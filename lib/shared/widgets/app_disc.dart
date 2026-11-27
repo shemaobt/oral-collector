@@ -1,64 +1,92 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_shadows.dart';
 import '../../core/theme/genre_colors.dart';
+import 'hand_cut_disc.dart';
+import 'printed_shadow_scope.dart';
 
 enum DiscSize {
-  small(36),
+  small(32),
   medium(44),
   large(56),
-  empty(72);
+  big(68),
+  empty(72),
+  huge(96);
 
   const DiscSize(this.diameter);
 
   final double diameter;
 }
 
-enum DiscTone { inset, ink, g1, g2, g3, g4, none }
+enum DiscTone {
+  resting,
+  onCard,
+  action,
+  record,
+  live,
+  working,
+  failed,
+  g1,
+  g2,
+  g3,
+  g4,
+}
 
 class AppDisc extends StatelessWidget {
   const AppDisc({
     super.key,
     required this.child,
     this.size = DiscSize.medium,
-    this.tone = DiscTone.inset,
+    this.tone = DiscTone.resting,
+    this.pressable = false,
+    this.enabled = true,
   });
 
   final Widget child;
   final DiscSize size;
   final DiscTone tone;
+  final bool pressable;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final genres = GenreColors.of(context).tones;
-    final (fill, foreground) = switch (tone) {
-      DiscTone.inset => (colors.surfaceAlt, colors.primary),
-      DiscTone.ink => (colors.primary, colors.background),
-      DiscTone.g1 => (genres[0].disc, genres[0].onDisc),
-      DiscTone.g2 => (genres[1].disc, genres[1].onDisc),
-      DiscTone.g3 => (genres[2].disc, genres[2].onDisc),
-      DiscTone.g4 => (genres[3].disc, genres[3].onDisc),
-      DiscTone.none => (AppColors.transparent, colors.secondary),
+    final shadows = PrintedShadows.of(context);
+    final (fill, sign, shadow) = switch (tone) {
+      DiscTone.resting => (colors.card, colors.foreground, shadows.paper),
+      DiscTone.onCard => (colors.pale, colors.foreground, shadows.paper),
+      DiscTone.action => (colors.primary, colors.card, shadows.ink),
+      DiscTone.record => (colors.mic, colors.onColor, shadows.brick),
+      DiscTone.live => (colors.accent, colors.onColor, shadows.tile),
+      DiscTone.working => (colors.clay, colors.foreground, shadows.clay),
+      DiscTone.failed => (colors.soft, colors.onSoft, shadows.terracotta),
+      DiscTone.g1 => (genres[0].disc, genres[0].onDisc, shadows.paper),
+      DiscTone.g2 => (genres[1].disc, genres[1].onDisc, shadows.paper),
+      DiscTone.g3 => (genres[2].disc, genres[2].onDisc, shadows.paper),
+      DiscTone.g4 => (genres[3].disc, genres[3].onDisc, shadows.paper),
     };
-    return Container(
-      width: size.diameter,
-      height: size.diameter,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: fill,
-        border: tone == DiscTone.none
-            ? Border.all(color: colors.border, width: 1.8)
-            : null,
-      ),
-      child: IconTheme.merge(
-        data: IconThemeData(color: foreground),
-        child: DefaultTextStyle.merge(
-          style: TextStyle(color: foreground),
-          child: child,
+    final printed = pressable && enabled && !PrintedShadowScope.paints(context);
+    final disc = SizedBox.square(
+      dimension: size.diameter,
+      child: CustomPaint(
+        painter: HandCutDiscPainter(
+          fill: fill,
+          shadow: printed ? shadow : null,
+        ),
+        child: Center(
+          child: IconTheme.merge(
+            data: IconThemeData(color: sign, size: size.diameter * 0.46),
+            child: DefaultTextStyle.merge(
+              style: TextStyle(color: sign),
+              child: child,
+            ),
+          ),
         ),
       ),
     );
+    final piece = printed ? PrintedShadowScope(child: disc) : disc;
+    return enabled ? piece : Opacity(opacity: 0.4, child: piece);
   }
 }

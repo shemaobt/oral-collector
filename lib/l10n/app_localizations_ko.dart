@@ -78,6 +78,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_loading => '로딩 중...';
 
   @override
+  String get common_updating => '업데이트 중';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

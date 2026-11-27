@@ -78,6 +78,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get common_loading => 'Memuat...';
 
   @override
+  String get common_updating => 'Memperbarui';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

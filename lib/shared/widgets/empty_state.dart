@@ -35,7 +35,8 @@ class EmptyState extends StatelessWidget {
                 children: [
                   AppDisc(
                     size: DiscSize.empty,
-                    child: Icon(icon, size: 30, color: colors.secondary),
+                    tone: DiscTone.onCard,
+                    child: Icon(icon),
                   ),
                   const SizedBox(height: SpacingScale.s20),
                   Text(

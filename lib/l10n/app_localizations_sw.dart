@@ -78,6 +78,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_loading => 'Inapakia...';
 
   @override
+  String get common_updating => 'Inasasisha';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

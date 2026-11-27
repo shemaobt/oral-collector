@@ -131,6 +131,14 @@ Path: @/lib/shared/widgets
   same shape shifted by `shadowOffset` (default 3 right, 4 down; 2 and 3 for
   small pieces), no blur, in physical directions so RTL does not flip it. Colours
   come from the caller; only pressable pieces pass a shadow.
+- **`AppDisc` is the kit's disc cut by hand** ([app_disc.dart](app_disc.dart),
+  [hand_cut_disc.dart](hand_cut_disc.dart)): one closed curve scaled to the
+  diameter, sign at 46%. The tone says what the disc tells (fill and sign); the
+  printed shadow (the same outline 3.7% right and 4.2% down, no blur, physical
+  directions so RTL does not flip it) is painted only when `pressable` is set,
+  never when `enabled` is false (the disc is then at 40%), and never inside a
+  piece that already paints one (`PrintedShadowScope`, which a piece with a
+  printed shadow puts around its child). Shadow colours: `PrintedShadows`.
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
   failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**
@@ -155,5 +163,17 @@ Path: @/lib/shared/widgets
   drop the next row inherits the collapsed state and plays the come-back; flip
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
+
+- **`NameAndState`** ([name_and_state.dart](name_and_state.dart)) lays out a
+  row's name and end state: the state shows whole on one line, the name gives
+  way with an ellipsis, and only below 48 px of name does the state end in one.
+
+- **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a whole
+  `Scaffold` and takes one switch, `checking`. A 3-high line is drawn over the
+  content, below the status bar, only after the check lasted 250 ms (an
+  animation clock, not a `Timer`): fades in on `enter`, out on `leave`, and a
+  38% stroke runs across in 1100 ms (reversed under right-to-left). Screen
+  readers hear `common_updating` once. With less motion asked, one still
+  stroke fills the width.
 
 Created and maintained by Nori.
