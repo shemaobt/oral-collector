@@ -50,6 +50,31 @@ class ShadowTints {
       Theme.of(context).brightness == Brightness.dark ? dark : light;
 }
 
+class QuestionShadows {
+  static const light = [
+    BoxShadow(color: Color.fromRGBO(63, 62, 32, 0.06), spreadRadius: 1),
+    BoxShadow(
+      color: Color.fromRGBO(63, 62, 32, 0.6),
+      offset: Offset(0, 24),
+      blurRadius: 50,
+      spreadRadius: -24,
+    ),
+  ];
+
+  static const dark = [
+    BoxShadow(color: Color.fromRGBO(243, 239, 226, 0.08), spreadRadius: 1),
+    BoxShadow(
+      color: Color.fromRGBO(0, 0, 0, 0.7),
+      offset: Offset(0, 24),
+      blurRadius: 50,
+      spreadRadius: -20,
+    ),
+  ];
+
+  static List<BoxShadow> of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? dark : light;
+}
+
 class PrintedShadows {
   final Color ink;
   final Color paper;
