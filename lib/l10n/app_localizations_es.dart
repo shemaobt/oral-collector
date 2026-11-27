@@ -2692,7 +2692,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Sin internet. El envío continúa cuando vuelva.';
 
   @override
-  String get status_noProject => 'Sin proyecto asignado';
+  String get status_noProject => 'Sin proyecto asignado.';
 
   @override
   String get status_noProjectSubtitle =>

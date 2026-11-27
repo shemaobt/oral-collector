@@ -4745,7 +4745,7 @@ abstract class AppLocalizations {
   /// No description provided for @status_noProject.
   ///
   /// In en, this message translates to:
-  /// **'No project assigned'**
+  /// **'No project assigned.'**
   String get status_noProject;
 
   /// No description provided for @status_noProjectSubtitle.

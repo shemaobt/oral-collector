@@ -1092,7 +1092,7 @@
   "recording_stopPreview": "停止预览",
   "recording_audioLoadFailed": "加载音频失败",
   "status_offlineNotice": "没有网络。网络恢复后会继续发送。",
-  "status_noProject": "未分配项目",
+  "status_noProject": "未分配项目。",
   "status_noProjectSubtitle": "您尚未被添加到任何项目中。请联系管理员并等待分配。",
   "a11y_recordingInProgress": "正在录音，点击暂停",
   "a11y_recordingPaused": "录音已暂停，点击继续",

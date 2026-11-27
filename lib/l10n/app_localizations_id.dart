@@ -2676,7 +2676,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Tidak ada internet. Pengiriman berlanjut saat kembali.';
 
   @override
-  String get status_noProject => 'Tidak ada proyek ditetapkan';
+  String get status_noProject => 'Tidak ada proyek ditetapkan.';
 
   @override
   String get status_noProjectSubtitle =>

@@ -2684,7 +2684,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sem internet. O envio continua quando voltar.';
 
   @override
-  String get status_noProject => 'Nenhum projeto atribuído';
+  String get status_noProject => 'Nenhum projeto atribuído.';
 
   @override
   String get status_noProjectSubtitle =>

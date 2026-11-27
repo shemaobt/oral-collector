@@ -34,6 +34,7 @@ class NeedsYouBlock extends StatelessWidget {
           vertical: SpacingScale.s16,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -53,9 +54,11 @@ class NeedsYouBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: SpacingScale.s12),
-            SizedBox(
-              width: double.infinity,
-              height: _buttonHeight,
+            ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: double.infinity,
+                minHeight: _buttonHeight,
+              ),
               child: action,
             ),
           ],

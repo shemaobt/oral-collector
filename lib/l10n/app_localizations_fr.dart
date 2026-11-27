@@ -2709,7 +2709,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pas d’internet. L’envoi reprend au retour de la connexion.';
 
   @override
-  String get status_noProject => 'Aucun projet attribué';
+  String get status_noProject => 'Aucun projet attribué.';
 
   @override
   String get status_noProjectSubtitle =>

@@ -2663,7 +2663,7 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hakuna intaneti. Kutuma kunaendelea ikirudi.';
 
   @override
-  String get status_noProject => 'Hakuna mradi uliopangwa';
+  String get status_noProject => 'Hakuna mradi uliopangwa.';
 
   @override
   String get status_noProjectSubtitle =>

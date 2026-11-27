@@ -893,7 +893,7 @@
   "recording_stopPreview": "Simamisha hakiki",
   "recording_audioLoadFailed": "Imeshindwa kupakia sauti",
   "status_offlineNotice": "Hakuna intaneti. Kutuma kunaendelea ikirudi.",
-  "status_noProject": "Hakuna mradi uliopangwa",
+  "status_noProject": "Hakuna mradi uliopangwa.",
   "status_noProjectSubtitle": "Bado haujaongezwa kwenye mradi wowote. Tafadhali wasiliana na msimamizi wako na subiri kupangwa.",
   "a11y_recordingInProgress": "Rekodi inaendelea, gusa kusitisha",
   "a11y_recordingPaused": "Rekodi imesitishwa, gusa kuendelea",

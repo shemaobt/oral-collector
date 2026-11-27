@@ -893,7 +893,7 @@
   "recording_stopPreview": "Hentikan pratinjau",
   "recording_audioLoadFailed": "Gagal memuat audio",
   "status_offlineNotice": "Tidak ada internet. Pengiriman berlanjut saat kembali.",
-  "status_noProject": "Tidak ada proyek ditetapkan",
+  "status_noProject": "Tidak ada proyek ditetapkan.",
   "status_noProjectSubtitle": "Anda belum ditambahkan ke proyek mana pun. Hubungi administrator Anda dan tunggu untuk ditetapkan.",
   "a11y_recordingInProgress": "Perekaman berlangsung, ketuk untuk menjeda",
   "a11y_recordingPaused": "Perekaman dijeda, ketuk untuk melanjutkan",

@@ -2650,7 +2650,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد اتصال بالإنترنت. يستمر الإرسال عند عودته.';
 
   @override
-  String get status_noProject => 'لم يتم تعيين مشروع';
+  String get status_noProject => 'لم يتم تعيين مشروع.';
 
   @override
   String get status_noProjectSubtitle =>

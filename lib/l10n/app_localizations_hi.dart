@@ -2677,7 +2677,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'इंटरनेट नहीं है। इंटरनेट लौटने पर भेजना जारी रहेगा।';
 
   @override
-  String get status_noProject => 'कोई प्रोजेक्ट नहीं सौंपा गया';
+  String get status_noProject => 'कोई प्रोजेक्ट नहीं सौंपा गया।';
 
   @override
   String get status_noProjectSubtitle =>

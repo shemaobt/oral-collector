@@ -2573,7 +2573,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get status_offlineNotice => '인터넷이 없습니다. 연결되면 전송이 이어집니다.';
 
   @override
-  String get status_noProject => '할당된 프로젝트 없음';
+  String get status_noProject => '할당된 프로젝트 없음.';
 
   @override
   String get status_noProjectSubtitle =>

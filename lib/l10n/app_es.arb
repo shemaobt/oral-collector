@@ -893,7 +893,7 @@
   "recording_stopPreview": "Detener vista previa",
   "recording_audioLoadFailed": "Error al cargar el audio",
   "status_offlineNotice": "Sin internet. El envío continúa cuando vuelva.",
-  "status_noProject": "Sin proyecto asignado",
+  "status_noProject": "Sin proyecto asignado.",
   "status_noProjectSubtitle": "Aún no has sido añadido a ningún proyecto. Contacta con tu administrador y espera a ser asignado.",
   "a11y_recordingInProgress": "Grabación en curso, toca para pausar",
   "a11y_recordingPaused": "Grabación en pausa, toca para reanudar",

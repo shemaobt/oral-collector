@@ -2669,7 +2669,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No internet. Sending continues when it is back.';
 
   @override
-  String get status_noProject => 'No project assigned';
+  String get status_noProject => 'No project assigned.';
 
   @override
   String get status_noProjectSubtitle =>
