@@ -2547,10 +2547,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_audioLoadFailed => '加载音频失败';
 
   @override
-  String get status_offlineSubtitle => '同步和加载数据等某些功能需要互联网连接。';
+  String get status_offlineNotice => '没有网络。网络恢复后会继续发送。';
 
   @override
-  String get status_noProject => '未分配项目';
+  String get status_noProject => '未分配项目。';
 
   @override
   String get status_noProjectSubtitle => '您尚未被添加到任何项目中。请联系管理员并等待分配。';

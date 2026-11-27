@@ -2705,11 +2705,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_audioLoadFailed => 'Échec du chargement de l\'audio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Certaines fonctionnalités comme la synchronisation et le chargement de données nécessitent une connexion Internet.';
+  String get status_offlineNotice =>
+      'Pas d’internet. L’envoi reprend au retour de la connexion.';
 
   @override
-  String get status_noProject => 'Aucun projet attribué';
+  String get status_noProject => 'Aucun projet attribué.';
 
   @override
   String get status_noProjectSubtitle =>

@@ -1,56 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import 'brush_sign.dart';
+import 'hand_cut_rect.dart';
 
-enum StatusBannerVariant { plain, warn, error, hot, info }
+const double _padX = 14;
+const double _signGap = 10;
+
+enum StatusBannerTone { calm, attention, failed }
 
 class StatusBanner extends StatelessWidget {
   const StatusBanner({
     super.key,
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.variant = StatusBannerVariant.plain,
+    required this.sign,
+    required this.text,
+    this.title,
+    this.tone = StatusBannerTone.calm,
   });
 
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final StatusBannerVariant variant;
+  final Sign sign;
+  final String text;
+  final String? title;
+  final StatusBannerTone tone;
 
   factory StatusBanner.offline(AppLocalizations l10n, {Key? key}) =>
       StatusBanner(
         key: key,
-        icon: LucideIcons.wifiOff,
-        title: l10n.projectSettings_offlineTitle,
-        subtitle: l10n.status_offlineSubtitle,
-        variant: StatusBannerVariant.hot,
+        sign: Sign.offline,
+        text: l10n.status_offlineNotice,
       );
 
   factory StatusBanner.noProject(AppLocalizations l10n, {Key? key}) =>
       StatusBanner(
         key: key,
-        icon: LucideIcons.shieldAlert,
+        sign: Sign.info,
         title: l10n.status_noProject,
-        subtitle: l10n.status_noProjectSubtitle,
-        variant: StatusBannerVariant.info,
+        text: l10n.status_noProjectSubtitle,
       );
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final theme = Theme.of(context);
 
-    final (background, foreground) = switch (variant) {
-      StatusBannerVariant.plain => (colors.surfaceAlt, colors.foreground),
-      StatusBannerVariant.warn => (colors.wood, colors.foreground),
-      StatusBannerVariant.error => (colors.soft, colors.onSoft),
-      StatusBannerVariant.hot => (colors.soft, colors.onSoft),
-      StatusBannerVariant.info => (colors.pale, colors.info),
+    final (sheet, ink) = switch (tone) {
+      StatusBannerTone.calm => (colors.pale, colors.foreground),
+      StatusBannerTone.attention => (colors.wood, colors.foreground),
+      StatusBannerTone.failed => (colors.soft, colors.onSoft),
     };
+
+    final style = Theme.of(
+      context,
+    ).textTheme.bodyMedium!.copyWith(fontSize: 15, height: 1.35, color: ink);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -59,45 +61,35 @@ class StatusBanner extends StatelessWidget {
         SpacingScale.s16,
         0,
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s16,
-          vertical: SpacingScale.s12,
-        ),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(RadiusScale.r16),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 18, color: foreground),
-            const SizedBox(width: SpacingScale.s12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: foreground,
-                    ),
+      child: CustomPaint(
+        painter: HandCutRectPainter(fill: sheet, radius: RadiusScale.r16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: _padX,
+            vertical: SpacingScale.s12,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BrushSign(sign, size: 18, color: ink),
+              const SizedBox(width: _signGap),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      if (title != null)
+                        TextSpan(
+                          text: '$title ',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      TextSpan(text: text),
+                    ],
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: SpacingScale.s4),
-                    Text(
-                      subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: foreground,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ],
+                  style: style,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

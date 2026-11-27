@@ -2680,11 +2680,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_audioLoadFailed => 'Falha ao carregar o áudio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Alguns recursos como sincronização e carregamento de dados requerem conexão com a internet.';
+  String get status_offlineNotice =>
+      'Sem internet. O envio continua quando voltar.';
 
   @override
-  String get status_noProject => 'Nenhum projeto atribuído';
+  String get status_noProject => 'Nenhum projeto atribuído.';
 
   @override
   String get status_noProjectSubtitle =>

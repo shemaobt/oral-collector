@@ -2673,11 +2673,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_audioLoadFailed => 'ऑडियो लोड करने में विफल';
 
   @override
-  String get status_offlineSubtitle =>
-      'कुछ सुविधाओं जैसे सिंक करने और डेटा लोड करने के लिए इंटरनेट कनेक्शन आवश्यक है।';
+  String get status_offlineNotice =>
+      'इंटरनेट नहीं है। इंटरनेट लौटने पर भेजना जारी रहेगा।';
 
   @override
-  String get status_noProject => 'कोई प्रोजेक्ट नहीं सौंपा गया';
+  String get status_noProject => 'कोई प्रोजेक्ट नहीं सौंपा गया।';
 
   @override
   String get status_noProjectSubtitle =>

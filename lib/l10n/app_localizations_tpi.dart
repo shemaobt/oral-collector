@@ -2655,11 +2655,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_audioLoadFailed => 'I no inap lodim sat';
 
   @override
-  String get status_offlineSubtitle =>
-      'Sampela wok olsem sinkim na kisim daata i nidim intenet.';
+  String get status_offlineNotice =>
+      'Nogat internet. Salim bai i go moa taim internet i kam bek.';
 
   @override
-  String get status_noProject => 'I no gat projek';
+  String get status_noProject => 'I no gat projek.';
 
   @override
   String get status_noProjectSubtitle =>

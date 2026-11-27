@@ -129,6 +129,12 @@ Path: @/lib/shared/widgets
   same shape shifted by `shadowOffset` (default 3 right, 4 down; 2 and 3 for
   small pieces), no blur, in physical directions so RTL does not flip it. Colours
   come from the caller; only pressable pieces pass a shadow.
+- **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
+  hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
+  failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**
+  ([needs_you_block.dart](needs_you_block.dart)) is the «Precisa de você» block:
+  a brush title, one sentence and the button that solves it, passed in as a
+  widget and held to the block's width at 44 high.
 - **Regression coverage** lives in
   [/test/shared/widgets](/test/shared/widgets), pumping each widget at the
   ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart)
