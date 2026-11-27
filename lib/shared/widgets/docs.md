@@ -155,9 +155,7 @@ Path: @/lib/shared/widgets
   item from the list mid-leave snaps the row out: the list shortens in one frame.
 
 - **`NameAndState`** ([name_and_state.dart](name_and_state.dart)) lays out a
-  row's name and its end state: the state keeps its natural width on one line,
-  the name takes the rest with its ellipsis, and only when the name would fall
-  below 48 px does the state end in an ellipsis. It owns its intrinsics and dry
-  layout (no `LayoutBuilder`) and reports no baseline.
+  row's name and end state: the state shows whole on one line, the name gives
+  way with an ellipsis, and only below 48 px of name does the state end in one.
 
 Created and maintained by Nori.

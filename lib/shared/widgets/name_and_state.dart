@@ -56,9 +56,7 @@ class _Slots extends SlottedMultiChildRenderObjectWidget<_Slot, RenderBox> {
 class _RenderSlots extends RenderBox
     with SlottedContainerRenderObjectMixin<_Slot, RenderBox> {
   _RenderSlots(this._direction);
-
   TextDirection _direction;
-
   set direction(TextDirection value) {
     if (value == _direction) return;
     _direction = value;
@@ -67,7 +65,6 @@ class _RenderSlots extends RenderBox
 
   RenderBox get _name => childForSlot(_Slot.name)!;
   RenderBox? get _state => childForSlot(_Slot.state);
-
   double _stateWidth(double width) => _state == null
       ? 0
       : math.min(

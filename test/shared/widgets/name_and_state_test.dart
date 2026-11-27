@@ -7,6 +7,7 @@ import '../../support/text_scale.dart';
 
 const _long = 'Gravação da história do rio contada pela avó na aldeia';
 const _sending = 'Enviando 42%';
+final _unbroken = 'A' * 60;
 final _name = find.byKey(const Key('name'));
 final _state = find.byKey(const Key('state'));
 const _ltr = TextDirection.ltr;
@@ -44,18 +45,11 @@ bool _cut(WidgetTester tester, Finder text) => tester
     )
     .didExceedMaxLines;
 
-void _stateOnOneLineAtEnd(
-  WidgetTester tester,
-  double width,
-  TextDirection direction,
-) {
-  expectNoOverflow(tester);
-  expect(tester.getSize(_state).height, tester.getSize(_name).height);
-  final state = tester.getRect(_state);
-  expect(
-    direction == _ltr ? state.right : state.left,
-    direction == _ltr ? width : 0,
-  );
+void _atEnd(WidgetTester t, double w, TextDirection d) {
+  expectNoOverflow(t);
+  expect(t.getSize(_state).height, t.getSize(_name).height);
+  final r = t.getRect(_state);
+  expect(d == _ltr ? r.right : r.left, d == _ltr ? w : 0);
 }
 
 void main() {
@@ -70,15 +64,11 @@ void main() {
           width: 360,
           direction: direction,
         );
-
-        _stateOnOneLineAtEnd(tester, 360, direction);
+        _atEnd(tester, 360, direction);
         expect(_cut(tester, _name) || _cut(tester, _state), isFalse);
         final name = tester.getRect(_name);
         final state = tester.getRect(_state);
-        final gap = direction == _ltr
-            ? state.left - name.right
-            : name.left - state.right;
-        expect(gap, 16);
+        expect(name.width + 16 + state.width, 360);
         final gapX = direction == _ltr ? name.right + 8 : state.right + 8;
         await tester.tapAt(Offset(gapX, name.center.dy));
         await tester.tap(_name);
@@ -90,9 +80,10 @@ void main() {
 
   for (final (state, width, scale, direction, cut) in [
     (_sending, 200.0, 1.0, _ltr, false),
-    (_sending, 200.0, 1.0, _rtl, false),
+    (_sending, 390.0, 2.0, _ltr, false),
     (_sending, 200.0, 2.0, _ltr, true),
-    ('Enviado', 80.0, 1.0, _ltr, true),
+    (_unbroken, 200.0, 1.0, _ltr, true),
+    (_unbroken, 200.0, 1.0, _rtl, true),
   ]) {
     testWidgets(
       'at $width, scale $scale, $direction ${state.length} letters: cut $cut, read whole',
@@ -105,8 +96,7 @@ void main() {
           scale: scale,
           direction: direction,
         );
-
-        _stateOnOneLineAtEnd(tester, width, direction);
+        _atEnd(tester, width, direction);
         expect(_cut(tester, _state), cut);
         expect(_cut(tester, _name), isTrue);
         if (cut) expect(tester.getSize(_name).width, 48);
@@ -118,7 +108,7 @@ void main() {
   }
 
   testWidgets(
-    'in an IntrinsicWidth and IntrinsicHeight a short name keeps 48 and the state shows whole',
+    'in an IntrinsicWidth and an AlertDialog a short name keeps 48 and the state shows whole',
     (tester) async {
       await _pump(
         tester,
@@ -129,13 +119,29 @@ void main() {
         ),
         width: 400,
       );
-
       expectNoOverflow(tester);
       expect(_cut(tester, _state), isFalse);
       final row = tester.renderObject<RenderBox>(find.byType(NameAndState));
       expect(row.size.width, 48 + 16 + tester.getSize(_state).width);
       expect(row.size.height, tester.getSize(_state).height);
       expect(row.getMinIntrinsicWidth(0), 48 + 16);
+      await pumpAtTextScale(
+        tester,
+        child: AlertDialog(
+          content: IntrinsicHeight(child: _slot(_long, _sending)),
+        ),
+      );
+      expectNoOverflow(tester);
+      expect(_cut(tester, _name), isTrue);
+      expect(_cut(tester, _state), isFalse);
+      final inDialog = find.byType(NameAndState);
+      expect(tester.getSize(inDialog).height, tester.getSize(_state).height);
     },
   );
+
+  testWidgets('without a state the name takes the whole row', (tester) async {
+    await _pump(tester, _slot(_long));
+
+    expect(tester.getSize(_name).width, 200);
+  });
 }
