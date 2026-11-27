@@ -34,7 +34,6 @@ void main() {
     await t.pump();
     if (!still && settle) await t.pumpAndSettle();
   }
-
   for (final bool dismissible in [true, false]) {
     final gestures = <String, Future<void> Function(WidgetTester)>{
       'drag': (t) => t.fling(find.text('body'), const Offset(0, 400), 2000),
@@ -49,13 +48,10 @@ void main() {
       });
     }
   }
-
   for (final int grabAtMs in [0, 100]) {
-    testWidgets('a slow drag grabbed at ${grabAtMs}ms follows the finger', (
-      t,
-    ) async {
+    testWidgets('slow drag at ${grabAtMs}ms follows the finger', (t) async {
       await open(t, settle: grabAtMs == 0);
-      if (grabAtMs > 0) await t.pump(Duration(milliseconds: grabAtMs));
+      await t.pump(Duration(milliseconds: grabAtMs));
       double top() => t.getTopLeft(find.text('body')).dy;
       final double start = top();
       final finger = await t.startGesture(t.getCenter(find.text('body')));
@@ -69,11 +65,9 @@ void main() {
       }
     });
   }
-
   testWidgets('less motion: whole at once, gone at once', (t) async {
     await open(t, still: true);
     expect(t.getTopLeft(find.text('body')).dy, 300);
-
     await t.tapAt(const Offset(10, 10));
     await t.pump();
     expect(find.text('body'), findsNothing);
