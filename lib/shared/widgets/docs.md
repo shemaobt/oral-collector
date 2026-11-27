@@ -60,13 +60,8 @@ Path: @/lib/shared/widgets
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
-- [app_tile.dart](app_tile.dart) is the kit's card: fill `card`, corners of 22,
-  no outline and no stripe, the soft edge from `ShadowTints.edge` as its only
-  shadow. [row_group.dart](row_group.dart) stacks rows in one card with a
-  `border` line between them. [app_row.dart](app_row.dart) is the row in three
-  kinds (recording, setting, compact) with one `state` at its end and an
-  optional `below`; `destructive` paints it in `error`.
-  [app_data_row.dart](app_data_row.dart) is a label and a value.
+- [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
+  stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the badges'
   "cleaning" / "uploading" spinners create/dispose an `AnimationController` in

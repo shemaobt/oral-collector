@@ -15,12 +15,12 @@ class AppDataRow extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 46),
       child: Row(
+        spacing: 16,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Text(label, style: base?.copyWith(color: colors.secondary)),
           ),
-          const SizedBox(width: 16),
           Flexible(
             child: Text(
               value,

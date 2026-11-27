@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_shadows.dart';
-import '../../core/theme/app_spacing.dart';
 
 class AppTile extends StatelessWidget {
   const AppTile({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: 18,
-      vertical: SpacingScale.s4,
-    ),
+    this.padding = const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
     this.radius = 22,
   });
 

@@ -3,21 +3,19 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 enum AppRowKind {
-  recording(minHeight: 66, leadWidth: 44, padTop: 11, padBottom: 11),
-  setting(minHeight: 58, leadWidth: 28, padTop: 9, padBottom: 9),
-  compact(minHeight: 54, leadWidth: 28, padTop: 8, padBottom: 8);
+  recording(height: 44, leadWidth: 44, pad: 11),
+  setting(height: 40, leadWidth: 28, pad: 9),
+  compact(height: 38, leadWidth: 28, pad: 8);
 
   const AppRowKind({
-    required this.minHeight,
+    required this.height,
     required this.leadWidth,
-    required this.padTop,
-    required this.padBottom,
+    required this.pad,
   });
 
-  final double minHeight;
+  final double height;
   final double leadWidth;
-  final double padTop;
-  final double padBottom;
+  final double pad;
 }
 
 const double _gap = 14;
@@ -49,72 +47,72 @@ class AppRow extends StatelessWidget {
     final colors = AppColors.of(context);
     final text = Theme.of(context).textTheme;
     final ink = destructive ? colors.error : colors.foreground;
-    final row = Row(
-      children: [
-        if (lead != null) ...[
-          SizedBox(
-            width: kind.leadWidth,
-            child: IconTheme.merge(
-              data: IconThemeData(color: ink),
-              child: lead!,
-            ),
-          ),
-          const SizedBox(width: _gap),
-        ],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.bodyLarge?.copyWith(
-                  color: ink,
-                  fontSize: 17,
-                  height: 1.25,
-                ),
+    final row = LayoutBuilder(
+      builder: (context, box) => Row(
+        spacing: _gap,
+        children: [
+          if (lead != null)
+            SizedBox(
+              width: kind.leadWidth,
+              child: IconTheme.merge(
+                data: IconThemeData(color: ink),
+                child: lead!,
               ),
-              if (detail != null)
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  detail!,
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall?.copyWith(color: colors.secondary),
+                  style: text.bodyLarge?.copyWith(
+                    color: ink,
+                    fontSize: 17,
+                    height: 1.25,
+                  ),
                 ),
-            ],
+                if (detail != null)
+                  Text(
+                    detail!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodySmall?.copyWith(color: colors.secondary),
+                  ),
+              ],
+            ),
           ),
-        ),
-        if (state != null) ...[const SizedBox(width: _gap), state!],
-      ],
+          if (state != null)
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth * 0.4),
+              child: state,
+            ),
+        ],
+      ),
     );
-    final hasBelow = below != null;
     return Padding(
       padding: EdgeInsetsDirectional.only(
-        top: kind.padTop,
-        bottom: hasBelow ? _belowPadBottom : kind.padBottom,
+        top: kind.pad,
+        bottom: below != null ? _belowPadBottom : kind.pad,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight:
-                  kind.minHeight -
-                  kind.padTop -
-                  (hasBelow ? _padBottomWithBelow : kind.padBottom),
-            ),
+            constraints: BoxConstraints(minHeight: kind.height),
             child: row,
           ),
-          if (hasBelow) ...[
-            const SizedBox(height: _padBottomWithBelow),
+          if (below != null)
             Padding(
-              padding: EdgeInsetsDirectional.only(start: kind.leadWidth + _gap),
+              padding: EdgeInsetsDirectional.only(
+                start: kind.leadWidth + _gap,
+                top: _padBottomWithBelow,
+              ),
               child: below,
             ),
-          ],
         ],
       ),
     );
