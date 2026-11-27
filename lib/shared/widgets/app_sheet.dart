@@ -86,6 +86,7 @@ typedef _Run = ({Curve rise, Curve fade});
 
 class _AppSheetBodyState extends State<_AppSheetBody> {
   _Run? _run;
+  bool _dragging = false;
 
   _AppSheetRoute<dynamic> get _route => widget.route;
 
@@ -118,13 +119,17 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
       ),
       onDragStart: (_) {
         final double shown = (_run ?? _enter).rise.transform(_route.drag.value);
-        _route.drag.value = shown.clamp(0.0, 1.0);
+        _dragging = true;
         _run = (rise: Curves.linear, fade: motion.enter);
+        _route.drag.value = shown.clamp(0.0, 1.0);
       },
-      onDragEnd: (_, {bool? isClosing}) => _run = (
-        rise: Split(_route.drag.value, endCurve: motion.enter),
-        fade: motion.enter,
-      ),
+      onDragEnd: (_, {bool? isClosing}) {
+        _dragging = false;
+        _run = (
+          rise: Split(_route.drag.value, endCurve: motion.enter),
+          fade: motion.enter,
+        );
+      },
       builder: (context) => Stack(
         children: [
           _route.builder(context),
@@ -162,7 +167,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
         builder: (context, child) {
           final double v = _route.animation!.value;
           final AnimationStatus status = _route.animation!.status;
-          _run = status.isAnimating
+          _run = status.isAnimating || _dragging
               ? _run ?? (status == AnimationStatus.reverse ? _leave : _enter)
               : null;
           final _Run run = _run ?? _enter;

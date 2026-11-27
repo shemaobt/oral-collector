@@ -175,12 +175,7 @@ Path: @/lib/shared/widgets
   stroke fills the width.
 
 - **`showAppSheet`** ([app_sheet.dart](app_sheet.dart)) is the one way a sheet
-  opens: its own route, because Flutter's sheet never passes its place. The
-  sheet rises on `MotionScale.sheetRise` over `slow` while the ground darkens to
-  `MotionScale.scrim` on `enter`; it leaves over `base` on `leave`. The frame
-  (corner 26, `card`, grab of `sand`) is the helper's; a screen's content
-  leaves the top 24 free for the grab. Not dismissible means no drag and no tap
-  on the ground. Under less motion both times are zero. The keyboard's insets
-  are never read: a caller that pads its own sheet stays above the keyboard.
+  opens: its own route. The frame (corner 26, grab) is the helper's; content
+  leaves the top 24 free. The keyboard's insets are never read.
 
 Created and maintained by Nori.

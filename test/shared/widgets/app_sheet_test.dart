@@ -4,72 +4,72 @@ import 'package:oral_collector/shared/widgets/app_sheet.dart';
 
 void main() {
   Future<void> open(
-    WidgetTester tester, {
+    WidgetTester t, {
     bool isDismissible = true,
     bool still = false,
   }) async {
-    tester.platformDispatcher.accessibilityFeaturesTestValue =
+    t.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: still);
-    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await tester.pumpWidget(
+    addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await t.pumpWidget(
       MaterialApp(
         home: Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () => showAppSheet<void>(
-                context: context,
-                isDismissible: isDismissible,
-                builder: (_) =>
-                    const SizedBox(height: 300, child: Text('body')),
+          builder: (c) => TextButton(
+            onPressed: () => showAppSheet<void>(
+              context: c,
+              isDismissible: isDismissible,
+              builder: (_) => const SizedBox(
+                width: double.infinity,
+                height: 300,
+                child: Text('body'),
               ),
-              child: const Text('open'),
             ),
+            child: const Text('open'),
           ),
         ),
       ),
     );
-    await tester.tap(find.text('open'));
-    await tester.pump();
-    if (!still) await tester.pumpAndSettle();
+    await t.tap(find.text('open'));
+    await t.pump();
+    if (!still) await t.pumpAndSettle();
   }
 
-  testWidgets('a drag down dismisses the sheet', (tester) async {
-    await open(tester);
+  for (final bool dismissible in [true, false]) {
+    final gestures = <String, Future<void> Function(WidgetTester)>{
+      'drag': (t) => t.fling(find.text('body'), const Offset(0, 400), 2000),
+      'ground tap': (t) => t.tapAt(const Offset(10, 10)),
+    };
+    for (final g in gestures.entries) {
+      testWidgets('${g.key}, dismissible $dismissible', (t) async {
+        await open(t, isDismissible: dismissible);
+        await g.value(t);
+        await t.pumpAndSettle();
+        expect(find.text('body'), dismissible ? findsNothing : findsOneWidget);
+      });
+    }
+  }
 
-    await tester.fling(find.text('body'), const Offset(0, 400), 2000);
-    await tester.pumpAndSettle();
-
-    expect(find.text('body'), findsNothing);
+  testWidgets('a slow drag moves the sheet as far as the finger', (t) async {
+    await open(t);
+    double top() => t.getTopLeft(find.text('body')).dy;
+    final double rest = top();
+    final finger = await t.startGesture(t.getCenter(find.text('body')));
+    await finger.moveBy(const Offset(0, 21));
+    double moved = 0;
+    for (final double step in [0, 60, 89]) {
+      await t.pump(const Duration(milliseconds: 16));
+      await finger.moveBy(Offset(0, step));
+      await t.pump(const Duration(milliseconds: 16));
+      expect(top() - rest, closeTo(moved += step, 1));
+    }
   });
 
-  testWidgets('a tap on the ground dismisses the sheet', (tester) async {
-    await open(tester);
+  testWidgets('less motion: whole at once, gone at once', (t) async {
+    await open(t, still: true);
+    expect(t.getTopLeft(find.text('body')).dy, 300);
 
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
-
-    expect(find.text('body'), findsNothing);
-  });
-
-  testWidgets('a sheet that is not dismissible ignores drag and ground', (
-    tester,
-  ) async {
-    await open(tester, isDismissible: false);
-
-    await tester.fling(find.text('body'), const Offset(0, 400), 2000);
-    await tester.pumpAndSettle();
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
-
-    expect(find.text('body'), findsOneWidget);
-  });
-
-  testWidgets('less motion: whole at once, gone at once', (tester) async {
-    await open(tester, still: true);
-    expect(tester.getTopLeft(find.text('body')).dy, 300);
-
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pump();
+    await t.tapAt(const Offset(10, 10));
+    await t.pump();
     expect(find.text('body'), findsNothing);
   });
 }
