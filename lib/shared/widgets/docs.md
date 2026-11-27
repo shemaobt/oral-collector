@@ -176,4 +176,11 @@ Path: @/lib/shared/widgets
   leaves the top 24 free. The keyboard's insets are never read. `constraints`
   caps the sheet's width; `useRootNavigator` pushes it on the root navigator.
 
+- **`showAppQuestion`** ([app_question.dart](app_question.dart)) is the one way a
+  question opens: its own route. A title, one line and the buttons the caller
+  builds (they pop the answer); a tap on the ground pops null unless
+  `isDismissible` is false. It enters in `base` on `enter`, rising `rise`, and
+  leaves in `fast` on `leave`, in place; the ground is `MotionScale.scrim`. With
+  less motion asked it is whole and gone at once.
+
 Created and maintained by Nori.
