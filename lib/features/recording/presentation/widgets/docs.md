@@ -506,13 +506,13 @@ Path: @/lib/features/recording/presentation/widgets
   `RecordingStatusSection`'s cleaning row no longer maps the status String
   (none / needs_cleaning / cleaning / cleaned / failed) to its icon / color /
   label itself; it calls `CleaningStatusStyle.forStatus` from
-  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart),
-  the same mapping. The status section renders a neutral "not flagged" row for
+  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart).
+  The status section renders a neutral "not flagged" row for
   non-flagged (none / unknown) statuses. Colors come from the resolved
   `AppColorSet` (`needs_cleaning` → `warning`, `cleaning` → `info`,
   `cleaned` → `success`, `failed` → `error`), so it is theme-aware in dark
   mode. Three private cleaning-mapping helpers
-  on the status section were deleted in favor of this shared mapping.
+  on the status section were deleted in favor of `CleaningStatusStyle`.
 - **Waveform widgets are isolated from the player.**
   `scrolling_waveform.dart` and `trim_waveform.dart` consume the
   `WaveformExtractor` service from

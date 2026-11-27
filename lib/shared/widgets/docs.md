@@ -58,7 +58,7 @@ Path: @/lib/shared/widgets
   typeface.
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the upload badge's
-  spinner creates/dispose an `AnimationController` in
+  spinner creates/disposes an `AnimationController` in
   `didUpdateWidget`) and `LeavingRow`'s fade and height.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
@@ -110,7 +110,7 @@ Path: @/lib/shared/widgets
     added.
 - **`compact` font sizing uses `null` for the on-token size.** The upload badge sets
   `fontSize` to `null` in compact mode (which keeps `labelSmall`'s native 11)
-  and only carry the off-token `13` as an explicit override — same typography
+  and only carries the off-token `13` as an explicit override — same typography
   convention as [/lib/core/theme/docs.md](/lib/core/theme/docs.md)'s "keep
   `copyWith(fontSize:)` when no token matches". No rendered-size change at 1.0×.
 - **The status badge is currently unused in the app.**
