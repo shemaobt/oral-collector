@@ -175,6 +175,11 @@ Path: @/lib/shared/widgets
   opens: its own route. The frame (corner 26, grab) is the helper's; content
   leaves the top 24 free. The keyboard's insets are never read. `constraints`
   caps the sheet's width; `useRootNavigator` pushes it on the root navigator.
+- **`showQuickNotice`** ([quick_notice.dart](quick_notice.dart)) says a short
+  message on a hand-cut bar on the root `Overlay`, margin to margin, 10 above
+  the bottom safe area. A new notice replaces the one on screen at once. Tones:
+  calm and failed (`error`). It jumps in (`base`, `noticeJump`), stays
+  `noticeStay` even under less motion, leaves in `fast`; a live region.
 
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
