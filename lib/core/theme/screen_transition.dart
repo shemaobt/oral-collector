@@ -135,9 +135,12 @@ class _StepState extends State<_Step> {
       animation: widget.run,
       child: widget.child,
       builder: (context, child) {
+        if (still) {
+          final leaving = widget.run.status == AnimationStatus.reverse;
+          return isTop && leaving ? const SizedBox.shrink() : child!;
+        }
         final backwards =
             (_direction ?? widget.run.status) == AnimationStatus.reverse;
-        if (still) return isTop && backwards ? const SizedBox.shrink() : child!;
         final elapsed = backwards ? 1 - widget.run.value : widget.run.value;
         final shown = isTop != backwards
             ? MotionScale.enter.transform(elapsed)
