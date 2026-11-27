@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'genre_colors.dart';
+import 'screen_transition.dart';
 import 'tokens.dart';
 
 const _fontFamily = 'Montserrat';
@@ -374,6 +375,7 @@ abstract class AppTheme {
         surfaceContainerHighest: AppColors.pale,
       ),
       scaffoldBackgroundColor: AppColors.background,
+      pageTransitionsTheme: ScreenTransition.phone,
       textTheme: textTheme,
       appBarTheme: _appBarTheme(AppColors.light, textTheme),
       cardTheme: CardThemeData(
@@ -503,6 +505,7 @@ abstract class AppTheme {
         surfaceContainerHighest: AppColors.darkPale,
       ),
       scaffoldBackgroundColor: AppColors.darkBackground,
+      pageTransitionsTheme: ScreenTransition.phone,
       textTheme: textTheme,
       appBarTheme: _appBarTheme(AppColors.dark, textTheme),
       cardTheme: CardThemeData(

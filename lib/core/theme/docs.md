@@ -297,6 +297,13 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
   `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md),
   and ENG-183/ENG-116 then burned the app's color literals down to zero outside
   this folder and promoted both rules to `warning`.
+- **Screen transitions** ([screen_transition.dart](screen_transition.dart),
+  ENG-3055): the themes map every `TargetPlatform` to a builder, so no route is
+  edited. iOS and macOS keep Apple's slide and its edge swipe, also under less
+  motion; the rest get the kit's slide. The root swaps in the web's map (fade
+  only) from `isWebPlatformProvider` through `ScreenTransition.pick`, because a
+  builder's time getters have no context and Apple's takes 500 ms where the
+  fade takes 320.
 - **Adding a token field is a multi-point edit** — thread it through the
   constructor, `copyWith`, `lerp`, `==`, `hashCode`, and the registered
   instances, or the equality/interpolation contracts break.
