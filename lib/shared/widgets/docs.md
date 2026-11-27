@@ -176,6 +176,7 @@ Path: @/lib/shared/widgets
 
 - **`showAppSheet`** ([app_sheet.dart](app_sheet.dart)) is the one way a sheet
   opens: its own route. The frame (corner 26, grab) is the helper's; content
-  leaves the top 24 free. The keyboard's insets are never read.
+  leaves the top 24 free. The keyboard's insets are never read. `constraints`
+  caps the sheet's width; `useRootNavigator` pushes it on the root navigator.
 
 Created and maintained by Nori.

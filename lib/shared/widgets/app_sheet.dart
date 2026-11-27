@@ -13,8 +13,13 @@ Future<T?> showAppSheet<T>({
   bool isDismissible = true,
   bool isScrollControlled = false,
   bool useSafeArea = false,
+  bool useRootNavigator = false,
+  BoxConstraints? constraints,
 }) {
-  final NavigatorState navigator = Navigator.of(context);
+  final NavigatorState navigator = Navigator.of(
+    context,
+    rootNavigator: useRootNavigator,
+  );
   return navigator.push(
     _AppSheetRoute<T>(
       builder: builder,
@@ -24,6 +29,7 @@ Future<T?> showAppSheet<T>({
       isDismissible: isDismissible,
       isScrollControlled: isScrollControlled,
       useSafeArea: useSafeArea,
+      constraints: constraints,
     ),
   );
 }
@@ -37,6 +43,7 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
     required this.isDismissible,
     required this.isScrollControlled,
     required this.useSafeArea,
+    required this.constraints,
   });
 
   final WidgetBuilder builder;
@@ -45,6 +52,7 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
   final bool isDismissible;
   final bool isScrollControlled;
   final bool useSafeArea;
+  final BoxConstraints? constraints;
 
   @override
   final String barrierLabel;
@@ -110,6 +118,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
         if (_route.isCurrent) Navigator.pop(context);
       },
       enableDrag: _route.isDismissible,
+      constraints: _route.constraints,
       backgroundColor: colors.card,
       elevation: 0,
       showDragHandle: false,
@@ -160,6 +169,10 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
     return Semantics(
       scopesRoute: true,
       namesRoute: true,
+      label: switch (Theme.of(context).platform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => '',
+        _ => MaterialLocalizations.of(context).dialogLabel,
+      },
       explicitChildNodes: true,
       child: AnimatedBuilder(
         animation: _route.animation!,
