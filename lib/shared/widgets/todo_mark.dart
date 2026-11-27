@@ -7,7 +7,7 @@ import '../../core/theme/app_colors.dart';
 const double _circle = 13;
 const double _stroke = 1.5;
 const double _gap = 6;
-const int _dashes = 8;
+const int _dashes = 10;
 const double _dashShare = 0.55;
 
 class TodoMark extends StatelessWidget {

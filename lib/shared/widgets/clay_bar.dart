@@ -4,7 +4,7 @@ import '../../core/theme/app_colors.dart';
 import 'hand_cut_rect.dart';
 
 const double _height = 14;
-const double _radius = 8;
+const double _radius = 4;
 const double _opacity = 0.4;
 
 class ClayBar extends StatelessWidget {
@@ -18,7 +18,7 @@ class ClayBar extends StatelessWidget {
     final clay = AppColors.of(context).clay;
     return ExcludeSemantics(
       child: SizedBox(
-        width: width,
+        width: width ?? double.infinity,
         height: height,
         child: CustomPaint(
           painter: HandCutRectPainter(
