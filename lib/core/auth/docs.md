@@ -90,9 +90,11 @@ Path: @/lib/core/auth
 - **A request from before «Sair» never touches the next session (ENG-3086).**
   Every method that awaits and then writes tokens, the user or the state captures
   the session counter before its first `await` and writes only while it is still
-  current. `logout` bumps the counter once the device is cleared, and no session
-  is current while a sign-out is clearing it, so neither a request started
-  before «Sair» nor one started during the clear can sign the person back in.
+  current, checked inside one queue it shares with the clear, so the clear runs
+  after any write that already passed the check. `logout` bumps the counter once
+  the device is cleared, and no session is current while a sign-out is clearing
+  it, so neither a request started before «Sair» nor one started during the
+  clear can sign the person back in.
 - **Why single-flight.** The backend rotates the refresh token on first use and
   invalidates the old one. Concurrent 401s previously each launched their own
   refresh reading the same (soon-stale) refresh token; the first won and the rest
