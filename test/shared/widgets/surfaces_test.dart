@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
-import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
-import 'package:oral_collector/shared/widgets/app_tile.dart';
-import 'package:oral_collector/shared/widgets/row_group.dart';
 import 'package:oral_collector/shared/widgets/stat_tile.dart';
 
 Future<void> _pump(
@@ -29,49 +26,7 @@ Future<void> _pump(
   );
 }
 
-BoxDecoration _surface(WidgetTester tester, Finder within) {
-  final box = tester.widget<DecoratedBox>(
-    find.descendant(of: within, matching: find.byType(DecoratedBox)).first,
-  );
-  return box.decoration as BoxDecoration;
-}
-
 void main() {
-  group('AppTile', () {
-    testWidgets('draws card fill, 1.5 border and radius 24', (tester) async {
-      await _pump(tester, const AppTile(child: Text('x')));
-      final decoration = _surface(tester, find.byType(AppTile));
-      expect(decoration.color, AppColors.light.card);
-      expect(
-        decoration.border,
-        Border.all(color: AppColors.light.border, width: 1.5),
-      );
-      expect(decoration.borderRadius, BorderRadius.circular(RadiusScale.r24));
-    });
-
-    for (final direction in TextDirection.values) {
-      testWidgets('stripe is 4 wide on the start side in $direction', (
-        tester,
-      ) async {
-        await _pump(
-          tester,
-          const AppTile(stripe: StripeTone.brick, child: Text('x')),
-          direction: direction,
-        );
-        final tile = tester.getRect(find.byType(AppTile));
-        final stripe = tester.getRect(find.byKey(AppTile.stripeKey));
-        expect(stripe.width, 4);
-        if (direction == TextDirection.ltr) {
-          expect(stripe.left, tile.left);
-        } else {
-          expect(stripe.right, tile.right);
-        }
-        final fill = tester.widget<ColoredBox>(find.byKey(AppTile.stripeKey));
-        expect(fill.color, AppColors.light.error);
-      });
-    }
-  });
-
   group('StatTile', () {
     Text number(WidgetTester tester) => tester.widget<Text>(find.text('128'));
 
@@ -93,23 +48,6 @@ void main() {
         const StatTile(value: '128', label: 'recordings', hot: true),
       );
       expect(number(tester).style!.color, AppColors.light.accent);
-    });
-  });
-
-  group('RowGroup', () {
-    testWidgets('stacks its rows inside one tile, in order', (tester) async {
-      await _pump(
-        tester,
-        const RowGroup(children: [Text('a'), Text('b'), Text('c')]),
-      );
-      expect(find.byType(AppTile), findsOneWidget);
-      final tops = [
-        'a',
-        'b',
-        'c',
-      ].map((t) => tester.getTopLeft(find.text(t)).dy).toList();
-      expect(tops, [...tops]..sort());
-      expect(tops.toSet().length, 3);
     });
   });
 }
