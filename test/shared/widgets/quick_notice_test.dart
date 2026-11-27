@@ -11,18 +11,51 @@ import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
 const _heldFor = Duration(milliseconds: 2900);
 
-MaterialApp _app({required Widget home, Brightness? brightness}) => MaterialApp(
-  locale: const Locale('pt'),
-  supportedLocales: AppLocalizations.supportedLocales,
-  localizationsDelegates: const [
-    AppLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  theme: ThemeData(brightness: brightness ?? Brightness.light),
-  home: home,
+MaterialApp _app({required Widget home, Brightness? brightness, Key? key}) =>
+    MaterialApp(
+      navigatorKey: key as GlobalKey<NavigatorState>?,
+      locale: const Locale('pt'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: ThemeData(brightness: brightness ?? Brightness.light),
+      home: home,
+    );
+
+Widget _shell(Widget body) => Scaffold(
+  extendBody: true,
+  body: QuickNoticeFloor(child: body),
+  bottomNavigationBar: const SizedBox(height: 88),
 );
+
+Widget _caller(String sentence) => SafeArea(
+  child: Builder(
+    builder: (context) => TextButton(
+      onPressed: () => showQuickNotice(context, sentence),
+      child: const Text('show'),
+    ),
+  ),
+);
+
+double _barBottom(WidgetTester tester, String sentence) => tester
+    .getRect(
+      find
+          .ancestor(of: find.text(sentence), matching: find.byType(CustomPaint))
+          .first,
+    )
+    .bottom;
+
+void _phone(WidgetTester tester, {double inset = 0}) {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  tester.view.padding = const FakeViewPadding(bottom: 34);
+  tester.view.viewInsets = FakeViewPadding(bottom: inset);
+  addTearDown(tester.view.reset);
+}
 
 Future<void> _pump(
   WidgetTester tester, {
@@ -118,9 +151,7 @@ void main() {
     'a notice shown from a route that is gone still leaves by itself',
     (tester) async {
       final navigator = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(
-        MaterialApp(navigatorKey: navigator, home: const Text('home')),
-      );
+      await tester.pumpWidget(_app(key: navigator, home: const Text('home')));
       Route<void> page(String name) => MaterialPageRoute(
         builder: (context) => TextButton(
           onPressed: () => showQuickNotice(context, 'Saved'),
@@ -135,6 +166,7 @@ void main() {
 
       navigator.currentState!.pop();
       await tester.pumpAndSettle();
+      expect(find.text('Saved'), findsOneWidget);
       unawaited(navigator.currentState!.push(page('second')));
       await tester.pumpAndSettle();
       expect(find.text('Saved'), findsOneWidget);
@@ -192,6 +224,119 @@ void main() {
     await tester.pumpAndSettle();
     expect(undone, [2]);
     expect(find.text('Saved 2'), findsNothing);
+  });
+
+  testWidgets('a handle taken before an await shows after its screen is gone', (
+    tester,
+  ) async {
+    final navigator = GlobalKey<NavigatorState>();
+    late QuickNotice handle;
+    await tester.pumpWidget(_app(key: navigator, home: const Text('home')));
+    unawaited(
+      navigator.currentState!.push(
+        MaterialPageRoute<void>(
+          builder: (context) {
+            handle = quickNoticeOf(context);
+            return const Text('screen');
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    navigator.currentState!.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('screen'), findsNothing);
+
+    handle.show('Late', action: QuickNoticeAction.undo(() {}));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+
+    expect(find.text('Late'), findsOneWidget);
+    expect(find.text('Desfazer'), findsOneWidget);
+    await tester.pump(MotionScale.noticeStayAction);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a notice shown inside a nested navigator outlives it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        home: Navigator(
+          onGenerateRoute: (_) =>
+              MaterialPageRoute<void>(builder: (_) => _caller('Saved')),
+        ),
+      ),
+    );
+    await tester.tap(find.text('show'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+
+    await tester.pumpWidget(_app(home: const SizedBox()));
+    expect(find.text('Saved'), findsOneWidget);
+    await tester.pump(MotionScale.noticeStay);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a notice stands 10 above the bottom bar, whatever the caller', (
+    tester,
+  ) async {
+    _phone(tester);
+    await tester.pumpWidget(_app(home: _shell(_caller('Saved'))));
+    await tester.tap(find.text('show'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+
+    expect(_barBottom(tester, 'Saved'), 844 - 88 - 10);
+    await tester.pump(MotionScale.noticeStay);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a notice moves above the bar when its screen closes on a tab', (
+    tester,
+  ) async {
+    _phone(tester);
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      _app(key: navigator, home: _shell(const Text('tab'))),
+    );
+    unawaited(
+      navigator.currentState!.push(
+        MaterialPageRoute<void>(builder: (_) => _caller('Saved')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('show'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+    expect(_barBottom(tester, 'Saved'), 844 - 34 - 10);
+
+    navigator.currentState!.pop();
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+    expect(_barBottom(tester, 'Saved'), 844 - 88 - 10);
+    await tester.pump(MotionScale.noticeStay);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets(
+    'once the shell is gone, a notice stands 10 above the safe area',
+    (tester) async {
+      _phone(tester);
+      await tester.pumpWidget(_app(home: _shell(const Text('tab'))));
+      await tester.pumpWidget(_app(home: _caller('Saved')));
+      await tester.tap(find.text('show'));
+      await tester.pumpAndSettle(const Duration(milliseconds: 10));
+
+      expect(_barBottom(tester, 'Saved'), 844 - 34 - 10);
+      await tester.pump(MotionScale.noticeStay);
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets('a notice stands 10 above the keyboard', (tester) async {
+    _phone(tester, inset: 300);
+    await _pump(tester);
+    await _show(tester);
+
+    expect(_barBottom(tester, 'Saved 1'), 844 - 300 - 10);
+    await tester.pump(MotionScale.noticeStay);
+    await tester.pumpAndSettle();
   });
 
   for (final ms in [100, 1500]) {

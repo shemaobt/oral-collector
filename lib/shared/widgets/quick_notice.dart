@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -25,6 +27,10 @@ class QuickNoticeAction {
 }
 
 final _live = Expando<OverlayEntry>('quickNotice');
+final _floors = Expando<ValueNotifier<double>>('quickNoticeFloor');
+
+ValueNotifier<double> _floorOf(OverlayState overlay) =>
+    _floors[overlay] ??= ValueNotifier(0);
 
 void showQuickNotice(
   BuildContext context,
@@ -32,8 +38,34 @@ void showQuickNotice(
   QuickNoticeTone tone = QuickNoticeTone.calm,
   Sign? sign,
   QuickNoticeAction? action,
-}) {
-  final overlay = Overlay.of(context, rootOverlay: true);
+}) => quickNoticeOf(
+  context,
+).show(sentence, tone: tone, sign: sign, action: action);
+
+QuickNotice quickNoticeOf(BuildContext context) =>
+    QuickNotice._(Overlay.of(context, rootOverlay: true));
+
+class QuickNotice {
+  const QuickNotice._(this._overlay);
+
+  final OverlayState _overlay;
+
+  void show(
+    String sentence, {
+    QuickNoticeTone tone = QuickNoticeTone.calm,
+    Sign? sign,
+    QuickNoticeAction? action,
+  }) => _show(_overlay, sentence, tone, sign, action);
+}
+
+void _show(
+  OverlayState overlay,
+  String sentence,
+  QuickNoticeTone tone,
+  Sign? sign,
+  QuickNoticeAction? action,
+) {
+  final context = overlay.context;
   final colors = AppColors.of(context);
   final motion = context.motion;
   final failed = tone == QuickNoticeTone.failed;
@@ -57,6 +89,7 @@ void showQuickNotice(
       word: word,
       onAct: action?.onTap,
       motion: motion,
+      floor: _floorOf(overlay),
       onGone: () {
         if (_live[overlay] != entry) return;
         _live[overlay] = null;
@@ -72,6 +105,43 @@ void showQuickNotice(
   overlay.insert(entry);
 }
 
+class QuickNoticeFloor extends StatefulWidget {
+  const QuickNoticeFloor({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<QuickNoticeFloor> createState() => _QuickNoticeFloorState();
+}
+
+class _QuickNoticeFloorState extends State<QuickNoticeFloor> {
+  late ValueNotifier<double> _floor;
+
+  void _set(double height) => WidgetsBinding.instance.addPostFrameCallback(
+    (_) => _floor.value = height,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _floor = _floorOf(Overlay.of(context, rootOverlay: true));
+    _set(
+      ModalRoute.isCurrentOf(context) ?? true
+          ? MediaQuery.paddingOf(context).bottom
+          : 0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _set(0);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class _QuickNotice extends StatefulWidget {
   const _QuickNotice({
     required this.sentence,
@@ -82,6 +152,7 @@ class _QuickNotice extends StatefulWidget {
     required this.word,
     required this.onAct,
     required this.motion,
+    required this.floor,
     required this.onGone,
   });
 
@@ -93,6 +164,7 @@ class _QuickNotice extends StatefulWidget {
   final String? word;
   final VoidCallback? onAct;
   final AppMotion motion;
+  final ValueListenable<double> floor;
   final VoidCallback onGone;
 
   @override
@@ -152,15 +224,24 @@ class _QuickNoticeState extends State<_QuickNotice>
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom + _lift;
     final style = Theme.of(
       context,
     ).textTheme.bodyMedium!.copyWith(fontSize: 15, color: widget.ink);
 
-    return Positioned(
-      left: SpacingScale.s16,
-      right: SpacingScale.s16,
-      bottom: bottom,
+    return ValueListenableBuilder(
+      valueListenable: widget.floor,
+      builder: (context, floor, child) => Positioned(
+        left: SpacingScale.s16,
+        right: SpacingScale.s16,
+        bottom:
+            [
+              floor,
+              MediaQuery.paddingOf(context).bottom,
+              MediaQuery.viewInsetsOf(context).bottom,
+            ].reduce(math.max) +
+            _lift,
+        child: child!,
+      ),
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
