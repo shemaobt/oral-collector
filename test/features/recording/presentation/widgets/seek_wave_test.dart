@@ -140,33 +140,25 @@ void main() {
   });
 
   group('keyboard', () {
-    Future<List<Duration>> focused(
-      WidgetTester tester, {
-      TextDirection direction = TextDirection.ltr,
-    }) async {
-      final asked = await _pump(tester, direction: direction);
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      return asked;
+    for (final (direction, first, second) in [
+      (
+        TextDirection.ltr,
+        const Duration(minutes: 6, seconds: 36),
+        const Duration(minutes: 5, seconds: 24),
+      ),
+      (
+        TextDirection.rtl,
+        const Duration(minutes: 5, seconds: 24),
+        const Duration(minutes: 6, seconds: 36),
+      ),
+    ]) {
+      testWidgets('right then left in $direction', (tester) async {
+        final asked = await _pump(tester, direction: direction);
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        expect(asked, [first, second]);
+      });
     }
-
-    testWidgets('right and left move 5%', (tester) async {
-      final asked = await focused(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      expect(asked, [
-        const Duration(minutes: 6, seconds: 36),
-        const Duration(minutes: 5, seconds: 24),
-      ]);
-    });
-
-    testWidgets('swap in right-to-left', (tester) async {
-      final asked = await focused(tester, direction: TextDirection.rtl);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      expect(asked, [
-        const Duration(minutes: 5, seconds: 24),
-        const Duration(minutes: 6, seconds: 36),
-      ]);
-    });
   });
 }
