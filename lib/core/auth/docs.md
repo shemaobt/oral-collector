@@ -147,8 +147,8 @@ Path: @/lib/core/auth
 - **Sign-out ends the session on the server too, and never waits for it
   (ENG-3086).** `logout` clears the device and the state first, so the router
   shows sign-in at once, then asks `POST /api/auth/logout` to revoke the refresh
-  token. Offline or a timeout stays silent; any other failure is reported, and
-  none is thrown to the callers.
+  token. Offline or a timeout stays silent; any other failure, a keychain that
+  fails to clear included, is reported, and none is thrown to the callers.
 - **A real 401 on refresh logs the user out everywhere.** `handleUnauthorized`
   resetting state to `const AuthState()` clears `currentUser`, which the router
   and shells observe to redirect to login — there is no separate "session expired"

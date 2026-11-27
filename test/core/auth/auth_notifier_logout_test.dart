@@ -346,6 +346,20 @@ void main() {
 
         expectSignedOutOnDevice();
       });
+
+      test('$name whose user write lands after «Sair» begins', () async {
+        final storage = _HeldStorage();
+        await signIn(storage);
+        final gate = storage.hold('write cached_user');
+        final pending = start();
+        await pumpEventQueue();
+        final signOut = notifier().logout();
+        await pumpEventQueue();
+        gate.complete();
+        await Future.wait([pending, signOut]);
+
+        expectSignedOutOnDevice();
+      });
     }
 
     test('a refresh whose token write lands after «Sair» begins', () async {
@@ -383,12 +397,18 @@ void main() {
       expectSignedOutOnDevice();
     });
 
-    test('a «Sair» that fails to clear still lets the next session '
-        'refresh', () async {
+    test('a «Sair» that fails to clear signs out, asks the server, does not '
+        'throw and lets the next session refresh', () async {
       final storage = _HeldStorage();
       await signIn(storage);
       storage.failOnce('delete access_token');
-      await expectLater(notifier().logout(), throwsA(isA<PlatformException>()));
+      await notifier().logout();
+
+      expect(container.read(authNotifierProvider).isAuthenticated, isFalse);
+      verify(() => repo.logout('r1')).called(1);
+      verify(
+        () => reporter.reportError(isA<PlatformException>(), any()),
+      ).called(1);
       await notifier().login('a@b.com', 'pw');
 
       expect(await notifier().handleUnauthorized(), isTrue);

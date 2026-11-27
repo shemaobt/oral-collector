@@ -202,7 +202,9 @@ class AuthNotifier extends Notifier<AuthState> {
       refreshToken = await _storage
           .read(key: _refreshTokenKey)
           .onError<PlatformException>((_, _) => null);
-      await _serialized(_clearTokens);
+      await _serialized(_clearTokens).onError<PlatformException>(
+        (e, st) => ref.read(errorReporterProvider).reportError(e, st),
+      );
     } finally {
       _signingOut--;
       _session++;
