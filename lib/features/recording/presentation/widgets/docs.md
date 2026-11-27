@@ -507,14 +507,11 @@ Path: @/lib/features/recording/presentation/widgets
   (none / needs_cleaning / cleaning / cleaned / failed) to its icon / color /
   label itself; it calls `CleaningStatusStyle.forStatus` from
   [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart),
-  the same mapping consumed by
-  [/lib/shared/widgets/cleaning_status_badge.dart](/lib/shared/widgets/cleaning_status_badge.dart).
-  That object's `isFlagged` flag models the one behavioral divergence between
-  the two consumers: the badge hides non-flagged (none / unknown) statuses,
-  while the status section renders a neutral "not flagged" row for them. Colors
-  come from the resolved `AppColorSet` (`needs_cleaning` → `warning`,
-  `cleaning` → `info`, `cleaned` → `success`, `failed` → `error`), so both
-  surfaces are theme-aware in dark mode. Three private cleaning-mapping helpers
+  the same mapping. The status section renders a neutral "not flagged" row for
+  non-flagged (none / unknown) statuses. Colors come from the resolved
+  `AppColorSet` (`needs_cleaning` → `warning`, `cleaning` → `info`,
+  `cleaned` → `success`, `failed` → `error`), so it is theme-aware in dark
+  mode. Three private cleaning-mapping helpers
   on the status section were deleted in favor of this shared mapping.
 - **Waveform widgets are isolated from the player.**
   `scrolling_waveform.dart` and `trim_waveform.dart` consume the

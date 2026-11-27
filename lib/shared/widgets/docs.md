@@ -11,8 +11,7 @@ Path: @/lib/shared/widgets
   [screen_header.dart](screen_header.dart)'s flat `AppBar`/`SliverAppBar`),
   list/section affordances ([empty_state.dart](empty_state.dart),
   `section_header.dart`, `status_banner.dart`), status chips
-  ([cleaning_status_badge.dart](cleaning_status_badge.dart),
-  [upload_status_badge.dart](upload_status_badge.dart),
+  ([upload_status_badge.dart](upload_status_badge.dart),
   `sync_status_indicator.dart`), and dialogs/sheets/inputs.
 - A screen is built only from these pieces and the tokens, and a new piece
   enters here before any screen uses it:
@@ -39,9 +38,6 @@ Path: @/lib/shared/widgets
   only design dependency) and of [/lib/l10n](/lib/l10n); they do not own domain
   state, so they fit the app as a thin, reusable presentation layer over the
   feature notifiers.
-- The cleaning chip delegates status→icon/color/label mapping to
-  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart),
-  keeping the badge purely visual.
 
 ### Core Implementation
 
@@ -61,8 +57,8 @@ Path: @/lib/shared/widgets
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
 - Stateless composition is the norm; stateful widgets exist only to own an
-  animation: a `RotationTransition` while a status is in-flight (the badges'
-  "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
+  animation: a `RotationTransition` while a status is in-flight (the upload badge's
+  spinner creates/dispose an `AnimationController` in
   `didUpdateWidget`) and `LeavingRow`'s fade and height.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
@@ -95,7 +91,7 @@ Path: @/lib/shared/widgets
     → IntrinsicHeight`, so it stays centered when it fits and scrolls instead of
     overflowing when large fonts make it taller than the viewport.
   - **`Flexible` + `maxLines: 1` + `TextOverflow.ellipsis`** for labels under
-    width pressure: the status-badge labels and the web sidebar's brand name
+    width pressure: the status-badge label and the web sidebar's brand name
     (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
     ellipsizing rather than overflowing.
   - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
@@ -112,15 +108,14 @@ Path: @/lib/shared/widgets
   - `screen_header.dart` needed no change — its title/subtitle already ellipsize
     and fit the toolbar within the 2.0× ceiling; only regression guards were
     added.
-- **`compact` font sizing uses `null` for the on-token size.** The badges set
+- **`compact` font sizing uses `null` for the on-token size.** The upload badge sets
   `fontSize` to `null` in compact mode (which keeps `labelSmall`'s native 11)
   and only carry the off-token `13` as an explicit override — same typography
   convention as [/lib/core/theme/docs.md](/lib/core/theme/docs.md)'s "keep
   `copyWith(fontSize:)` when no token matches". No rendered-size change at 1.0×.
-- **The two status badges are currently unused in the app.**
-  `CleaningStatusBadge` is intended for the recording status section (per its
-  style's doc comment) and `UploadStatusBadge` has no call sites yet; both were
-  hardened as shared-library hygiene so they are safe when wired up.
+- **The status badge is currently unused in the app.**
+  `UploadStatusBadge` has no call sites yet; it was hardened as shared-library
+  hygiene so it is safe when wired up.
 - **`HandCutRectPainter`** ([hand_cut_rect.dart](hand_cut_rect.dart)) is the
   kit's rectangle cut by hand: outline wobbles per axis by 0.012 × the short side
   (at least 0.35, at most 1.1 from a short side of 92); the combined shift of a
