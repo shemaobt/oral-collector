@@ -108,34 +108,37 @@ class _UpdatingLineState extends State<UpdatingLine>
           start: 0,
           end: 0,
           height: _height,
-          child: IgnorePointer(
-            child: ExcludeSemantics(
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_fade, _run]),
-                builder: (context, _) {
-                  if (_fade.value == 0) return const SizedBox.shrink();
-                  final at =
-                      _startShare +
-                      _travelShare * MotionScale.loop.transform(_run.value);
-                  return FadeTransition(
-                    opacity: _opacity,
-                    child: FractionallySizedBox(
-                      widthFactor: still ? 1 : _strokeShare,
-                      alignment: AlignmentDirectional(
-                        still
-                            ? 0
-                            : (2 * _strokeShare * at) / (1 - _strokeShare) - 1,
-                        0,
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(_radius),
+          child: ClipRect(
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_fade, _run]),
+                  builder: (context, _) {
+                    if (_fade.value == 0) return const SizedBox.shrink();
+                    final at =
+                        _startShare +
+                        _travelShare * MotionScale.loop.transform(_run.value);
+                    return FadeTransition(
+                      opacity: _opacity,
+                      child: FractionallySizedBox(
+                        widthFactor: still ? 1 : _strokeShare,
+                        alignment: AlignmentDirectional(
+                          still
+                              ? 0
+                              : (2 * _strokeShare * at) / (1 - _strokeShare) -
+                                    1,
+                          0,
+                        ),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(_radius),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
