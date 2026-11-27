@@ -34,20 +34,11 @@ Future<ValueNotifier<bool>> _pump(
   return checking;
 }
 
-Future<void> _shown(WidgetTester tester, ValueNotifier<bool> on) async {
-  on.value = true;
-  await tester.pump();
-  await tester.pump(MotionScale.checkWait);
-  await tester.pump(MotionScale.fast);
-  await tester.pump(MotionScale.fast);
-}
-
 void main() {
   final said = <String>[];
 
   setUp(() {
     said.clear();
-    TestWidgetsFlutterBinding.ensureInitialized();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (
           message,
@@ -67,34 +58,47 @@ void main() {
     await tester.pump(MotionScale.checkWait * 2);
     expect(tester.hasRunningAnimations, isFalse);
     expect(said, isEmpty);
-
     checking.value = true;
     await tester.pump();
     await tester.pump(MotionScale.checkWait);
     checking.value = false;
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pumpAndSettle();
-
     expect(_line, findsNothing);
-  });
-
-  testWidgets('a longer check runs a 38% stroke under the status bar and says '
-      'it once, even when it comes back mid fade-out', (tester) async {
-    final checking = await _pump(tester);
-    await _shown(tester, checking);
-    await tester.pump(const Duration(milliseconds: 350));
-
-    expect(tester.getSize(_line).width, closeTo(148.2, 0.01));
-    expect(tester.getTopLeft(_line).dy, 24);
-
-    checking.value = false;
-    await tester.pump();
-    await tester.pump(MotionScale.fast ~/ 4);
     checking.value = true;
     await tester.pump();
-    await tester.pump(MotionScale.fast);
-    expect(_line, findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpWidget(const SizedBox());
+    expect(tester.hasRunningAnimations, isFalse);
+  });
 
+  testWidgets('a longer check runs a 38% stroke under the status bar, fades '
+      'in on enter and out on leave, and says it once', (tester) async {
+    final checking = await _pump(tester);
+    double opacity() => tester
+        .widget<FadeTransition>(
+          find.ancestor(of: _line, matching: find.byType(FadeTransition)).first,
+        )
+        .opacity
+        .value;
+    checking.value = true;
+    await tester.pump();
+    await tester.pump(MotionScale.checkWait);
+    await tester.pump(MotionScale.checkWait);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(opacity(), closeTo(0.950, 0.001));
+    await tester.pump(MotionScale.fast);
+    expect(tester.getSize(_line).width, closeTo(148.2, 0.01));
+    expect(tester.getTopLeft(_line).dy, 24);
+    checking.value = false;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final out = opacity();
+    expect(out, closeTo(0.846, 0.001));
+    checking.value = true;
+    await tester.pump();
+    expect(opacity(), closeTo(out, 0.001));
     checking.value = false;
     await tester.pumpAndSettle();
     expect(_line, findsNothing);
@@ -104,18 +108,17 @@ void main() {
   testWidgets('with less motion one still stroke fills the width until the '
       'person turns less motion off', (tester) async {
     final checking = await _pump(tester, still: true);
-    await _shown(tester, checking);
-
+    checking.value = true;
+    await tester.pump();
+    await tester.pump(MotionScale.checkWait + MotionScale.fast * 2);
     expect(tester.getSize(_line).width, 390);
     expect(tester.getTopLeft(_line).dx, 0);
-
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures();
     await tester.pump();
     await tester.pump(MotionScale.fast);
     final before = tester.getTopLeft(_line).dx;
     await tester.pump(MotionScale.fast);
-
     expect(tester.getTopLeft(_line).dx, isNot(before));
   });
 }

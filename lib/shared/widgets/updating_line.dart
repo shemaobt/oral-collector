@@ -33,6 +33,11 @@ class _UpdatingLineState extends State<UpdatingLine>
     ..addStatusListener((status) {
       if (status == AnimationStatus.dismissed) _run.stop();
     });
+  late final _opacity = CurvedAnimation(
+    parent: _fade,
+    curve: MotionScale.enter,
+    reverseCurve: MotionScale.leave.flipped,
+  );
   late final AnimationController _run = AnimationController(
     vsync: this,
     duration: MotionScale.checkRun,
@@ -84,6 +89,7 @@ class _UpdatingLineState extends State<UpdatingLine>
   @override
   void dispose() {
     _wait.dispose();
+    _opacity.dispose();
     _fade.dispose();
     _run.dispose();
     super.dispose();
@@ -91,9 +97,7 @@ class _UpdatingLineState extends State<UpdatingLine>
 
   @override
   Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final still = context.motion.still;
-    final enter = context.motion.enter;
     final color = AppColors.of(context).accent;
     return Stack(
       fit: StackFit.passthrough,
@@ -110,37 +114,26 @@ class _UpdatingLineState extends State<UpdatingLine>
                 animation: Listenable.merge([_fade, _run]),
                 builder: (context, _) {
                   if (_fade.value == 0) return const SizedBox.shrink();
-                  return LayoutBuilder(
-                    builder: (context, box) {
-                      final stroke = still
-                          ? box.maxWidth
-                          : box.maxWidth * _strokeShare;
-                      final travel = still
-                          ? 0.0
-                          : stroke *
-                                (_startShare +
-                                    _travelShare *
-                                        MotionScale.loop.transform(_run.value));
-                      return Opacity(
-                        opacity: enter.transform(_fade.value),
-                        child: Align(
-                          alignment: AlignmentDirectional.topStart,
-                          child: Transform.translate(
-                            offset: Offset(rtl ? -travel : travel, 0),
-                            child: SizedBox(
-                              width: stroke,
-                              height: _height,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  borderRadius: BorderRadius.circular(_radius),
-                                ),
-                              ),
-                            ),
-                          ),
+                  final at =
+                      _startShare +
+                      _travelShare * MotionScale.loop.transform(_run.value);
+                  return FadeTransition(
+                    opacity: _opacity,
+                    child: FractionallySizedBox(
+                      widthFactor: still ? 1 : _strokeShare,
+                      alignment: AlignmentDirectional(
+                        still
+                            ? 0
+                            : (2 * _strokeShare * at) / (1 - _strokeShare) - 1,
+                        0,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(_radius),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   );
                 },
               ),
