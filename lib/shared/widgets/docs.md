@@ -129,6 +129,14 @@ Path: @/lib/shared/widgets
   same shape shifted by `shadowOffset` (default 3 right, 4 down; 2 and 3 for
   small pieces), no blur, in physical directions so RTL does not flip it. Colours
   come from the caller; only pressable pieces pass a shadow.
+- **`AppDisc` is the kit's disc cut by hand** ([app_disc.dart](app_disc.dart),
+  [hand_cut_disc.dart](hand_cut_disc.dart)): one closed curve scaled to the
+  diameter, sign at 46%. The tone says what the disc tells (fill and sign); the
+  printed shadow (the same outline 3.7% right and 4.2% down, no blur, physical
+  directions so RTL does not flip it) is painted only when `pressable` is set,
+  never when `enabled` is false (the disc is then at 40%), and never inside a
+  piece that already paints one (`PrintedShadowScope`, which a piece with a
+  printed shadow puts around its child). Shadow colours: `PrintedShadows`.
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
   failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**

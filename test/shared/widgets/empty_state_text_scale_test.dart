@@ -44,9 +44,12 @@ void main() {
     expect(find.text(_description), findsOneWidget);
   });
 
-  testWidgets('disc is 72 with a 30 icon', (tester) async {
+  testWidgets('disc is 72 with a sign at 46%', (tester) async {
     await _pump(tester, 1.0);
     expect(tester.getSize(find.byType(AppDisc)), const Size.square(72));
-    expect(tester.widget<Icon>(find.byType(Icon)).size, 30);
+    expect(
+      IconTheme.of(tester.element(find.byType(Icon))).size,
+      closeTo(72 * 0.46, 0.001),
+    );
   });
 }
