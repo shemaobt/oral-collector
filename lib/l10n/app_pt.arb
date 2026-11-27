@@ -916,7 +916,7 @@
   "recording_previewSelection": "Pré-visualizar seleção",
   "recording_stopPreview": "Parar pré-visualização",
   "recording_audioLoadFailed": "Falha ao carregar o áudio",
-  "status_offlineSubtitle": "Alguns recursos como sincronização e carregamento de dados requerem conexão com a internet.",
+  "status_offlineNotice": "Sem internet. O envio continua quando voltar.",
   "status_noProject": "Nenhum projeto atribuído",
   "status_noProjectSubtitle": "Você ainda não foi adicionado a nenhum projeto. Contate seu administrador e aguarde a atribuição.",
   "a11y_recordingInProgress": "Gravação em andamento, toque para pausar",

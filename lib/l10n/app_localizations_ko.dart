@@ -2570,7 +2570,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_audioLoadFailed => '오디오 로드 실패';
 
   @override
-  String get status_offlineSubtitle => '동기화 및 데이터 로드와 같은 일부 기능은 인터넷 연결이 필요합니다.';
+  String get status_offlineNotice => '인터넷이 없습니다. 연결되면 전송이 이어집니다.';
 
   @override
   String get status_noProject => '할당된 프로젝트 없음';

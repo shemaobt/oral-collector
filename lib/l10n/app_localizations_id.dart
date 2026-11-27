@@ -2672,8 +2672,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_audioLoadFailed => 'Gagal memuat audio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Beberapa fitur seperti sinkronisasi dan pemuatan data memerlukan koneksi internet.';
+  String get status_offlineNotice =>
+      'Tidak ada internet. Pengiriman berlanjut saat kembali.';
 
   @override
   String get status_noProject => 'Tidak ada proyek ditetapkan';

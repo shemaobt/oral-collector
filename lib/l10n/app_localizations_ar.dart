@@ -2646,8 +2646,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_audioLoadFailed => 'فشل تحميل الصوت';
 
   @override
-  String get status_offlineSubtitle =>
-      'تتطلب بعض الميزات مثل المزامنة وتحميل البيانات اتصالاً بالإنترنت.';
+  String get status_offlineNotice =>
+      'لا يوجد اتصال بالإنترنت. يستمر الإرسال عند عودته.';
 
   @override
   String get status_noProject => 'لم يتم تعيين مشروع';

@@ -4736,11 +4736,11 @@ abstract class AppLocalizations {
   /// **'Failed to load audio'**
   String get recording_audioLoadFailed;
 
-  /// No description provided for @status_offlineSubtitle.
+  /// No description provided for @status_offlineNotice.
   ///
   /// In en, this message translates to:
-  /// **'Some features like syncing and loading data require an internet connection.'**
-  String get status_offlineSubtitle;
+  /// **'No internet. Sending continues when it is back.'**
+  String get status_offlineNotice;
 
   /// No description provided for @status_noProject.
   ///

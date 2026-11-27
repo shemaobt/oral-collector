@@ -38,6 +38,7 @@ const _testColors = AppColorSet(
   knob: Color(0xFF000000),
   count: Color(0xFF000000),
   onSoft: Color(0xFF000000),
+  noteInk: Color(0xFF000000),
 );
 
 Widget _wrap(Widget child) => MaterialApp(

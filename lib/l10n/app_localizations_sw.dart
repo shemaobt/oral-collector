@@ -2659,8 +2659,8 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_audioLoadFailed => 'Imeshindwa kupakia sauti';
 
   @override
-  String get status_offlineSubtitle =>
-      'Baadhi ya vipengele kama vile usawazishaji na upakiaji data vinahitaji muunganisho wa intaneti.';
+  String get status_offlineNotice =>
+      'Hakuna intaneti. Kutuma kunaendelea ikirudi.';
 
   @override
   String get status_noProject => 'Hakuna mradi uliopangwa';
