@@ -107,7 +107,7 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
                       opacity: v,
                       child: Transform.translate(
                         offset: Offset(0, entering ? motion.rise * (1 - v) : 0),
-                        child: _Card(route: this),
+                        child: _card(context),
                       ),
                     ),
                   ),
@@ -119,15 +119,8 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
       ),
     );
   }
-}
 
-class _Card extends StatelessWidget {
-  const _Card({required this.route});
-
-  final _AppQuestionRoute<dynamic> route;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _card(BuildContext context) {
     final AppColorSet colors = AppColors.of(context);
     final TextTheme text = Theme.of(context).textTheme;
     return ConstrainedBox(
@@ -146,13 +139,10 @@ class _Card extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  route.title,
-                  style: text.headlineLarge?.copyWith(fontSize: 30),
-                ),
+                Text(title, style: text.headlineLarge?.copyWith(fontSize: 30)),
                 const SizedBox(height: _gap),
                 Text(
-                  route.message,
+                  message,
                   style: text.bodyMedium?.copyWith(
                     fontSize: 15,
                     color: colors.secondary,
@@ -163,7 +153,7 @@ class _Card extends StatelessWidget {
                   alignment: WrapAlignment.end,
                   spacing: _gap,
                   runSpacing: _gap,
-                  children: route.actionsBuilder(context),
+                  children: actionsBuilder(context),
                 ),
               ],
             ),
