@@ -27,6 +27,7 @@ class AuthNotifier extends Notifier<AuthState> {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
   Future<bool>? _inFlightRefresh;
+  int _session = 0;
 
   @override
   AuthState build() {
@@ -55,11 +56,12 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Runs after [restoreSession] (and after the startup gate), so a slow or
   /// offline getMe never delays first frame.
   Future<void> refreshSessionIfOnline() async {
+    final session = _session;
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
 
     final online = await ref.read(connectivityServiceProvider).isOnline;
-    if (!online) return;
+    if (!online || session != _session) return;
 
     if (state.currentUser == null) {
       state = state.copyWith(isLoading: true, clearError: true);
@@ -67,12 +69,13 @@ class AuthNotifier extends Notifier<AuthState> {
 
     try {
       final user = await _repo.getMe(accessToken);
+      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on UnauthorizedException {
       try {
         final refreshed = await _tryRefresh();
-        if (!refreshed) {
+        if (!refreshed && session == _session) {
           await _clearTokens();
           state = const AuthState();
         }
@@ -124,22 +127,27 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> updateProfile({String? displayName}) async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final session = _session;
 
     try {
       final accessToken = await _storage.read(key: _accessTokenKey);
       if (accessToken == null) throw Exception('Not authenticated');
 
       final user = await _repo.updateMe(accessToken, displayName: displayName);
+      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
-      state = state.copyWith(isLoading: false, error: e);
+      if (session == _session) {
+        state = state.copyWith(isLoading: false, error: e);
+      }
     }
   }
 
   Future<void> uploadAvatar(String filePath) async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final session = _session;
 
     try {
       final accessToken = await _storage.read(key: _accessTokenKey);
@@ -147,18 +155,22 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final imageUrl = await _repo.uploadImage(accessToken, filePath);
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
+      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
-      state = state.copyWith(isLoading: false, error: e);
+      if (session == _session) {
+        state = state.copyWith(isLoading: false, error: e);
+      }
       rethrow;
     }
   }
 
   Future<bool> handleUnauthorized() async {
+    final session = _session;
     final refreshed = await _tryRefresh();
-    if (!refreshed) {
+    if (!refreshed && session == _session) {
       await _clearTokens();
       state = const AuthState();
     }
@@ -182,6 +194,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _session++;
+    _inFlightRefresh = null;
     final refreshToken = await _storage
         .read(key: _refreshTokenKey)
         .onError<PlatformException>((_, _) => null);
@@ -246,20 +260,27 @@ class AuthNotifier extends Notifier<AuthState> {
   // non-async: the slot has to be assigned before any await, or the race
   // returns.
   Future<bool> _tryRefresh() {
-    return _inFlightRefresh ??= _doTryRefresh().whenComplete(
-      () => _inFlightRefresh = null,
-    );
+    final inFlight = _inFlightRefresh;
+    if (inFlight != null) return inFlight;
+    late final Future<bool> refresh;
+    refresh = _doTryRefresh().whenComplete(() {
+      if (identical(_inFlightRefresh, refresh)) _inFlightRefresh = null;
+    });
+    return _inFlightRefresh = refresh;
   }
 
   Future<bool> _doTryRefresh() async {
+    final session = _session;
     try {
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) return false;
 
       final tokens = await _repo.refreshToken(refreshToken);
+      if (session != _session) return false;
       await _storeTokens(tokens.accessToken, tokens.refreshToken);
 
       final user = await _repo.getMe(tokens.accessToken);
+      if (session != _session) return false;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
       return true;
