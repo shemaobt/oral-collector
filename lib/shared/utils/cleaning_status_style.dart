@@ -5,9 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Single source of truth mapping a recording's cleaning-status string to its
-/// presentation. Consumed by [CleaningStatusBadge] and the cleaning row of
-/// RecordingStatusSection. Statuses: none, needs_cleaning, cleaning, cleaned,
-/// failed.
+/// presentation. Consumed by the cleaning row of RecordingStatusSection.
+/// Statuses: none, needs_cleaning, cleaning, cleaned, failed.
 @immutable
 class CleaningStatusStyle {
   const CleaningStatusStyle({
