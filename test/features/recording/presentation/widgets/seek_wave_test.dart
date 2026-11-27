@@ -50,13 +50,7 @@ void main() {
     ('middle', TextDirection.ltr, 0.5, 32.0, const Duration(minutes: 6)),
     ('quarter', TextDirection.ltr, 0.25, 32.0, const Duration(minutes: 3)),
     ('RTL quarter', TextDirection.rtl, 0.25, 32.0, const Duration(minutes: 9)),
-    (
-      'top edge of the box',
-      TextDirection.ltr,
-      0.5,
-      2.0,
-      const Duration(minutes: 6),
-    ),
+    ('top edge', TextDirection.ltr, 0.5, 2.0, const Duration(minutes: 6)),
     ('start', TextDirection.ltr, 0.0, 32.0, Duration.zero),
   ]) {
     testWidgets('tap at $name asks $expected', (t) async {
@@ -133,9 +127,7 @@ void main() {
     });
   }
 
-  testWidgets('a zero duration is disabled, key downs pass through', (
-    tester,
-  ) async {
+  testWidgets('zero duration is disabled, key downs pass', (tester) async {
     final handle = tester.ensureSemantics();
     final received = <LogicalKeyboardKey>[];
     final asked = await _pump(
