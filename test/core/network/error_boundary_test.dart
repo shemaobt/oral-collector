@@ -116,6 +116,13 @@ void main() {
       },
     );
 
+    test('ClientException do http -> NetworkException', () async {
+      await expectLater(
+        guard(() async => throw http.ClientException('Failed to fetch')),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+
     test('AppException é repassada sem reembrulhar', () async {
       await expectLater(
         guard(() async => throw const ConflictException()),

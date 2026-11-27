@@ -106,7 +106,8 @@ Path: @/lib/core/network
   standardized).
 - `guard<T>(body)` wraps an async operation: it rethrows any `AppException`
   unchanged (so a boundary that already mapped a status is not re-wrapped),
-  maps `SocketException` -> `NetworkException`, and maps
+  maps `SocketException` and `http.ClientException` (how the web client, and a
+  connection dropped mid-response, fail) -> `NetworkException`, and maps
   `dart:async` `TimeoutException` -> the domain `TimeoutException`.
 - `guardResponse(response)` in
   [./api_error_handler.dart](api_error_handler.dart) throws **only** on 401 and

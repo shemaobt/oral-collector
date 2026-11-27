@@ -102,11 +102,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout(String refreshToken) async {
     final response = await guard(
-      () => _client.post(
-        Uri.parse('$_baseUrl/api/auth/logout'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh_token': refreshToken}),
-      ),
+      () => _client
+          .post(
+            Uri.parse('$_baseUrl/api/auth/logout'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh_token': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 10)),
     );
     if (response.statusCode != 204) throwForResponse(response);
   }

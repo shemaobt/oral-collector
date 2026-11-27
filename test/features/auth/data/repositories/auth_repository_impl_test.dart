@@ -1,3 +1,4 @@
+import 'dart:async' show Completer, unawaited;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -128,7 +129,29 @@ void main() {
     test('throws a ServerException on 500', () async {
       stubPost({'detail': 'boom'}, 500);
 
-      await expectLater(repo.logout('r1'), throwsA(isA<ServerException>()));
+      await expectLater(
+        repo.logout('r1'),
+        throwsA(
+          isA<ServerException>().having((e) => e.statusCode, 'status', 500),
+        ),
+      );
+    });
+
+    testWidgets('gives up with a TimeoutException when the server never '
+        'answers', (tester) async {
+      when(
+        () => client.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) => Completer<http.Response>().future);
+
+      Object? failure;
+      unawaited(repo.logout('r1').catchError((Object e) => failure = e));
+      await tester.pump(const Duration(seconds: 30));
+
+      expect(failure, isA<TimeoutException>());
     });
   });
 }
