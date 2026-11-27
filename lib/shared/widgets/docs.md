@@ -154,4 +154,15 @@ Path: @/lib/shared/widgets
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
 
+- **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a screen's
+  content and takes one switch, `checking`. The content never moves: the line
+  is drawn over its top edge, 3 high, edge to edge of what it wraps (wrap what
+  starts below the status bar). It shows only after the check has lasted 250 ms
+  (counted on an animation clock, not a `Timer`), fades in over `fast`, and a
+  38% stroke runs across in 1100 ms, again and again, in the accent colour;
+  under right-to-left it runs the other way. Screen readers hear
+  `common_updating` once when it appears. When the switch goes off it fades out
+  and every ticker stops, so `pumpAndSettle` returns. With less motion asked,
+  after the same 250 ms one still stroke fills the width and goes at once.
+
 Created and maintained by Nori.

@@ -78,6 +78,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_loading => 'جارٍ التحميل...';
 
   @override
+  String get common_updating => 'جارٍ التحديث';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

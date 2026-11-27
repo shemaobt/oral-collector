@@ -78,6 +78,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get common_loading => 'लोड हो रहा है...';
 
   @override
+  String get common_updating => 'अपडेट हो रहा है';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

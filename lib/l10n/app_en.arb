@@ -23,6 +23,10 @@
   "common_clear": "Clear",
   "common_untitled": "Untitled",
   "common_loading": "Loading...",
+  "common_updating": "Updating",
+  "@common_updating": {
+    "description": "Spoken by screen readers when a thin line starts running over a screen that is checking the server again."
+  },
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "by Shema",
   "auth_heroTagline": "Preserve voices.\nShare stories.",

@@ -21,6 +21,7 @@
   "common_clear": "지우기",
   "common_untitled": "제목 없음",
   "common_loading": "로딩 중...",
+  "common_updating": "업데이트 중",
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "Shema 제공",
   "auth_heroTagline": "목소리를 보존하고\n이야기를 나누세요.",

@@ -78,6 +78,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get common_loading => 'Lodim...';
 
   @override
+  String get common_updating => 'Apdetim';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

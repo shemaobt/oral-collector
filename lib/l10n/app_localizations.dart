@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'Loading...'**
   String get common_loading;
 
+  /// Spoken by screen readers when a thin line starts running over a screen that is checking the server again.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating'**
+  String get common_updating;
+
   /// No description provided for @auth_oralCollector.
   ///
   /// In en, this message translates to:
