@@ -78,6 +78,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_loading => 'Loading...';
 
   @override
+  String get common_updating => 'Updating';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

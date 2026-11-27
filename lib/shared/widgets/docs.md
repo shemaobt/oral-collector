@@ -154,4 +154,12 @@ Path: @/lib/shared/widgets
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
 
+- **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a whole
+  `Scaffold` and takes one switch, `checking`. A 3-high line is drawn over the
+  content, below the status bar, only after the check lasted 250 ms (an
+  animation clock, not a `Timer`): fades in on `enter`, out on `leave`, and a
+  38% stroke runs across in 1100 ms (reversed under right-to-left). Screen
+  readers hear `common_updating` once. With less motion asked, one still
+  stroke fills the width.
+
 Created and maintained by Nori.

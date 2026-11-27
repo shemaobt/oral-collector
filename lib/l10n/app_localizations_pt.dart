@@ -78,6 +78,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get common_loading => 'Carregando...';
 
   @override
+  String get common_updating => 'Atualizando';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

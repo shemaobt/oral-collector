@@ -78,6 +78,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_loading => '加载中...';
 
   @override
+  String get common_updating => '正在更新';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override

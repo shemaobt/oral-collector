@@ -78,6 +78,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_loading => 'Chargement...';
 
   @override
+  String get common_updating => 'Mise à jour';
+
+  @override
   String get auth_oralCollector => 'Oral Collector';
 
   @override
