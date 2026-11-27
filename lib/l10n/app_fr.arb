@@ -985,6 +985,7 @@
   "recovery_backToList": "Pas maintenant",
   "common_discard": "Ignorer",
   "common_resume": "Reprendre",
+  "common_undo": "Annuler",
   "import_dropActive": "Relâcher pour importer",
   "import_dropHint": "Déposez des fichiers audio à importer",
   "import_largeFileWarning": "Fichier volumineux ({size}). Gardez cet onglet ouvert jusqu'à la fin du téléversement.",

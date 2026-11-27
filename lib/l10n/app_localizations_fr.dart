@@ -36,6 +36,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_resume => 'Reprendre';
 
   @override
+  String get common_undo => 'Annuler';
+
+  @override
   String get common_discard => 'Ignorer';
 
   @override

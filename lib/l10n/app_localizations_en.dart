@@ -36,6 +36,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_resume => 'Resume';
 
   @override
+  String get common_undo => 'Undo';
+
+  @override
   String get common_discard => 'Discard';
 
   @override

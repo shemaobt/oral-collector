@@ -36,6 +36,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_resume => 'استئناف';
 
   @override
+  String get common_undo => 'تراجع';
+
+  @override
   String get common_discard => 'تجاهل';
 
   @override

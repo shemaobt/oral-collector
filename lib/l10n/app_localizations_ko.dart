@@ -36,6 +36,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_resume => '계속';
 
   @override
+  String get common_undo => '실행 취소';
+
+  @override
   String get common_discard => '삭제';
 
   @override

@@ -983,6 +983,7 @@
   "recovery_backToList": "ليس الآن",
   "common_discard": "تجاهل",
   "common_resume": "استئناف",
+  "common_undo": "تراجع",
   "import_dropActive": "حرر للاستيراد",
   "import_dropHint": "أسقط ملفات الصوت للاستيراد",
   "import_largeFileWarning": "ملف كبير ({size}). أبقِ هذه التبويبة مفتوحة حتى ينتهي الرفع.",

@@ -179,7 +179,9 @@ Path: @/lib/shared/widgets
   message on a hand-cut bar on the root `Overlay`, margin to margin, 10 above
   the bottom safe area. A new notice replaces the one on screen at once. Tones:
   calm and failed (`error`). It jumps in (`base`, `noticeJump`), stays
-  `noticeStay` even under less motion, leaves in `fast`; a live region.
+  `noticeStay` even under less motion, leaves in `fast`; a live region. An
+  `action` (word and callback; `.undo` says «Desfazer») at its end keeps it
+  `noticeStayAction` and runs once, on a tap. A downward swipe sends it away.
 
 - **`AppOption`** ([app_option.dart](app_option.dart)) is one choice among
   several, with a title and an optional explanation: hand-cut, `card` at rest,

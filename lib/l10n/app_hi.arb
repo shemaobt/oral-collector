@@ -985,6 +985,7 @@
   "recovery_backToList": "अभी नहीं",
   "common_discard": "हटाएँ",
   "common_resume": "जारी रखें",
+  "common_undo": "पूर्ववत करें",
   "import_dropActive": "आयात के लिए छोड़ें",
   "import_dropHint": "आयात करने के लिए ऑडियो फ़ाइलें छोड़ें",
   "import_largeFileWarning": "बड़ी फ़ाइल ({size})। अपलोड पूरा होने तक यह टैब खुला रखें।",

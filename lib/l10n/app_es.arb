@@ -985,6 +985,7 @@
   "recovery_backToList": "Ahora no",
   "common_discard": "Descartar",
   "common_resume": "Continuar",
+  "common_undo": "Deshacer",
   "import_dropActive": "Suelta para importar",
   "import_dropHint": "Suelta archivos de audio para importar",
   "import_largeFileWarning": "Archivo grande ({size}). Mantén esta pestaña abierta hasta que termine la subida.",
