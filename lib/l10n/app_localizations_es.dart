@@ -36,6 +36,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_resume => 'Continuar';
 
   @override
+  String get common_undo => 'Deshacer';
+
+  @override
   String get common_discard => 'Descartar';
 
   @override

@@ -985,6 +985,7 @@
   "recovery_backToList": "나중에",
   "common_discard": "삭제",
   "common_resume": "계속",
+  "common_undo": "실행 취소",
   "import_dropActive": "가져오려면 놓으세요",
   "import_dropHint": "가져올 오디오 파일을 놓으세요",
   "import_largeFileWarning": "큰 파일({size}). 업로드가 완료될 때까지 이 탭을 열어 두세요.",

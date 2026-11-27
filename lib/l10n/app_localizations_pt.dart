@@ -36,6 +36,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get common_resume => 'Retomar';
 
   @override
+  String get common_undo => 'Desfazer';
+
+  @override
   String get common_discard => 'Descartar';
 
   @override

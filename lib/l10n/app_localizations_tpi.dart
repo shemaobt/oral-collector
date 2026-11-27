@@ -36,6 +36,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get common_resume => 'Statim gen';
 
   @override
+  String get common_undo => 'Rausim bek';
+
+  @override
   String get common_discard => 'Rausim';
 
   @override

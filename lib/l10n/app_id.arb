@@ -985,6 +985,7 @@
   "recovery_backToList": "Nanti saja",
   "common_discard": "Buang",
   "common_resume": "Lanjutkan",
+  "common_undo": "Urungkan",
   "import_dropActive": "Lepaskan untuk mengimpor",
   "import_dropHint": "Jatuhkan berkas audio untuk diimpor",
   "import_largeFileWarning": "Berkas besar ({size}). Biarkan tab ini terbuka hingga unggahan selesai.",

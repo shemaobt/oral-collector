@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Resume'**
   String get common_resume;
 
+  /// No description provided for @common_undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get common_undo;
+
   /// No description provided for @common_discard.
   ///
   /// In en, this message translates to:

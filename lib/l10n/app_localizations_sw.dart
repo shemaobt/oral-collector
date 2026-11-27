@@ -36,6 +36,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_resume => 'Endelea';
 
   @override
+  String get common_undo => 'Tendua';
+
+  @override
   String get common_discard => 'Tupa';
 
   @override

@@ -36,6 +36,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get common_resume => 'Lanjutkan';
 
   @override
+  String get common_undo => 'Urungkan';
+
+  @override
   String get common_discard => 'Buang';
 
   @override

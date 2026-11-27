@@ -36,6 +36,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_resume => '继续';
 
   @override
+  String get common_undo => '撤销';
+
+  @override
   String get common_discard => '丢弃';
 
   @override
