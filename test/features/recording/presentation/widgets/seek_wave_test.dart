@@ -46,14 +46,20 @@ SemanticsData _semantics(WidgetTester tester) =>
     tester.getSemantics(find.byType(SeekWave)).getSemanticsData();
 
 void main() {
-  for (final (direction, fraction, top, expected) in [
-    (TextDirection.ltr, 0.5, 32.0, const Duration(minutes: 6)),
-    (TextDirection.ltr, 0.25, 32.0, const Duration(minutes: 3)),
-    (TextDirection.rtl, 0.25, 32.0, const Duration(minutes: 9)),
-    (TextDirection.ltr, 0.5, 2.0, const Duration(minutes: 6)),
-    (TextDirection.ltr, 0.0, 32.0, Duration.zero),
+  for (final (name, direction, fraction, top, expected) in [
+    ('middle', TextDirection.ltr, 0.5, 32.0, const Duration(minutes: 6)),
+    ('quarter', TextDirection.ltr, 0.25, 32.0, const Duration(minutes: 3)),
+    ('RTL quarter', TextDirection.rtl, 0.25, 32.0, const Duration(minutes: 9)),
+    (
+      'top edge of the box',
+      TextDirection.ltr,
+      0.5,
+      2.0,
+      const Duration(minutes: 6),
+    ),
+    ('start', TextDirection.ltr, 0.0, 32.0, Duration.zero),
   ]) {
-    testWidgets('tap $fraction/$top $direction asks $expected', (t) async {
+    testWidgets('tap at $name asks $expected', (t) async {
       final asked = await _pump(t, direction: direction);
       await t.tapAt(_at(t, fraction, top: top));
       expect(asked, [expected]);
@@ -127,7 +133,9 @@ void main() {
     });
   }
 
-  testWidgets('a zero duration is disabled, keys pass', (tester) async {
+  testWidgets('a zero duration is disabled, key downs pass through', (
+    tester,
+  ) async {
     final handle = tester.ensureSemantics();
     final received = <LogicalKeyboardKey>[];
     final asked = await _pump(
@@ -136,15 +144,18 @@ void main() {
       wrap: (wave) => Focus(
         autofocus: true,
         onKeyEvent: (_, event) {
-          received.add(event.logicalKey);
+          if (event is KeyDownEvent) received.add(event.logicalKey);
           return KeyEventResult.ignored;
         },
         child: wave,
       ),
     );
     expect(_semantics(tester).flagsCollection.isEnabled, Tristate.isFalse);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    expect(received, contains(LogicalKeyboardKey.arrowRight));
+    Focus.of(tester.element(find.byType(LayoutBuilder))).requestFocus();
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+    expect(received, [LogicalKeyboardKey.arrowRight]);
     expect(asked, isEmpty);
     handle.dispose();
   });
