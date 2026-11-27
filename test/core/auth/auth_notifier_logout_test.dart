@@ -1,5 +1,6 @@
 import 'dart:async' show Completer;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,98 +12,73 @@ import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/core/providers/secure_storage_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
-
-class _MockStorage extends Mock implements FlutterSecureStorage {}
+import 'package:oral_collector/features/sync/data/providers.dart';
+import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
 
-class _RecordingReporter implements ErrorReporter {
-  final List<Object> reported = [];
+class _MockConnectivity extends Mock implements ConnectivityService {}
 
+class _UnreadableStorage extends FlutterSecureStorage {
   @override
-  void reportError(
-    Object error,
-    StackTrace? stackTrace, {
-    Map<String, String>? tags,
-    Map<String, Object?>? context,
-    ErrorLevel level = ErrorLevel.error,
-  }) => reported.add(error);
-
-  @override
-  void addBreadcrumb(
-    String message, {
-    String? category,
-    ErrorLevel level = ErrorLevel.info,
-    Map<String, Object?>? data,
-  }) {}
-
-  @override
-  void setUser({
-    String? id,
-    String? username,
-    String? email,
-    Map<String, Object?>? data,
-  }) {}
-
-  @override
-  void clearUser() {}
-
-  @override
-  void setTag(String key, String value) {}
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async => throw PlatformException(code: 'errSecInteractionNotAllowed');
 }
 
+class _MockReporter extends Mock implements ErrorReporter {}
+
 void main() {
-  late _MockStorage storage;
+  late Map<String, String> stored;
   late _MockAuthRepository repo;
-  late _RecordingReporter reporter;
+  late _MockReporter reporter;
   late ProviderContainer container;
 
   const user = User(id: 'u1', email: 'a@b.com', isPlatformAdmin: false);
 
-  setUp(() async {
-    storage = _MockStorage();
-    repo = _MockAuthRepository();
-    reporter = _RecordingReporter();
-    when(
-      () => storage.write(
-        key: any(named: 'key'),
-        value: any(named: 'value'),
-      ),
-    ).thenAnswer((_) async {});
-    when(() => storage.delete(key: any(named: 'key'))).thenAnswer((_) async {});
-    when(
-      () => storage.read(key: 'refresh_token'),
-    ).thenAnswer((_) async => 'r1');
-    when(() => repo.login('a@b.com', 'pw')).thenAnswer(
-      (_) async => (user: user, accessToken: 'a1', refreshToken: 'r1'),
-    );
-
+  Future<void> signIn(FlutterSecureStorage storage) async {
+    final connectivity = _MockConnectivity();
+    when(() => connectivity.isOnline).thenAnswer((_) async => true);
     container = ProviderContainer(
       overrides: [
         secureStorageProvider.overrideWithValue(storage),
         authRepositoryProvider.overrideWithValue(repo),
         errorReporterProvider.overrideWithValue(reporter),
+        connectivityServiceProvider.overrideWithValue(connectivity),
       ],
     );
     addTearDown(container.dispose);
     await container.read(authNotifierProvider.notifier).login('a@b.com', 'pw');
     expect(container.read(authNotifierProvider).isAuthenticated, isTrue);
+  }
+
+  setUp(() async {
+    stored = {};
+    FlutterSecureStorage.setMockInitialValues(stored);
+    repo = _MockAuthRepository();
+    reporter = _MockReporter();
+    when(() => repo.login('a@b.com', 'pw')).thenAnswer(
+      (_) async => (user: user, accessToken: 'a1', refreshToken: 'r1'),
+    );
+    when(() => repo.logout('r1')).thenAnswer((_) async {});
+    await signIn(const FlutterSecureStorage());
   });
 
   AuthNotifier notifier() => container.read(authNotifierProvider.notifier);
-  bool signedIn() => container.read(authNotifierProvider).isAuthenticated;
 
   void expectSignedOutOnDevice() {
-    for (final key in ['access_token', 'refresh_token', 'cached_user']) {
-      verify(() => storage.delete(key: key)).called(1);
-    }
-    expect(signedIn(), isFalse);
+    expect(stored, isEmpty);
+    expect(container.read(authNotifierProvider).isAuthenticated, isFalse);
   }
 
   test('asks the server to end the stored refresh token once and clears the '
       'device', () async {
-    when(() => repo.logout('r1')).thenAnswer((_) async {});
-
     await notifier().logout();
 
     verify(() => repo.logout('r1')).called(1);
@@ -116,7 +92,7 @@ void main() {
     final done = notifier().logout();
     await untilCalled(() => repo.logout('r1'));
 
-    expect(signedIn(), isFalse);
+    expectSignedOutOnDevice();
     answer.complete();
     await done;
   });
@@ -129,7 +105,7 @@ void main() {
       await notifier().logout();
 
       expectSignedOutOnDevice();
-      expect(reporter.reported, isEmpty);
+      verifyNever(() => reporter.reportError(any(), any()));
     });
   }
 
@@ -140,18 +116,67 @@ void main() {
     await notifier().logout();
 
     expectSignedOutOnDevice();
-    expect(reporter.reported, [failure]);
+    verify(() => reporter.reportError(failure, any())).called(1);
   });
 
-  test('without a stored refresh token nothing is asked and the person is '
-      'signed out', () async {
-    when(
-      () => storage.read(key: 'refresh_token'),
-    ).thenAnswer((_) async => null);
+  final noToken = <String, Future<void> Function()>{
+    'no refresh token stored': () async => stored.remove('refresh_token'),
+    'an unreadable keychain': () => signIn(_UnreadableStorage()),
+  };
+  for (final MapEntry(key: name, value: arrange) in noToken.entries) {
+    test('$name: signs out, asks nothing and does not throw', () async {
+      await arrange();
 
-    await notifier().logout();
+      await notifier().logout();
 
-    verifyNever(() => repo.logout(any()));
-    expect(signedIn(), isFalse);
+      verifyNever(() => repo.logout(any()));
+      expectSignedOutOnDevice();
+    });
+  }
+
+  group('a response landing after «Sair» signs nobody in again:', () {
+    late Completer<void> gate;
+    setUp(() => gate = Completer<void>());
+    Future<T> held<T>(T value) => gate.future.then((_) => value);
+
+    final inFlight = <String, Future<void> Function()>{
+      'refresh': () {
+        when(
+          () => repo.refreshToken('r1'),
+        ).thenAnswer((_) => held((accessToken: 'a1', refreshToken: 'r1')));
+        when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+        return notifier().handleUnauthorized();
+      },
+      'getMe at start-up': () {
+        when(() => repo.getMe('a1')).thenAnswer((_) => held(user));
+        return notifier().refreshSessionIfOnline();
+      },
+      'profile update': () {
+        when(
+          () => repo.updateMe('a1', displayName: 'Ana'),
+        ).thenAnswer((_) => held(user));
+        return notifier().updateProfile(displayName: 'Ana');
+      },
+      'avatar upload': () {
+        when(() => repo.uploadImage('a1', 'f')).thenAnswer((_) async => 'u');
+        when(
+          () => repo.updateMe('a1', avatarUrl: 'u'),
+        ).thenAnswer((_) => held(user));
+        return notifier().uploadAvatar('f');
+      },
+    };
+
+    for (final MapEntry(key: name, value: start) in inFlight.entries) {
+      test(name, () async {
+        final pending = start();
+        await pumpEventQueue();
+
+        await notifier().logout();
+        gate.complete();
+        await pending;
+
+        expectSignedOutOnDevice();
+      });
+    }
   });
 }

@@ -100,13 +100,7 @@ void main() {
   group('logout', () {
     test('posts the refresh token to /api/auth/logout without an '
         'Authorization header and completes on 204', () async {
-      when(
-        () => client.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer((_) async => http.Response('', 204));
+      stubPost('', 204);
 
       await repo.logout('r1');
 
