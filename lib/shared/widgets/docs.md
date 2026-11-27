@@ -171,4 +171,8 @@ Path: @/lib/shared/widgets
   readers hear `common_updating` once. With less motion asked, one still
   stroke fills the width.
 
+- **`showAppSheet`** ([app_sheet.dart](app_sheet.dart)) is the one way a sheet
+  opens: its own route. The frame (corner 26, grab) is the helper's; content
+  leaves the top 24 free. The keyboard's insets are never read.
+
 Created and maintained by Nori.
