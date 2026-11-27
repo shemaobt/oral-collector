@@ -6,6 +6,8 @@ import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/router/app_router.dart';
+import 'package:oral_collector/core/theme/app_theme.dart';
+import 'package:oral_collector/core/theme/screen_transition.dart';
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
@@ -20,6 +22,7 @@ import 'package:oral_collector/features/recording/data/repositories/local_record
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
@@ -186,6 +189,14 @@ Future<ProviderContainer> pumpApp(
       container: container,
       child: MaterialApp.router(
         routerConfig: container.read(routerProvider),
+        theme: ScreenTransition.pick(
+          AppTheme.lightTheme,
+          isWeb: container.read(isWebPlatformProvider),
+        ),
+        darkTheme: ScreenTransition.pick(
+          AppTheme.darkTheme,
+          isWeb: container.read(isWebPlatformProvider),
+        ),
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           AppLocalizations.delegate,

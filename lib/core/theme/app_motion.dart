@@ -21,6 +21,8 @@ abstract final class MotionScale {
   static const Curve loop = Curves.easeInOut;
   static const Duration checkWait = Duration(milliseconds: 250);
   static const Duration checkRun = Duration(milliseconds: 1100);
+  static const Curve sheetRise = Cubic(.2, 1.25, .3, 1);
+  static const Color scrim = Color.fromRGBO(20, 16, 11, .44);
 }
 
 /// Theme-scoped motion tokens. Read via `context.motion`, which zeroes the six

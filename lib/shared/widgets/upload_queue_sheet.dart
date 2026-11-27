@@ -8,9 +8,10 @@ import '../../features/recording/data/providers.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import '../utils/format.dart';
+import 'app_sheet.dart';
 
 void showUploadQueueSheet(BuildContext context) {
-  showModalBottomSheet(
+  showAppSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -45,15 +46,7 @@ class _UploadQueueContent extends ConsumerWidget {
 
     return Column(
       children: [
-        const SizedBox(height: SpacingScale.s8),
-        Container(
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: colors.border,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
+        const SizedBox(height: SpacingScale.s24),
         Padding(
           padding: const EdgeInsets.all(SpacingScale.s16),
           child: Column(

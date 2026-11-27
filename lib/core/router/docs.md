@@ -55,6 +55,10 @@ Path: @/lib/core/router
   scheme as a path — the Live Activity's deep link exists only to bring the
   app to the foreground, not to navigate anywhere, so this redirect is a
   no-op with a fallback.
+- **No route defines its own transition.** Routes use `builder:`, so each page
+  asks the theme's `pageTransitionsTheme` (see
+  [/lib/core/theme/docs.md](/lib/core/theme/docs.md)); a route edited to carry
+  its own would bypass the per-platform map.
 - **Every route is declared exactly once conceptually, but appears twice in
   the file.** `/genre/:id`, `/recording/:id`, `/recording/:id/trim`,
   `/import-file`, `/project/:id/settings`, the storyteller routes, and
