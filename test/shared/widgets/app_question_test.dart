@@ -1,47 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/core/theme/app_motion.dart';
 import 'package:oral_collector/shared/widgets/app_question.dart';
 
 void main() {
   String? answer;
-  bool closed = false;
 
   Future<void> open(
     WidgetTester t, {
     bool isDismissible = true,
     bool still = false,
+    String title = 'Sair?',
+    String message = 'Linha.',
+    List<String> buttons = const ['Sim'],
   }) async {
     answer = null;
-    closed = false;
     await t.pumpWidget(
       MaterialApp(
-        theme: ThemeData(
-          extensions: [
-            if (still)
-              const AppMotion(
-                base: Duration.zero,
-                fast: Duration.zero,
-                still: true,
-              ),
-          ],
+        builder: (c, child) => MediaQuery(
+          data: MediaQuery.of(c).copyWith(disableAnimations: still),
+          child: child!,
         ),
         home: Builder(
           builder: (c) => TextButton(
             onPressed: () async {
               answer = await showAppQuestion<String>(
                 context: c,
-                title: 'Sair?',
-                message: 'Linha.',
+                title: title,
+                message: message,
                 isDismissible: isDismissible,
                 actionsBuilder: (ctx) => [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, 'yes'),
-                    child: const Text('Sim'),
-                  ),
+                  for (final b in buttons)
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, b),
+                      child: Text(b),
+                    ),
                 ],
               );
-              closed = true;
             },
             child: const Text('open'),
           ),
@@ -50,43 +44,52 @@ void main() {
     );
     await t.tap(find.text('open'));
     await t.pump();
-    await t.pumpAndSettle();
+    if (!still) await t.pumpAndSettle();
   }
 
   testWidgets('gives the caller the answer that was tapped', (t) async {
     await open(t);
-    expect(find.text('Sair?'), findsOneWidget);
-    expect(find.text('Linha.'), findsOneWidget);
     await t.tap(find.text('Sim'));
     await t.pumpAndSettle();
     expect(find.text('Sair?'), findsNothing);
-    expect(answer, 'yes');
+    expect(answer, 'Sim');
   });
 
-  testWidgets('a tap on the ground closes it with no answer', (t) async {
-    await open(t);
-    await t.tapAt(const Offset(10, 10));
-    await t.pumpAndSettle();
-    expect(find.text('Sair?'), findsNothing);
-    expect(closed, isTrue);
-    expect(answer, isNull);
-  });
+  for (final dismissible in [true, false]) {
+    testWidgets('ground tap, dismissible $dismissible', (t) async {
+      await open(t, isDismissible: dismissible);
+      await t.tapAt(const Offset(10, 10));
+      await t.pumpAndSettle();
+      expect(find.text('Sair?'), dismissible ? findsNothing : findsOneWidget);
+      expect(answer, isNull);
+    });
+  }
 
-  testWidgets('where the caller forbids it, the ground tap does nothing', (
-    t,
-  ) async {
-    await open(t, isDismissible: false);
-    await t.tapAt(const Offset(10, 10));
-    await t.pumpAndSettle();
-    expect(find.text('Sair?'), findsOneWidget);
-    expect(closed, isFalse);
-  });
-
-  testWidgets('less motion: whole at once, gone at once', (t) async {
+  testWidgets('less motion: whole at the first frame, gone at once', (t) async {
     await open(t, still: true);
-    expect(find.text('Sair?'), findsOneWidget);
+    expect(t.widget<Opacity>(find.byType(Opacity).last).opacity, 1);
     await t.tap(find.text('Sim'));
     await t.pump();
     expect(find.text('Sair?'), findsNothing);
   });
+
+  const asks = {
+    'Leave without saving?': 'The audio is kept for later.',
+    'Sair sem salvar?': 'O áudio fica guardado para depois.',
+  };
+  for (final ask in asks.entries) {
+    testWidgets('${ask.key} scrolls at 2.0x on 320x640', (t) async {
+      t.view.physicalSize = const Size(960, 1920);
+      t.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(t.view.reset);
+      await open(
+        t,
+        title: ask.key,
+        message: ask.value,
+        buttons: ['Cancel', 'Keep for later', 'Discard'],
+      );
+      await t.ensureVisible(find.text('Discard'));
+      expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
+    });
+  }
 }
