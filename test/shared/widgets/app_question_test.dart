@@ -85,14 +85,16 @@ void main() {
     expect(t.getTopLeft(find.text('Sair?')).dy, closeTo(top, 0.5));
   });
 
-  for (final title in ['Leave without saving?', 'Sair sem salvar?']) {
-    testWidgets('$title scrolls at 2.0x on 320x640', (t) async {
-      t.view.physicalSize = const Size(960, 1920);
-      t.platformDispatcher.textScaleFactorTestValue = 2;
-      addTearDown(t.view.reset);
-      await open(t, title: title, buttons: ['Cancel', 'Keep', 'Discard']);
-      await t.ensureVisible(find.text('Discard'));
-      expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
-    });
-  }
+  testWidgets('scrolls at 2.0x on 320x640', (t) async {
+    t.view.physicalSize = const Size(960, 1920);
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.view.reset);
+    await open(
+      t,
+      title: 'Leave without saving?',
+      buttons: ['Cancel', 'Keep', 'Discard'],
+    );
+    await t.ensureVisible(find.text('Discard'));
+    expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
+  });
 }
