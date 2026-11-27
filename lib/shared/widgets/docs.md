@@ -158,4 +158,12 @@ Path: @/lib/shared/widgets
   row's name and end state: the state shows whole on one line, the name gives
   way with an ellipsis, and only below 48 px of name does the state end in one.
 
+- **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a whole
+  `Scaffold` and takes one switch, `checking`. A 3-high line is drawn over the
+  content, below the status bar, only after the check lasted 250 ms (an
+  animation clock, not a `Timer`): fades in on `enter`, out on `leave`, and a
+  38% stroke runs across in 1100 ms (reversed under right-to-left). Screen
+  readers hear `common_updating` once. With less motion asked, one still
+  stroke fills the width.
+
 Created and maintained by Nori.
