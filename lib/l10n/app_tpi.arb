@@ -985,6 +985,7 @@
   "recovery_backToList": "I no nau",
   "common_discard": "Rausim",
   "common_resume": "Statim gen",
+  "common_undo": "Rausim bek",
   "import_dropActive": "Lusim na imotim",
   "import_dropHint": "Drop ol audio fail bilong imotim",
   "import_largeFileWarning": "Bikpela fail ({size}). Larim dispela tab i op inap long aplotim i pinis.",

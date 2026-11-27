@@ -9,6 +9,7 @@
   "nav_admin": "Admin",
   "common_cancel": "Cancel",
   "common_resume": "Resume",
+  "common_undo": "Undo",
   "common_discard": "Discard",
   "common_save": "Save",
   "common_delete": "Delete",

@@ -382,6 +382,7 @@
   "recording_resumeSizeMismatch": "Esse é outro arquivo. Selecione exatamente o mesmo arquivo que estava sendo enviado.",
   "import_largeFileWarning": "Arquivo grande ({size}). Mantenha esta aba aberta até o envio terminar.",
   "common_resume": "Retomar",
+  "common_undo": "Desfazer",
   "common_discard": "Descartar",
   "moveCategory_title": "Mover Categoria",
   "moveCategory_genre": "Gênero",

@@ -1184,6 +1184,7 @@
   "recovery_backToList": "暂不",
   "common_discard": "丢弃",
   "common_resume": "继续",
+  "common_undo": "撤销",
   "import_dropActive": "释放以导入",
   "import_dropHint": "拖放音频文件以导入",
   "import_largeFileWarning": "大文件（{size}）。请保持此标签页打开,直至上传完成。",

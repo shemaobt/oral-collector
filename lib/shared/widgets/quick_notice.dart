@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
+import '../../l10n/app_localizations.dart';
 import 'brush_sign.dart';
 import 'hand_cut_rect.dart';
 
 const double _lift = 10;
 const double _minHeight = 52;
 const double _signGap = 10;
+const double _actionHeight = 44;
+const double _actionEnd = 6;
 
 enum QuickNoticeTone { calm, failed }
 
@@ -20,11 +23,21 @@ void showQuickNotice(
   String sentence, {
   QuickNoticeTone tone = QuickNoticeTone.calm,
   Sign? sign,
+  VoidCallback? onUndo,
 }) {
   final overlay = Overlay.of(context, rootOverlay: true);
   final colors = AppColors.of(context);
   final motion = context.motion;
   final failed = tone == QuickNoticeTone.failed;
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  final actionInk = dark
+      ? colors.pale
+      : failed
+      ? colors.onPrimary
+      : colors.sand;
+  final undoWord = onUndo == null
+      ? null
+      : AppLocalizations.of(context).common_undo;
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (_) => _QuickNotice(
@@ -32,6 +45,9 @@ void showQuickNotice(
       sign: sign ?? (failed ? Sign.info : Sign.check),
       fill: failed ? colors.error : colors.primary,
       ink: colors.onPrimary,
+      actionInk: actionInk,
+      undoWord: undoWord,
+      onUndo: onUndo,
       motion: motion,
       onGone: () {
         if (_live[overlay] != entry) return;
@@ -54,6 +70,9 @@ class _QuickNotice extends StatefulWidget {
     required this.sign,
     required this.fill,
     required this.ink,
+    required this.actionInk,
+    required this.undoWord,
+    required this.onUndo,
     required this.motion,
     required this.onGone,
   });
@@ -62,6 +81,9 @@ class _QuickNotice extends StatefulWidget {
   final Sign sign;
   final Color fill;
   final Color ink;
+  final Color actionInk;
+  final String? undoWord;
+  final VoidCallback? onUndo;
   final AppMotion motion;
   final VoidCallback onGone;
 
@@ -88,13 +110,28 @@ class _QuickNoticeState extends State<_QuickNotice>
 
   void _onStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
-      _stay = Timer(MotionScale.noticeStay, () {
-        _leaving = true;
-        _controller.reverse();
-      });
+      _stay = Timer(
+        widget.onUndo == null
+            ? MotionScale.noticeStay
+            : MotionScale.noticeStayUndo,
+        _leave,
+      );
     } else if (status == AnimationStatus.dismissed) {
       widget.onGone();
     }
+  }
+
+  void _leave() {
+    if (_leaving) return;
+    _leaving = true;
+    _stay?.cancel();
+    _controller.reverse();
+  }
+
+  void _undo() {
+    if (_leaving) return;
+    _leave();
+    widget.onUndo!();
   }
 
   @override
@@ -106,10 +143,10 @@ class _QuickNoticeState extends State<_QuickNotice>
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom + _lift;
     final style = Theme.of(
       context,
     ).textTheme.bodyMedium!.copyWith(fontSize: 15, color: widget.ink);
-    final bottom = MediaQuery.paddingOf(context).bottom + _lift;
 
     return Positioned(
       left: SpacingScale.s16,
@@ -133,10 +170,10 @@ class _QuickNoticeState extends State<_QuickNotice>
             child: Transform.translate(offset: Offset(0, dy), child: child),
           );
         },
-        child: Semantics(
-          liveRegion: true,
-          label: widget.sentence,
-          excludeSemantics: true,
+        child: GestureDetector(
+          onVerticalDragEnd: (details) {
+            if ((details.primaryVelocity ?? 0) > 0) _leave();
+          },
           child: CustomPaint(
             painter: HandCutRectPainter(
               fill: widget.fill,
@@ -145,15 +182,33 @@ class _QuickNoticeState extends State<_QuickNotice>
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: _minHeight),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s16,
-                  vertical: SpacingScale.s12,
+                padding: EdgeInsets.fromLTRB(
+                  SpacingScale.s16,
+                  SpacingScale.s12,
+                  widget.undoWord == null ? SpacingScale.s16 : _actionEnd,
+                  SpacingScale.s12,
                 ),
                 child: Row(
                   children: [
                     BrushSign(widget.sign, size: 18, color: widget.ink),
                     const SizedBox(width: _signGap),
-                    Expanded(child: Text(widget.sentence, style: style)),
+                    Expanded(
+                      child: Semantics(
+                        liveRegion: true,
+                        label: widget.sentence,
+                        excludeSemantics: true,
+                        child: Text(widget.sentence, style: style),
+                      ),
+                    ),
+                    if (widget.undoWord case final word?)
+                      _Action(
+                        word: word,
+                        style: style.copyWith(
+                          color: widget.actionInk,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        onTap: _undo,
+                      ),
                   ],
                 ),
               ),
@@ -163,4 +218,28 @@ class _QuickNoticeState extends State<_QuickNotice>
       ),
     );
   }
+}
+
+class _Action extends StatelessWidget {
+  const _Action({required this.word, required this.style, required this.onTap});
+
+  final String word;
+  final TextStyle style;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _actionHeight),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
+          child: Center(child: Text(word, style: style)),
+        ),
+      ),
+    ),
+  );
 }

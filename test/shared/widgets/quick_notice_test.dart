@@ -2,22 +2,55 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_motion.dart';
+import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
 const _heldFor = Duration(milliseconds: 2900);
 
-Future<void> _pump(WidgetTester tester, {bool still = false}) async {
+const _undoStay = Duration(milliseconds: 6000);
+
+MaterialApp _app({required Widget home, Brightness? brightness}) => MaterialApp(
+  locale: const Locale('pt'),
+  supportedLocales: AppLocalizations.supportedLocales,
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  theme: ThemeData(brightness: brightness ?? Brightness.light),
+  home: home,
+);
+
+Future<void> _pump(
+  WidgetTester tester, {
+  bool still = false,
+  ValueChanged<int>? onUndo,
+  QuickNoticeTone tone = QuickNoticeTone.calm,
+  Brightness? brightness,
+}) async {
   tester.platformDispatcher.accessibilityFeaturesTestValue =
       FakeAccessibilityFeatures(disableAnimations: still);
   addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   var count = 0;
   await tester.pumpWidget(
-    MaterialApp(
+    _app(
+      brightness: brightness,
       home: Builder(
         builder: (context) => TextButton(
-          onPressed: () => showQuickNotice(context, 'Saved ${++count}'),
+          onPressed: () {
+            final n = ++count;
+            showQuickNotice(
+              context,
+              'Saved $n',
+              tone: tone,
+              onUndo: onUndo == null ? null : () => onUndo(n),
+            );
+          },
           child: const Text('show'),
         ),
       ),
@@ -108,6 +141,108 @@ void main() {
       expect(find.text('Saved'), findsNothing);
     },
   );
+
+  testWidgets('a tap on «Desfazer» calls undo once and the notice leaves', (
+    tester,
+  ) async {
+    final undone = <int>[];
+    await _pump(tester, onUndo: undone.add);
+    await _show(tester);
+
+    await tester.tap(find.text('Desfazer'));
+    await tester.tap(find.text('Desfazer'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    expect(undone, [1]);
+    expect(find.text('Saved 1'), findsNothing);
+  });
+
+  testWidgets('a notice with undo stays 6 s and never calls undo by itself', (
+    tester,
+  ) async {
+    final undone = <int>[];
+    await _pump(tester, onUndo: undone.add);
+    await _show(tester);
+
+    for (var i = 0; i < 59; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Saved 1'), findsOneWidget);
+    expect(find.text('Desfazer'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
+    expect(find.text('Saved 1'), findsNothing);
+    expect(undone, isEmpty);
+  });
+
+  testWidgets('the undo of a replaced notice can no longer be called', (
+    tester,
+  ) async {
+    final undone = <int>[];
+    await _pump(tester, onUndo: undone.add);
+    await _show(tester);
+    await _show(tester);
+
+    expect(find.text('Desfazer'), findsOneWidget);
+    await tester.tap(find.text('Desfazer'));
+    await tester.pumpAndSettle();
+    expect(undone, [2]);
+    expect(find.text('Saved 2'), findsNothing);
+  });
+
+  testWidgets('a downward swipe sends the notice away at once', (tester) async {
+    await _pump(tester);
+    await _show(tester);
+
+    await tester.fling(find.text('Saved 1'), const Offset(0, 120), 1000);
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+
+    expect(find.text('Saved 1'), findsNothing);
+  });
+
+  group('the action reads in the kit colours', () {
+    final cases = {
+      'calm in light': (
+        Brightness.light,
+        QuickNoticeTone.calm,
+        AppColors.light.sand,
+      ),
+      'failed in light': (
+        Brightness.light,
+        QuickNoticeTone.failed,
+        AppColors.background,
+      ),
+      'calm in dark': (
+        Brightness.dark,
+        QuickNoticeTone.calm,
+        AppColors.darkPale,
+      ),
+      'failed in dark': (
+        Brightness.dark,
+        QuickNoticeTone.failed,
+        AppColors.darkPale,
+      ),
+    };
+    for (final MapEntry(key: name, value: (brightness, tone, color))
+        in cases.entries) {
+      testWidgets('$name, 15 at weight 600, 44 high', (tester) async {
+        await _pump(tester, onUndo: (_) {}, tone: tone, brightness: brightness);
+        await _show(tester);
+
+        final style = tester.widget<Text>(find.text('Desfazer')).style!;
+        expect(style.color, color);
+        expect(style.fontSize, 15);
+        expect(style.fontWeight, FontWeight.w600);
+        expect(
+          tester.getSemantics(find.text('Desfazer')).rect.height,
+          greaterThanOrEqualTo(44),
+        );
+        await tester.pump(_undoStay);
+        await tester.pumpAndSettle();
+      });
+    }
+  });
 
   testWidgets('screen readers hear the sentence when the notice arrives', (
     tester,

@@ -985,6 +985,7 @@
   "recovery_backToList": "Si sasa",
   "common_discard": "Tupa",
   "common_resume": "Endelea",
+  "common_undo": "Tendua",
   "import_dropActive": "Achia ili kuingiza",
   "import_dropHint": "Dondosha faili za sauti ili kuingiza",
   "import_largeFileWarning": "Faili kubwa ({size}). Acha kichupo hiki kifunguliwe hadi upakiaji ukamilike.",

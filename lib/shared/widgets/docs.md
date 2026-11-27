@@ -179,7 +179,9 @@ Path: @/lib/shared/widgets
   message on a hand-cut bar on the root `Overlay`, margin to margin, 10 above
   the bottom safe area. A new notice replaces the one on screen at once. Tones:
   calm and failed (`error`). It jumps in (`base`, `noticeJump`), stays
-  `noticeStay` even under less motion, leaves in `fast`; a live region.
+  `noticeStay` even under less motion, leaves in `fast`; a live region. With
+  `onUndo` it offers «Desfazer» at its end and stays `noticeStayUndo`; the
+  callback runs only on a tap. A downward swipe sends it away.
 
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the

@@ -36,6 +36,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get common_resume => 'जारी रखें';
 
   @override
+  String get common_undo => 'पूर्ववत करें';
+
+  @override
   String get common_discard => 'हटाएँ';
 
   @override
