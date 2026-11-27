@@ -23,6 +23,9 @@ abstract final class MotionScale {
   static const Duration checkRun = Duration(milliseconds: 1100);
   static const Curve sheetRise = Cubic(.2, 1.25, .3, 1);
   static const Color scrim = Color.fromRGBO(20, 16, 11, .44);
+  static const Curve noticeJump = Cubic(.2, 1.6, .4, 1);
+  static const double noticeDrop = 44;
+  static const Duration noticeStay = Duration(milliseconds: 3000);
 }
 
 /// Theme-scoped motion tokens. Read via `context.motion`, which zeroes the six

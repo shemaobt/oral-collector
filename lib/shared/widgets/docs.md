@@ -175,5 +175,14 @@ Path: @/lib/shared/widgets
   opens: its own route. The frame (corner 26, grab) is the helper's; content
   leaves the top 24 free. The keyboard's insets are never read. `constraints`
   caps the sheet's width; `useRootNavigator` pushes it on the root navigator.
+- **`showQuickNotice`** ([quick_notice.dart](quick_notice.dart)) is the one way a
+  short message is said: a hand-cut bar from margin to margin (16), 10 above the
+  bottom safe area, no maximum width, no shadow. It draws on the root `Overlay`,
+  so it needs no setup under a bare `MaterialApp`, and keeps one entry per
+  overlay: a new notice replaces the one on screen at once. Tones: calm (ink)
+  and failed (`error`); the default sign is check, or info when failed. It
+  arrives with a jump (`base`, `noticeJump`, from `noticeDrop` below), stays
+  `noticeStay` after arriving (a time on screen, not zeroed by less motion) and
+  leaves in `fast` on `leave`, sinking `rise`. The sentence is a live region.
 
 Created and maintained by Nori.
