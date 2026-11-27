@@ -16,6 +16,8 @@ abstract class AuthRepository {
     String token,
   );
 
+  Future<void> logout(String refreshToken);
+
   Future<User> getMe(String accessToken);
 
   Future<User> updateMe(

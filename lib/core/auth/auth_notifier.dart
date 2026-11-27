@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/sync/data/providers.dart';
-import '../errors/api_exception.dart';
+import '../errors/app_exception.dart';
 import '../observability/error_reporter.dart';
 import '../providers/secure_storage_provider.dart';
 import 'auth_repository.dart';
@@ -182,8 +182,19 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    final refreshToken = await _storage.read(key: _refreshTokenKey);
     await _clearTokens();
     state = const AuthState();
+    if (refreshToken == null) return;
+    try {
+      await _repo.logout(refreshToken);
+    } on NetworkException {
+      return;
+    } on TimeoutException {
+      return;
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 
   Future<void> _storeTokens(String accessToken, String refreshToken) async {

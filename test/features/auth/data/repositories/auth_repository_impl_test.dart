@@ -95,4 +95,40 @@ void main() {
       expect(result.refreshToken, 'rt');
     });
   });
+
+  group('logout', () {
+    test('posts the refresh token to /api/auth/logout without an '
+        'Authorization header and completes on 204', () async {
+      when(
+        () => client.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => http.Response('', 204));
+
+      await repo.logout('r1');
+
+      final call = verify(
+        () => client.post(
+          captureAny(),
+          headers: captureAny(named: 'headers'),
+          body: captureAny(named: 'body'),
+        ),
+      )..called(1);
+      final [uri, headers, body] = call.captured;
+      expect((uri as Uri).path, '/api/auth/logout');
+      expect(
+        (headers as Map<String, String>).keys.map((k) => k.toLowerCase()),
+        isNot(contains('authorization')),
+      );
+      expect(jsonDecode(body as String), {'refresh_token': 'r1'});
+    });
+
+    test('throws a ServerException on 500', () async {
+      stubPost({'detail': 'boom'}, 500);
+
+      await expectLater(repo.logout('r1'), throwsA(isA<ServerException>()));
+    });
+  });
 }

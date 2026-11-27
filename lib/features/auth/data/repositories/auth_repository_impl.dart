@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/error_boundary.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/user.dart';
@@ -96,6 +97,18 @@ class AuthRepositoryImpl implements AuthRepository {
       accessToken: readString(data, 'access_token'),
       refreshToken: readString(data, 'refresh_token'),
     );
+  }
+
+  @override
+  Future<void> logout(String refreshToken) async {
+    final response = await guard(
+      () => _client.post(
+        Uri.parse('$_baseUrl/api/auth/logout'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
+      ),
+    );
+    if (response.statusCode != 204) throwForResponse(response);
   }
 
   @override
