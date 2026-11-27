@@ -30,9 +30,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Réduire';
-
-  @override
   String get common_cancel => 'Annuler';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get common_loading => 'Chargement...';
+
+  @override
+  String get common_updating => 'Mise à jour';
 
   @override
   String get auth_oralCollector => 'Oral Collector';
@@ -2708,11 +2708,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_audioLoadFailed => 'Échec du chargement de l\'audio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Certaines fonctionnalités comme la synchronisation et le chargement de données nécessitent une connexion Internet.';
+  String get status_offlineNotice =>
+      'Pas d’internet. L’envoi reprend au retour de la connexion.';
 
   @override
-  String get status_noProject => 'Aucun projet attribué';
+  String get status_noProject => 'Aucun projet attribué.';
 
   @override
   String get status_noProjectSubtitle =>

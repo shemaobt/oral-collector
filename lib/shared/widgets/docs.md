@@ -63,8 +63,7 @@ Path: @/lib/shared/widgets
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the badges'
   "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
-  `didUpdateWidget`), `LeavingRow`'s fade and height, or the web sidebar's
-  collapse state ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
+  `didUpdateWidget`) and `LeavingRow`'s fade and height.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -96,10 +95,9 @@ Path: @/lib/shared/widgets
     → IntrinsicHeight`, so it stays centered when it fits and scrolls instead of
     overflowing when large fonts make it taller than the viewport.
   - **`Flexible` + `maxLines: 1` + `TextOverflow.ellipsis`** for labels under
-    width pressure: the status-badge labels and the web sidebar's collapse-toggle
-    label (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
-    ellipsizing rather than overflowing. The collapse toggle was the only
-    unprotected text in the sidebar and the single real overflow found.
+    width pressure: the status-badge labels and the web sidebar's brand name
+    (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
+    ellipsizing rather than overflowing.
   - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
     bar / nav item in
     [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the 96px
@@ -139,6 +137,12 @@ Path: @/lib/shared/widgets
   never when `enabled` is false (the disc is then at 40%), and never inside a
   piece that already paints one (`PrintedShadowScope`, which a piece with a
   printed shadow puts around its child). Shadow colours: `PrintedShadows`.
+- **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
+  hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
+  failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**
+  ([needs_you_block.dart](needs_you_block.dart)) is the «Precisa de você» block:
+  a brush title, one sentence and the button that solves it, passed in as a
+  widget and held to the block's width at 44 high.
 - **Regression coverage** lives in
   [/test/shared/widgets](/test/shared/widgets), pumping each widget at the
   ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart)
@@ -157,5 +161,13 @@ Path: @/lib/shared/widgets
   drop the next row inherits the collapsed state and plays the come-back; flip
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
+
+- **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a whole
+  `Scaffold` and takes one switch, `checking`. A 3-high line is drawn over the
+  content, below the status bar, only after the check lasted 250 ms (an
+  animation clock, not a `Timer`): fades in on `enter`, out on `leave`, and a
+  38% stroke runs across in 1100 ms (reversed under right-to-left). Screen
+  readers hear `common_updating` once. With less motion asked, one still
+  stroke fills the width.
 
 Created and maintained by Nori.

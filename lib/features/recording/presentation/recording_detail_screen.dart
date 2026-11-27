@@ -1026,6 +1026,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     ),
 
                     Container(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.paddingOf(context).bottom,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.card,
                         border: Border(

@@ -158,12 +158,6 @@ abstract class AppLocalizations {
   /// **'Admin'**
   String get nav_admin;
 
-  /// No description provided for @nav_collapse.
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse'**
-  String get nav_collapse;
-
   /// No description provided for @common_cancel.
   ///
   /// In en, this message translates to:
@@ -259,6 +253,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get common_loading;
+
+  /// Spoken by screen readers when a thin line starts running over a screen that is checking the server again.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating'**
+  String get common_updating;
 
   /// No description provided for @auth_oralCollector.
   ///
@@ -4742,16 +4742,16 @@ abstract class AppLocalizations {
   /// **'Failed to load audio'**
   String get recording_audioLoadFailed;
 
-  /// No description provided for @status_offlineSubtitle.
+  /// No description provided for @status_offlineNotice.
   ///
   /// In en, this message translates to:
-  /// **'Some features like syncing and loading data require an internet connection.'**
-  String get status_offlineSubtitle;
+  /// **'No internet. Sending continues when it is back.'**
+  String get status_offlineNotice;
 
   /// No description provided for @status_noProject.
   ///
   /// In en, this message translates to:
-  /// **'No project assigned'**
+  /// **'No project assigned.'**
   String get status_noProject;
 
   /// No description provided for @status_noProjectSubtitle.

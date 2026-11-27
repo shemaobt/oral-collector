@@ -335,29 +335,11 @@ void main() {
         expect(label.style!.color, colors.onPrimary);
       },
     );
-
-    testWidgets('expanded is 232 wide, collapsed is a 72 rail of icons', (
-      tester,
-    ) async {
-      await pumpWide(tester);
-      expect(tester.getSize(find.byType(WebSidebar)).width, 232);
-      await tester.tap(find.byIcon(LucideIcons.panelLeftClose));
-      await tester.pumpAndSettle();
-      expect(tester.getSize(find.byType(WebSidebar)).width, 72);
-      expect(
-        find.descendant(
-          of: find.byType(WebSidebar),
-          matching: find.text('Home'),
-        ),
-        findsNothing,
-      );
-    });
   });
 
   testWidgets(
     'tapping a tab while finalizing shows snackbar and does not navigate',
     (tester) async {
-      // Mobile layout (< 600px) so the bottom nav is used.
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);

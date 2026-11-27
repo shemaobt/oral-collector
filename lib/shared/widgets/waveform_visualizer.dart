@@ -108,7 +108,8 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.barColor ?? AppColors.primary;
+    final color =
+        widget.barColor ?? AppColors.of(context).primary.withValues(alpha: 0.5);
     final bars = _isLive ? _bars : (widget.amplitudes ?? []);
 
     if (widget.fillWidth) {

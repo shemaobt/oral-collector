@@ -30,9 +30,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Pasim';
-
-  @override
   String get common_cancel => 'Lusim';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get common_loading => 'Lodim...';
+
+  @override
+  String get common_updating => 'Apdetim';
 
   @override
   String get auth_oralCollector => 'Oral Collector';
@@ -2658,11 +2658,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_audioLoadFailed => 'I no inap lodim sat';
 
   @override
-  String get status_offlineSubtitle =>
-      'Sampela wok olsem sinkim na kisim daata i nidim intenet.';
+  String get status_offlineNotice =>
+      'Nogat internet. Salim bai i go moa taim internet i kam bek.';
 
   @override
-  String get status_noProject => 'I no gat projek';
+  String get status_noProject => 'I no gat projek.';
 
   @override
   String get status_noProjectSubtitle =>

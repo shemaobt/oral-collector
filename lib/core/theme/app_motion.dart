@@ -19,6 +19,8 @@ abstract final class MotionScale {
   static const Curve pressBack = Cubic(.2, 1.9, .4, 1);
   static const Duration stagger = Duration(milliseconds: 70);
   static const Curve loop = Curves.easeInOut;
+  static const Duration checkWait = Duration(milliseconds: 250);
+  static const Duration checkRun = Duration(milliseconds: 1100);
 }
 
 /// Theme-scoped motion tokens. Read via `context.motion`, which zeroes the six

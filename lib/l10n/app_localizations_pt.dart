@@ -30,9 +30,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Recolher';
-
-  @override
   String get common_cancel => 'Cancelar';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get common_loading => 'Carregando...';
+
+  @override
+  String get common_updating => 'Atualizando';
 
   @override
   String get auth_oralCollector => 'Oral Collector';
@@ -2683,11 +2683,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_audioLoadFailed => 'Falha ao carregar o áudio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Alguns recursos como sincronização e carregamento de dados requerem conexão com a internet.';
+  String get status_offlineNotice =>
+      'Sem internet. O envio continua quando voltar.';
 
   @override
-  String get status_noProject => 'Nenhum projeto atribuído';
+  String get status_noProject => 'Nenhum projeto atribuído.';
 
   @override
   String get status_noProjectSubtitle =>

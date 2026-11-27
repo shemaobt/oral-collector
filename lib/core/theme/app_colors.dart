@@ -27,6 +27,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color knob;
   final Color count;
   final Color onSoft;
+  final Color noteInk;
 
   const AppColorSet({
     required this.primary,
@@ -54,6 +55,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.knob,
     required this.count,
     required this.onSoft,
+    required this.noteInk,
   });
 
   static Color _keep(Color? next, Color current) => next ?? current;
@@ -85,6 +87,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? knob,
     Color? count,
     Color? onSoft,
+    Color? noteInk,
   }) {
     return AppColorSet(
       primary: _keep(primary, this.primary),
@@ -112,6 +115,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       knob: _keep(knob, this.knob),
       count: _keep(count, this.count),
       onSoft: _keep(onSoft, this.onSoft),
+      noteInk: _keep(noteInk, this.noteInk),
     );
   }
 
@@ -144,6 +148,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       knob: Color.lerp(knob, other.knob, t)!,
       count: Color.lerp(count, other.count, t)!,
       onSoft: Color.lerp(onSoft, other.onSoft, t)!,
+      noteInk: Color.lerp(noteInk, other.noteInk, t)!,
     );
   }
 
@@ -173,6 +178,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     knob,
     count,
     onSoft,
+    noteInk,
   ];
 
   @override
@@ -266,6 +272,7 @@ abstract class AppColors {
     knob: Color(0xFFFFFFFF),
     count: mic,
     onSoft: error,
+    noteInk: foreground,
   );
 
   static const dark = AppColorSet(
@@ -294,5 +301,6 @@ abstract class AppColors {
     knob: darkSecondary,
     count: darkForeground,
     onSoft: Color(0xFF872F00),
+    noteInk: Color(0xFF33321A),
   );
 }

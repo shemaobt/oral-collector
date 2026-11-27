@@ -30,9 +30,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Ciutkan';
-
-  @override
   String get common_cancel => 'Batal';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get common_loading => 'Memuat...';
+
+  @override
+  String get common_updating => 'Memperbarui';
 
   @override
   String get auth_oralCollector => 'Oral Collector';
@@ -2675,11 +2675,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_audioLoadFailed => 'Gagal memuat audio';
 
   @override
-  String get status_offlineSubtitle =>
-      'Beberapa fitur seperti sinkronisasi dan pemuatan data memerlukan koneksi internet.';
+  String get status_offlineNotice =>
+      'Tidak ada internet. Pengiriman berlanjut saat kembali.';
 
   @override
-  String get status_noProject => 'Tidak ada proyek ditetapkan';
+  String get status_noProject => 'Tidak ada proyek ditetapkan.';
 
   @override
   String get status_noProjectSubtitle =>
