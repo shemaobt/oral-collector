@@ -312,7 +312,7 @@ void main() {
     // Dentro do diálogo: a própria tela de confirmação tem um botão de
     // descartar, e procurar no widget inteiro acharia os dois.
     Finder inDialog(String label) => find.descendant(
-      of: find.byKey(const ValueKey('app-question-card')),
+      of: find.byType(Wrap),
       matching: find.widgetWithText(TextButton, label),
     );
 

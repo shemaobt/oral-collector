@@ -133,7 +133,6 @@ class _Card extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: _width),
       child: DecoratedBox(
-        key: const ValueKey('app-question-card'),
         decoration: BoxDecoration(
           color: colors.card,
           borderRadius: BorderRadius.circular(RadiusScale.r24),
