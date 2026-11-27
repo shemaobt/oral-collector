@@ -1,9 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_motion.dart';
 import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
-const _gap = Duration(milliseconds: 200);
+const _step = Duration(milliseconds: 100);
+const _heldFor = Duration(milliseconds: 2900);
+
+Future<void> _pumpFor(WidgetTester tester, Duration total) async {
+  for (var left = total; left > Duration.zero; left -= _step) {
+    await tester.pump(_step);
+  }
+}
 
 Future<void> _pump(WidgetTester tester, {bool still = false}) async {
   tester.platformDispatcher.accessibilityFeaturesTestValue =
@@ -24,7 +33,10 @@ Future<void> _pump(WidgetTester tester, {bool still = false}) async {
 
 Future<void> _show(WidgetTester tester) async {
   await tester.tap(find.text('show'));
-  await tester.pumpAndSettle();
+  await tester.pump();
+  while (tester.binding.hasScheduledFrame) {
+    await tester.pump(const Duration(milliseconds: 10));
+  }
 }
 
 void main() {
@@ -34,10 +46,10 @@ void main() {
       await _pump(tester, still: still);
 
       await _show(tester);
-      await tester.pump(MotionScale.noticeStay - _gap);
+      await _pumpFor(tester, _heldFor);
       expect(find.text('Saved 1'), findsOneWidget);
 
-      await tester.pump(_gap);
+      await tester.pump(MotionScale.noticeStay - _heldFor);
       await tester.pumpAndSettle();
       expect(find.text('Saved 1'), findsNothing);
     });
@@ -58,6 +70,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Saved 2'), findsNothing);
   });
+
+  testWidgets(
+    'a notice shown from a route that is gone still leaves by itself',
+    (tester) async {
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(navigatorKey: navigator, home: const Text('home')),
+      );
+      Route<void> page(String name) => MaterialPageRoute(
+        builder: (context) => TextButton(
+          onPressed: () => showQuickNotice(context, 'Saved'),
+          child: Text(name),
+        ),
+      );
+
+      unawaited(navigator.currentState!.push(page('first')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('first'));
+      await tester.pumpAndSettle();
+
+      navigator.currentState!.pop();
+      await tester.pumpAndSettle();
+      unawaited(navigator.currentState!.push(page('second')));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved'), findsOneWidget);
+
+      await tester.pump(MotionScale.noticeStay);
+      await tester.pumpAndSettle();
+      expect(find.text('Saved'), findsNothing);
+    },
+  );
 
   testWidgets('screen readers hear the sentence when the notice arrives', (
     tester,

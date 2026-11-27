@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -8,7 +7,7 @@ import '../../core/theme/tokens.dart';
 import 'brush_sign.dart';
 import 'hand_cut_rect.dart';
 
-const double _margin = 16;
+const double _innerPadding = 16;
 const double _lift = 10;
 const double _minHeight = 52;
 const double _signGap = 10;
@@ -25,6 +24,7 @@ void showQuickNotice(
 }) {
   final overlay = Overlay.of(context, rootOverlay: true);
   final colors = AppColors.of(context);
+  final motion = context.motion;
   final failed = tone == QuickNoticeTone.failed;
   late final OverlayEntry entry;
   entry = OverlayEntry(
@@ -33,7 +33,7 @@ void showQuickNotice(
       sign: sign ?? (failed ? Sign.info : Sign.check),
       fill: failed ? colors.error : colors.primary,
       ink: colors.onPrimary,
-      motion: context.motion,
+      motion: motion,
       onGone: () {
         entry.remove();
         entry.dispose();
@@ -41,7 +41,9 @@ void showQuickNotice(
       },
     ),
   );
-  _live[overlay]?.remove();
+  _live[overlay]
+    ?..remove()
+    ..dispose();
   _live[overlay] = entry;
   overlay.insert(entry);
 }
@@ -110,8 +112,8 @@ class _QuickNoticeState extends State<_QuickNotice>
     final bottom = MediaQuery.paddingOf(context).bottom + _lift;
 
     return Positioned(
-      left: _margin,
-      right: _margin,
+      left: SpacingScale.s16,
+      right: SpacingScale.s16,
       bottom: bottom,
       child: AnimatedBuilder(
         animation: _controller,
@@ -124,7 +126,7 @@ class _QuickNoticeState extends State<_QuickNotice>
           } else {
             final eased = MotionScale.noticeJump.transform(_controller.value);
             dy = MotionScale.noticeDrop * (1 - eased);
-            opacity = math.min(1, eased);
+            opacity = eased;
           }
           return Opacity(
             opacity: opacity.clamp(0.0, 1.0),
@@ -144,8 +146,8 @@ class _QuickNoticeState extends State<_QuickNotice>
               constraints: const BoxConstraints(minHeight: _minHeight),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: _margin,
-                  vertical: 12,
+                  horizontal: _innerPadding,
+                  vertical: SpacingScale.s12,
                 ),
                 child: Row(
                   children: [
