@@ -158,7 +158,6 @@ Path: @/lib/shared/widgets
   row's name and its end state: the state keeps its natural width on one line,
   the name takes the rest with its ellipsis, and only when the name would fall
   below 48 px does the state end in an ellipsis. It owns its intrinsics and dry
-  layout, so it works inside `IntrinsicHeight` and dialogs where a
-  `LayoutBuilder` throws.
+  layout (no `LayoutBuilder`) and reports no baseline.
 
 Created and maintained by Nori.

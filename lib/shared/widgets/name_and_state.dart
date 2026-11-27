@@ -3,8 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-const double _minName = 48;
-const double _gap = 14;
+import '../../core/theme/app_spacing.dart';
+
+const double _minName = SpacingScale.s48;
+const double _gap = SpacingScale.s16;
 
 class NameAndState extends StatelessWidget {
   const NameAndState({super.key, required this.name, this.state});
@@ -14,7 +16,11 @@ class NameAndState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _Slots({
-    _Slot.name: name,
+    _Slot.name: DefaultTextStyle.merge(
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      child: name,
+    ),
     if (state case final state?)
       _Slot.state: DefaultTextStyle.merge(
         maxLines: 1,
@@ -78,7 +84,7 @@ class _RenderSlots extends RenderBox
 
   @override
   double computeMaxIntrinsicWidth(double height) =>
-      _name.getMaxIntrinsicWidth(height) +
+      math.max(_name.getMaxIntrinsicWidth(height), _minName) +
       (_state == null ? 0 : _gap + _state!.getMaxIntrinsicWidth(height));
 
   @override
