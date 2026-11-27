@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
+import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_shadows.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/context_tokens.dart';
 
 const double _width = 340;
-const double _corner = 24;
 const double _gap = 10;
 
 Future<T?> showAppQuestion<T>({
@@ -47,6 +48,7 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
   final AppMotion motion;
   final CapturedThemes themes;
   final bool isDismissible;
+  bool? _entering;
 
   @override
   final String barrierLabel;
@@ -81,9 +83,12 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
         child: AnimatedBuilder(
           animation: animation,
           builder: (context, _) {
-            final bool leaving = animation.status == AnimationStatus.reverse;
-            final Curve curve = leaving ? motion.leave.flipped : motion.enter;
-            final double v = curve.transform(animation.value);
+            _entering = animation.isAnimating
+                ? _entering ?? animation.status == AnimationStatus.forward
+                : null;
+            final bool entering = _entering ?? true;
+            final double v = (entering ? motion.enter : motion.leave.flipped)
+                .transform(animation.value);
             return Stack(
               fit: StackFit.expand,
               children: [
@@ -94,12 +99,14 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
                   ),
                 ),
                 SafeArea(
-                  minimum: const EdgeInsets.symmetric(horizontal: 16),
+                  minimum: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s16,
+                  ),
                   child: Center(
                     child: Opacity(
                       opacity: v,
                       child: Transform.translate(
-                        offset: Offset(0, leaving ? 0 : motion.rise * (1 - v)),
+                        offset: Offset(0, entering ? motion.rise * (1 - v) : 0),
                         child: _Card(route: this),
                       ),
                     ),
@@ -128,12 +135,12 @@ class _Card extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.card,
-          borderRadius: BorderRadius.circular(_corner),
+          borderRadius: BorderRadius.circular(RadiusScale.r24),
           boxShadow: QuestionShadows.of(context),
         ),
         child: Material(
           type: MaterialType.transparency,
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
             child: Column(
               mainAxisSize: MainAxisSize.min,
