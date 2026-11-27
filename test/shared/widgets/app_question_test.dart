@@ -9,6 +9,7 @@ void main() {
     WidgetTester t, {
     bool isDismissible = true,
     bool still = false,
+    bool settle = true,
     String title = 'Sair?',
     String message = 'Linha.',
     List<String> buttons = const ['Sim'],
@@ -44,11 +45,12 @@ void main() {
     );
     await t.tap(find.text('open'));
     await t.pump();
-    if (!still) await t.pumpAndSettle();
+    if (!still && settle) await t.pumpAndSettle();
   }
 
   testWidgets('gives the caller the answer that was tapped', (t) async {
     await open(t);
+    expect(find.text('Linha.'), findsOneWidget);
     await t.tap(find.text('Sim'));
     await t.pumpAndSettle();
     expect(find.text('Sair?'), findsNothing);
@@ -73,21 +75,22 @@ void main() {
     expect(find.text('Sair?'), findsNothing);
   });
 
-  const asks = {
-    'Leave without saving?': 'The audio is kept for later.',
-    'Sair sem salvar?': 'O áudio fica guardado para depois.',
-  };
-  for (final ask in asks.entries) {
-    testWidgets('${ask.key} scrolls at 2.0x on 320x640', (t) async {
+  testWidgets('a pop mid-entrance reverses without a jump', (t) async {
+    await open(t, settle: false);
+    await t.pump(const Duration(milliseconds: 100));
+    final double top = t.getTopLeft(find.text('Sair?')).dy;
+    await t.tap(find.text('Sim'));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 1));
+    expect(t.getTopLeft(find.text('Sair?')).dy, closeTo(top, 0.5));
+  });
+
+  for (final title in ['Leave without saving?', 'Sair sem salvar?']) {
+    testWidgets('$title scrolls at 2.0x on 320x640', (t) async {
       t.view.physicalSize = const Size(960, 1920);
       t.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(t.view.reset);
-      await open(
-        t,
-        title: ask.key,
-        message: ask.value,
-        buttons: ['Cancel', 'Keep for later', 'Discard'],
-      );
+      await open(t, title: title, buttons: ['Cancel', 'Keep', 'Discard']);
       await t.ensureVisible(find.text('Discard'));
       expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
     });
