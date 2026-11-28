@@ -96,7 +96,7 @@ ButtonStyle handCutButtonStyle(
     HandCutButtonTone.quietOnCard => (c.pale, c.foreground, shadows.paper),
     HandCutButtonTone.danger => (
       c.error,
-      dark ? c.background : const Color(0xFFFFFFFF),
+      dark ? c.background : AppColors.card,
       shadows.danger,
     ),
   };
