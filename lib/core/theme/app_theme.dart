@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_shadows.dart';
 import 'genre_colors.dart';
 import 'screen_transition.dart';
 import 'tokens.dart';
@@ -178,7 +179,14 @@ abstract class AppTheme {
 
   static DialogThemeData _dialogTheme(AppColorSet c, TextTheme text) {
     return DialogThemeData(
-      titleTextStyle: text.headlineLarge,
+      titleTextStyle: text.headlineLarge?.copyWith(
+        fontSize: _questionTitleSize,
+        height: 0.95,
+      ),
+      contentTextStyle: text.bodyMedium?.copyWith(
+        fontSize: _menuTextSize,
+        color: c.secondary,
+      ),
       backgroundColor: c.card,
       surfaceTintColor: _noTint,
       shape: RoundedRectangleBorder(
@@ -220,24 +228,54 @@ abstract class AppTheme {
     );
   }
 
+  static const _questionTitleSize = 30.0;
+  static const _menuTextSize = 15.0;
+  static const _menuRadius = 18.0;
+  static const _menuRowHeight = 48.0;
+  static const _menuRows = EdgeInsets.symmetric(vertical: 6);
+
   static final _menuShape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(RadiusScale.r16),
+    borderRadius: BorderRadius.circular(_menuRadius),
   );
 
-  static PopupMenuThemeData _popupMenuTheme(AppColorSet c) {
+  static TextStyle _menuText(AppColorSet c) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: _menuTextSize,
+    fontWeight: FontWeight.w500,
+    color: c.foreground,
+  );
+
+  static PopupMenuThemeData _popupMenuTheme(AppColorSet c, Color shadow) {
     return PopupMenuThemeData(
       color: c.card,
       surfaceTintColor: _noTint,
       shape: _menuShape,
+      elevation: MenuShadow.elevation,
+      shadowColor: shadow,
+      menuPadding: _menuRows,
+      labelTextStyle: WidgetStateProperty.all(_menuText(c)),
     );
   }
 
-  static MenuThemeData _menuTheme(AppColorSet c) {
+  static MenuThemeData _menuTheme(AppColorSet c, Color shadow) {
     return MenuThemeData(
       style: MenuStyle(
         backgroundColor: WidgetStateProperty.all(c.card),
         surfaceTintColor: WidgetStateProperty.all(_noTint),
         shape: WidgetStateProperty.all(_menuShape),
+        elevation: WidgetStateProperty.all(MenuShadow.elevation),
+        shadowColor: WidgetStateProperty.all(shadow),
+        padding: WidgetStateProperty.all(_menuRows),
+      ),
+    );
+  }
+
+  static MenuButtonThemeData _menuButtonTheme(AppColorSet c) {
+    return MenuButtonThemeData(
+      style: ButtonStyle(
+        textStyle: WidgetStateProperty.all(_menuText(c)),
+        foregroundColor: WidgetStateProperty.all(c.foreground),
+        minimumSize: WidgetStateProperty.all(const Size(0, _menuRowHeight)),
       ),
     );
   }
@@ -444,8 +482,9 @@ abstract class AppTheme {
       chipTheme: _chipTheme(AppColors.light),
       dialogTheme: _dialogTheme(AppColors.light, textTheme),
       bottomSheetTheme: _bottomSheetTheme(AppColors.light),
-      menuTheme: _menuTheme(AppColors.light),
-      popupMenuTheme: _popupMenuTheme(AppColors.light),
+      menuTheme: _menuTheme(AppColors.light, MenuShadow.light),
+      menuButtonTheme: _menuButtonTheme(AppColors.light),
+      popupMenuTheme: _popupMenuTheme(AppColors.light, MenuShadow.light),
       snackBarTheme: _snackBarTheme(AppColors.light),
       tabBarTheme: _tabBarTheme(AppColors.light),
       sliderTheme: _sliderTheme(AppColors.light),
@@ -569,8 +608,9 @@ abstract class AppTheme {
       chipTheme: _chipTheme(AppColors.dark),
       dialogTheme: _dialogTheme(AppColors.dark, textTheme),
       bottomSheetTheme: _bottomSheetTheme(AppColors.dark),
-      menuTheme: _menuTheme(AppColors.dark),
-      popupMenuTheme: _popupMenuTheme(AppColors.dark),
+      menuTheme: _menuTheme(AppColors.dark, MenuShadow.dark),
+      menuButtonTheme: _menuButtonTheme(AppColors.dark),
+      popupMenuTheme: _popupMenuTheme(AppColors.dark, MenuShadow.dark),
       snackBarTheme: _snackBarTheme(AppColors.dark),
       tabBarTheme: _tabBarTheme(AppColors.dark),
       sliderTheme: _sliderTheme(AppColors.dark),

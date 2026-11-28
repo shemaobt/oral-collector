@@ -4,6 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import 'app_disc.dart';
 
+enum EmptyTone { calm, failed }
+
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -11,12 +13,15 @@ class EmptyState extends StatelessWidget {
     required this.title,
     this.description,
     this.action,
+    this.tone = EmptyTone.calm,
   });
 
   final IconData icon;
   final String title;
   final String? description;
   final Widget? action;
+  final EmptyTone tone;
+  static const _gap = 14.0;
 
   @override
   Widget build(BuildContext context) {
@@ -35,35 +40,36 @@ class EmptyState extends StatelessWidget {
                 children: [
                   AppDisc(
                     size: DiscSize.empty,
-                    tone: DiscTone.onCard,
+                    tone: tone == EmptyTone.failed
+                        ? DiscTone.failed
+                        : DiscTone.onCard,
                     child: Icon(icon),
                   ),
-                  const SizedBox(height: SpacingScale.s20),
+                  const SizedBox(height: _gap),
                   Text(
                     title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontSize: description == null ? 16 : 17,
+                      fontWeight: description == null
+                          ? FontWeight.w500
+                          : FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   if (description != null) ...[
-                    const SizedBox(height: SpacingScale.s8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: SpacingScale.s16,
-                      ),
-                      child: Text(
-                        description!,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.secondary,
-                          height: 1.4,
-                        ),
+                    const SizedBox(height: _gap),
+                    Text(
+                      description!,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 15,
+                        color: colors.secondary,
+                        height: 1.45,
                       ),
                     ),
                   ],
                   if (action != null) ...[
-                    const SizedBox(height: SpacingScale.s24),
+                    const SizedBox(height: _gap),
                     action!,
                   ],
                 ],
