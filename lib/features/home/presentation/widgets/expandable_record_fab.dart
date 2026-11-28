@@ -184,65 +184,74 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
       opacity: _expandAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: ExcludeFocus(
-          excluding: !_isOpen,
-          child: ExcludeSemantics(
-            excluding: !_isOpen,
-            child: IgnorePointer(
-              ignoring: !_isOpen,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxLabelWidth),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: SpacingScale.s8,
-                        vertical: SpacingScale.s8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(RadiusScale.r8),
-                      ),
-                      child: Text(
-                        label,
-                        maxLines: 2,
-                        softWrap: true,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+        child: _Hidden(
+          hidden: !_isOpen,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxLabelWidth),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: SpacingScale.s8),
-                  Pressable(
-                    onTap: onTap,
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: _miniButtonSize,
-                      height: _miniButtonSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: color,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(icon, size: 20, color: AppColors.white),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: SpacingScale.s8),
+              Pressable(
+                onTap: onTap,
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: _miniButtonSize,
+                  height: _miniButtonSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 20, color: AppColors.white),
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Hidden extends StatelessWidget {
+  const _Hidden({required this.hidden, required this.child});
+
+  final bool hidden;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeFocus(
+      excluding: hidden,
+      child: IgnorePointer(ignoring: hidden, child: child),
     );
   }
 }

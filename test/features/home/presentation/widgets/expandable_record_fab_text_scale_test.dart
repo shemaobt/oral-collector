@@ -148,7 +148,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      expect(quick + normal, 1);
+      expect((quick, normal), (0, 1));
       semantics.dispose();
     },
   );
