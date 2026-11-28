@@ -1,44 +1,43 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/tokens.dart';
+import '../../core/theme/app_theme.dart';
+import 'brush_sign.dart';
+import 'round_button.dart';
 
-const double _headerHeight = 96;
 const double _maxHeaderTextScale = 1.3;
+const double _air = 6;
+const double _rowHeight = 48;
+const double _edge = 20;
+const double _discInset = 2;
+const double _actionsGap = 10;
+const double _titleGap = 10;
 
 class ScreenHeader extends StatelessWidget implements PreferredSizeWidget {
   const ScreenHeader({
     super.key,
     required this.title,
-    required this.subtitle,
     this.actions,
-    this.showBackButton = false,
-    this.bottom,
+    this.onBack,
   });
 
   final String title;
-  final String subtitle;
   final List<Widget>? actions;
-  final bool showBackButton;
-  final PreferredSizeWidget? bottom;
+  final VoidCallback? onBack;
 
   @override
-  Size get preferredSize =>
-      Size.fromHeight(_headerHeight + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize => Size.fromHeight(_height(onBack != null));
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      toolbarHeight: _headerHeight,
-      automaticallyImplyLeading: showBackButton,
-      leading: showBackButton ? const BackButton() : null,
-      titleSpacing: showBackButton ? 0 : SpacingScale.s16,
-      title: _HeaderTitle(title: title, subtitle: subtitle),
-      actions: [
-        if (actions != null) ...actions!,
-        const SizedBox(width: SpacingScale.s8),
-      ],
-      bottom: bottom,
+      toolbarHeight: preferredSize.height,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      shape: const Border(),
+      title: _ScreenTop(title: title, actions: actions, onBack: onBack),
     );
   }
 }
@@ -47,20 +46,16 @@ class ScreenHeaderSliver extends StatelessWidget {
   const ScreenHeaderSliver({
     super.key,
     required this.title,
-    required this.subtitle,
     this.actions,
-    this.showBackButton = false,
-    this.bottom,
+    this.onBack,
     this.floating = true,
     this.snap = true,
     this.pinned = true,
   });
 
   final String title;
-  final String subtitle;
   final List<Widget>? actions;
-  final bool showBackButton;
-  final PreferredSizeWidget? bottom;
+  final VoidCallback? onBack;
   final bool floating;
   final bool snap;
   final bool pinned;
@@ -68,57 +63,117 @@ class ScreenHeaderSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      toolbarHeight: _headerHeight,
+      toolbarHeight: _height(onBack != null, MediaQuery.textScalerOf(context)),
       floating: floating,
       snap: snap,
       pinned: pinned,
-      automaticallyImplyLeading: showBackButton,
-      leading: showBackButton ? const BackButton() : null,
-      titleSpacing: showBackButton ? 0 : SpacingScale.s16,
-      title: _HeaderTitle(title: title, subtitle: subtitle),
-      actions: [
-        if (actions != null) ...actions!,
-        const SizedBox(width: SpacingScale.s8),
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      shape: const Border(),
+      title: _ScreenTop(title: title, actions: actions, onBack: onBack),
+    );
+  }
+}
+
+double _height(bool back, [TextScaler? scaler]) {
+  const line = AppTheme.titleSize * AppTheme.titleHeight;
+  final title = math.min(
+    (scaler ??
+            TextScaler.linear(
+              WidgetsBinding.instance.platformDispatcher.textScaleFactor,
+            ))
+        .scale(line),
+    line * _maxHeaderTextScale,
+  );
+  return _air +
+      (back ? _rowHeight + _titleGap + title : math.max(_rowHeight, title));
+}
+
+class _ScreenTop extends StatelessWidget {
+  const _ScreenTop({required this.title, this.actions, this.onBack});
+
+  final String title;
+  final List<Widget>? actions;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final back = onBack;
+    final titleText = _HeaderTitle(title: title);
+    final trailing = [
+      for (final (i, action) in (actions ?? const <Widget>[]).indexed) ...[
+        if (i > 0) const SizedBox(width: _actionsGap),
+        Semantics(container: true, child: action),
       ],
-      bottom: bottom,
+    ];
+
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: _maxHeaderTextScale,
+      child: Padding(
+        padding: const EdgeInsets.only(top: _air),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: _rowHeight),
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(
+                  start: back == null ? _edge : _edge - _discInset,
+                  end: _edge,
+                ),
+                child: Row(
+                  children: [
+                    if (back == null)
+                      Expanded(child: titleText)
+                    else ...[
+                      Semantics(
+                        container: true,
+                        child: RoundButton.sign(
+                          sign: Sign.back,
+                          semanticLabel: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
+                          onPressed: back,
+                          size: RoundButtonSize.small,
+                          tone: RoundButtonTone.resting,
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
+                    ...trailing,
+                  ],
+                ),
+              ),
+            ),
+            if (back != null) ...[
+              const SizedBox(height: _titleGap),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _edge),
+                child: titleText,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _HeaderTitle extends StatelessWidget {
-  const _HeaderTitle({required this.title, required this.subtitle});
+  const _HeaderTitle({required this.title});
 
   final String title;
-  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-
-    return MediaQuery.withClampedTextScaling(
-      maxScaleFactor: _maxHeaderTextScale,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.displayMedium,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: SpacingScale.s8),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.secondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+        color: AppColors.of(context).foreground,
       ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

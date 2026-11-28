@@ -56,7 +56,7 @@ abstract class AppTheme {
 
     return base.copyWith(
       displayLarge: brush(base.displayLarge, 44, 0.92),
-      displayMedium: brush(base.displayMedium, 36, 0.92),
+      displayMedium: brush(base.displayMedium, titleSize, titleHeight),
       displaySmall: brush(base.displaySmall, 28, 1),
       headlineLarge: brush(base.headlineLarge, 28, 1),
       headlineMedium: brush(base.headlineMedium, 23, 1),
@@ -72,6 +72,9 @@ abstract class AppTheme {
       labelSmall: sans(base.labelSmall, 11, FontWeight.w700, 1.25),
     );
   }
+
+  static const titleSize = 42.0;
+  static const titleHeight = 0.95;
 
   static const _buttonHeight = 46.0;
   static const _buttonBorder = 1.5;

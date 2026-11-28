@@ -97,8 +97,7 @@ Path: @/lib/shared/widgets
     ellipsizing rather than overflowing.
   - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
     bar / nav item in
-    [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the 96px
-    toolbar in `screen_header.dart`). They
+    [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the top in `screen_header.dart` is the exception, see below). They
     clip rather than grow, keeping the base design; content adapts *within* the
     fixed chrome. This mirrors the resilience approach in the feature screens:
     the recording flow
@@ -106,9 +105,9 @@ Path: @/lib/shared/widgets
     and, since ENG-180, the profile + project widgets
     ([/lib/features/profile/presentation/widgets](/lib/features/profile/presentation/widgets),
     [/lib/features/project/presentation/widgets](/lib/features/project/presentation/widgets)).
-  - `screen_header.dart` needed no change — its title/subtitle already ellipsize
-    and fit the toolbar within the 2.0× ceiling; only regression guards were
-    added.
+  - `screen_header.dart` has a minimum row height that grows with the title up to
+    its own 1.3× text ceiling; the back disc and each action are semantic nodes
+    apart from the title's heading.
 - **`UploadStatusBadge` draws a send state as a word or a sign, never a pill.**
   `compact` is the row form (check alone, word, or the 32 disc); the page form
   is the sign at 18 then the word at 15/600. No retry lives here.

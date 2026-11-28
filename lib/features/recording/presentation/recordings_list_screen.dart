@@ -290,7 +290,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 slivers: [
                   ScreenHeaderSliver(
                     title: l10n.recordings_title,
-                    subtitle: l10n.recordings_subtitle,
                     actions: [
                       const SyncStatusIndicator(),
                       FiltersIconButton(

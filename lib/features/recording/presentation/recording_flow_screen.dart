@@ -132,21 +132,6 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
     }
   }
 
-  String _subtitle(AppLocalizations l10n) {
-    switch (_currentStep) {
-      case _FlowStep.genre:
-        return l10n.recording_selectGenreSubtitle;
-      case _FlowStep.subcategory:
-        return l10n.recording_selectSubcategorySubtitle;
-      case _FlowStep.register:
-        return l10n.recording_selectRegisterSubtitle;
-      case _FlowStep.recording:
-        return l10n.recording_recordingStepSubtitle;
-      case _FlowStep.confirmation:
-        return l10n.recording_reviewStepSubtitle;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -154,7 +139,7 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
 
     return RecordingNavigationGuard(
       child: Scaffold(
-        appBar: ScreenHeader(title: _title(l10n), subtitle: _subtitle(l10n)),
+        appBar: ScreenHeader(title: _title(l10n)),
         body: genreState.isLoading && genreState.genres.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : _buildStep(genreState, l10n),
