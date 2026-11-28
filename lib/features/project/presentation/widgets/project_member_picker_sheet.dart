@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../domain/entities/project_member.dart';
 import '../notifiers/member_notifier.dart';
 
@@ -21,17 +22,11 @@ Future<ProjectMember?> showProjectMemberPickerSheet(
   ProjectMember? selected,
   bool includeAll = true,
 }) {
-  return showModalBottomSheet<ProjectMember?>(
+  return showAppSheet<ProjectMember?>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     useRootNavigator: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(RadiusScale.r20),
-      ),
-    ),
     builder: (_) => _ProjectMemberPickerSheet(
       projectId: projectId,
       selectedUserId: selected?.userId,

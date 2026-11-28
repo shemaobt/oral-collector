@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/widgets/icon_box.dart';
 import '../../../recording/presentation/notifiers/input_device_notifier.dart';
 import '../../../recording/presentation/widgets/input_device_picker_sheet.dart';
@@ -57,7 +58,7 @@ class _RecordingSettingsCardState extends ConsumerState<RecordingSettingsCard> {
           color: widget.colors.secondary,
         ),
         onTap: () {
-          showModalBottomSheet<void>(
+          showAppSheet<void>(
             context: context,
             builder: (_) => const InputDevicePickerSheet(),
           );

@@ -15,7 +15,11 @@ Path: @/packages/obt_lints
   [lib/src/avoid_raw_print.dart](lib/src/avoid_raw_print.dart), bans raw `print` /
   `debugPrint` so all console output routes through the logging facade. A
   fourth, `avoid_raw_dialog` ([lib/src/avoid_raw_dialog.dart](lib/src/avoid_raw_dialog.dart)),
-  bans `showDialog` / `showGeneralDialog` in `lib/` outside `app_question.dart`.
+  bans `showDialog` / `showGeneralDialog` in `lib/` outside `app_question.dart`, and
+  `showModalBottomSheet` / `showBottomSheet` outside `app_sheet.dart`. It resolves
+  the called element, so it also reports prefixed calls
+  (`material.showModalBottomSheet`) and `Scaffold.of(context).showBottomSheet`,
+  and spares same-named functions that do not come from Flutter.
 - Lives in its **own package** because `custom_lint` requires every lint plugin
   to be a standalone Dart package exposing a `createPlugin()` entrypoint
   ([lib/obt_lints.dart](lib/obt_lints.dart)); it cannot be folded into the app's

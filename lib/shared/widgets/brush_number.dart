@@ -21,12 +21,14 @@ class BrushNumber extends StatelessWidget {
     required this.height,
     this.color,
     this.label,
+    this.tabular = false,
   });
 
   final String text;
   final double height;
   final Color? color;
   final String? label;
+  final bool tabular;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,8 @@ class BrushNumber extends StatelessWidget {
     final h = MediaQuery.textScalerOf(context).scale(height);
     final glyphs = [for (final c in text.split('')) _glyphs[c]!];
     final paint = color ?? DefaultTextStyle.of(context).style.color!;
-    final width = _width(glyphs, h);
+    final slots = [for (final g in glyphs) _slot(g, tabular)];
+    final width = _width(slots, h);
     return Semantics(
       label: label ?? text,
       excludeSemantics: true,
@@ -45,22 +48,31 @@ class BrushNumber extends StatelessWidget {
         width: width,
         height: h,
         child: ClipRect(
-          child: CustomPaint(painter: _NumberPainter(glyphs, paint, h)),
+          child: CustomPaint(painter: _NumberPainter(glyphs, slots, paint, h)),
         ),
       ),
     );
   }
 }
 
-double _pitch(Glyph g, double h) => (g.width / _box + _gap) * h;
+final _digitSlot = Glyph.values
+    .where((g) => g.char != ':')
+    .map((g) => g.width)
+    .reduce((a, b) => a > b ? a : b);
 
-double _width(List<Glyph> glyphs, double h) =>
-    glyphs.fold<double>(0, (sum, g) => sum + _pitch(g, h)) - _gap * h;
+double _slot(Glyph g, bool tabular) =>
+    tabular && g.char != ':' ? _digitSlot : g.width;
+
+double _pitch(double slot, double h) => (slot / _box + _gap) * h;
+
+double _width(List<double> slots, double h) =>
+    slots.fold<double>(0, (sum, s) => sum + _pitch(s, h)) - _gap * h;
 
 class _NumberPainter extends CustomPainter {
-  const _NumberPainter(this.glyphs, this.color, this.height);
+  const _NumberPainter(this.glyphs, this.slots, this.color, this.height);
 
   final List<Glyph> glyphs;
+  final List<double> slots;
   final Color color;
   final double height;
 
@@ -69,14 +81,15 @@ class _NumberPainter extends CustomPainter {
     final scale = height / _box;
     final paint = Paint()..color = color;
     var x = 0.0;
-    for (final g in glyphs) {
+    for (var i = 0; i < glyphs.length; i++) {
+      final g = glyphs[i];
       canvas.save();
-      canvas.translate(x, _top * scale);
+      canvas.translate(x + (slots[i] - g.width) / 2 * scale, _top * scale);
       canvas.scale(scale);
       canvas.translate(-g.left, 0);
       canvas.drawPath(_outline(g), paint);
       canvas.restore();
-      x += _pitch(g, height);
+      x += _pitch(slots[i], height);
     }
   }
 
@@ -84,5 +97,6 @@ class _NumberPainter extends CustomPainter {
   bool shouldRepaint(_NumberPainter old) =>
       old.color != color ||
       old.height != height ||
-      !listEquals(old.glyphs, glyphs);
+      !listEquals(old.glyphs, glyphs) ||
+      !listEquals(old.slots, slots);
 }
