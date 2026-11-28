@@ -246,14 +246,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
     unawaited(_draftStore.write(widget.result.filePath, _currentDraft));
   }
 
-  void _releaseDecision() {
-    if (_pendingDecisionController.state == widget.result) {
-      _pendingDecisionController.state = null;
-    }
-  }
+  void _releaseDecision() => _pendingDecisionController.update(
+    (owner) => owner == widget.result ? null : owner,
+  );
 
   /// The recording's fate is decided: the draft has no owner left.
   Future<void> _closeDraft() async {
+    _releaseDecision();
     _draftWriteTimer?.cancel();
     _draftWriteTimer = null;
     _draftClosed = true;
@@ -537,7 +536,6 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
       );
 
       await _closeDraft();
-      _releaseDecision();
 
       if (isOnline) {
         unawaited(syncNotifier.processQueue());
@@ -644,7 +642,6 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
       } catch (_) {}
 
       await _closeDraft();
-      _releaseDecision();
 
       // The bytes are on the server and the local row is written, and on web
       // they live in IndexedDB, which outlives the tab (ENG-421). Without this
