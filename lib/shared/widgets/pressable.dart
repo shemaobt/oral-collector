@@ -74,6 +74,12 @@ class _PressLookState extends State<PressLook>
   }
 }
 
+Widget pressLookBackground(
+  BuildContext context,
+  Set<WidgetState> states,
+  Widget? child,
+) => PressLook(down: states.contains(WidgetState.pressed), child: child!);
+
 class Pressable extends StatefulWidget {
   const Pressable({
     super.key,
