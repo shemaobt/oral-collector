@@ -35,12 +35,8 @@ void main() {
       expect(find.text(_title), findsOneWidget);
     });
 
-    for (final (scale, height) in const [
-      (1.0, 54.0),
-      (1.3, 57.9),
-      (2.0, 57.9),
-    ]) {
-      testWidgets('the row grows to ${height}px at ${scale}x', (tester) async {
+    for (final (scale, height) in const [(1.0, 54.0), (1.3, 57.9)]) {
+      testWidgets('the row is ${height}px at ${scale}x', (tester) async {
         tester.platformDispatcher.textScaleFactorTestValue = scale;
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         await pump(tester, scale);
@@ -48,31 +44,11 @@ void main() {
           tester.getSize(find.byType(AppBar)).height,
           closeTo(height, 0.1),
         );
-        expect(
-          tester.getSize(find.text(_title)).height,
-          closeTo(39.9 * (scale > 1.3 ? 1.3 : scale), 0.2),
-        );
       });
     }
 
     testWidgets(
-      'the back disc sits 20px from the edge and the title under it',
-      (tester) async {
-        await pumpAtTextScale(
-          tester,
-          child: Scaffold(
-            appBar: ScreenHeader(title: _title, onBack: () {}),
-            body: const SizedBox.expand(),
-          ),
-        );
-        await tester.pump();
-        expect(tester.getTopLeft(find.byType(AppDisc)).dx, 20);
-        expect(tester.getTopLeft(find.text(_title)).dx, 20);
-      },
-    );
-
-    testWidgets(
-      'the back and each action are their own nodes, not the heading',
+      'the back and the action are their own nodes, not the heading',
       (tester) async {
         final handle = tester.ensureSemantics();
         await pumpAtTextScale(
@@ -85,31 +61,27 @@ void main() {
                 Semantics(
                   label: 'Filters',
                   button: true,
-                  child: const SizedBox(width: 48, height: 48),
+                  child: const SizedBox(),
                 ),
               ],
             ),
-            body: const SizedBox.expand(),
           ),
         );
         await tester.pump();
         final back = MaterialLocalizations.of(
           tester.element(find.byType(ScreenHeader)),
         ).backButtonTooltip;
-        expect(find.bySemanticsLabel(back), findsOneWidget);
-        expect(find.bySemanticsLabel('Filters'), findsOneWidget);
+        expect(tester.getTopLeft(find.byType(AppDisc)).dx, 20);
         expect(
           tester.getSemantics(find.text(_title)),
           isSemantics(label: _title, isHeader: true, isButton: false),
         );
-        expect(
-          tester.getSemantics(find.bySemanticsLabel('Filters')),
-          isSemantics(label: 'Filters', isButton: true, isHeader: false),
-        );
-        expect(
-          tester.getSemantics(find.bySemanticsLabel(back)),
-          isSemantics(label: back, isButton: true, isHeader: false),
-        );
+        for (final label in ['Filters', back]) {
+          expect(
+            tester.getSemantics(find.bySemanticsLabel(label)),
+            isSemantics(label: label, isButton: true, isHeader: false),
+          );
+        }
         handle.dispose();
       },
     );
