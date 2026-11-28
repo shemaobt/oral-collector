@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -20,6 +21,7 @@ class _PressLookState extends State<PressLook>
   late final AnimationController _press = AnimationController.unbounded(
     vsync: this,
   );
+  final GlobalKey _childKey = GlobalKey();
 
   @override
   void didUpdateWidget(covariant PressLook oldWidget) {
@@ -48,7 +50,7 @@ class _PressLookState extends State<PressLook>
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _press,
-        child: widget.child,
+        child: KeyedSubtree(key: _childKey, child: widget.child),
         builder: (context, child) {
           final press = _press.value;
           final tint = 1 - dip * math.max(press, 0);
@@ -92,6 +94,7 @@ class Pressable extends StatefulWidget {
 
 class _PressableState extends State<Pressable> {
   bool _down = false;
+  Offset _origin = Offset.zero;
 
   bool get _enabled => widget.onTap != null || widget.onLongPress != null;
 
@@ -99,20 +102,39 @@ class _PressableState extends State<Pressable> {
     if (_down != down) setState(() => _down = down);
   }
 
+  void _onPointerDown(PointerDownEvent event) {
+    if (event.buttons != kPrimaryButton) return;
+    _origin = event.position;
+    _setDown(true);
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if ((event.position - _origin).distance > kTouchSlop) _setDown(false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Listener(
-      onPointerDown: (_) => _setDown(_enabled),
+      onPointerDown: _onPointerDown,
+      onPointerMove: _onPointerMove,
       onPointerUp: (_) => _setDown(false),
       onPointerCancel: (_) => _setDown(false),
-      child: Material(
-        color: AppColors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: widget.onLongPress,
-          customBorder: widget.customBorder,
-          child: PressLook(down: _down, child: widget.child),
-        ),
+      child: Stack(
+        children: [
+          PressLook(down: _down && _enabled, child: widget.child),
+          Positioned.fill(
+            child: Material(
+              color: AppColors.transparent,
+              child: InkWell(
+                onTap: widget.onTap,
+                onLongPress: widget.onLongPress,
+                customBorder: widget.customBorder,
+                highlightColor: AppColors.transparent,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
