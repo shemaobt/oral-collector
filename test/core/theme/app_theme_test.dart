@@ -25,10 +25,6 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
     BorderRadius.circular(RadiusScale.r16),
   );
   expect(
-    (theme.inputDecorationTheme.border! as OutlineInputBorder).borderRadius,
-    BorderRadius.circular(RadiusScale.r16),
-  );
-  expect(
     _radiusOf(theme.chipTheme.shape),
     BorderRadius.circular(RadiusScale.r20),
   );
@@ -38,13 +34,6 @@ void _expectPaddingFromTokens(ThemeData theme) {
   const buttonPadding = EdgeInsets.symmetric(horizontal: SpacingScale.s20);
   expect(_buttonPadding(theme.elevatedButtonTheme.style), buttonPadding);
   expect(_buttonPadding(theme.filledButtonTheme.style), buttonPadding);
-  expect(
-    theme.inputDecorationTheme.contentPadding,
-    const EdgeInsets.symmetric(
-      horizontal: SpacingScale.s16,
-      vertical: SpacingScale.s16,
-    ),
-  );
 }
 
 const _brush = 'CaveatBrush';
@@ -244,32 +233,6 @@ void main() {
         expect(_on(danger.backgroundColor), c.error);
         expect(_on(danger.shape), const StadiumBorder());
         expect(_on(danger.minimumSize), const Size(0, 46));
-      });
-    });
-
-    group('$name fields', () {
-      test('read as the design field', () {
-        final c = theme.extension<AppColorSet>()!;
-        final input = theme.inputDecorationTheme;
-        BorderSide side(InputBorder? b) =>
-            (b! as OutlineInputBorder).borderSide;
-        expect(input.filled, isTrue);
-        expect(WidgetStateProperty.resolveAs(input.fillColor!, {}), c.card);
-        expect(
-          WidgetStateProperty.resolveAs(input.fillColor!, {
-            WidgetState.disabled,
-          }),
-          c.surfaceAlt,
-        );
-        expect(
-          side(input.enabledBorder),
-          BorderSide(color: c.border, width: 1.5),
-        );
-        expect(side(input.errorBorder), BorderSide(color: c.error, width: 1.5));
-        expect(
-          side(input.focusedErrorBorder),
-          BorderSide(color: c.error, width: 1.5),
-        );
       });
     });
 

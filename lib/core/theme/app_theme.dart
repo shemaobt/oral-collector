@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_shadows.dart';
+import 'field_border.dart';
 import 'genre_colors.dart';
 import 'screen_transition.dart';
 import 'tokens.dart';
@@ -129,31 +130,55 @@ abstract class AppTheme {
     );
   }
 
-  static const _fieldBorder = 1.5;
+  static const _fieldLine = 2.0;
+  static const _fieldPadding = EdgeInsets.symmetric(
+    horizontal: 14,
+    vertical: SpacingScale.s12,
+  );
 
-  static InputDecorationTheme _inputDecorationTheme(AppColorSet c) {
-    OutlineInputBorder outline(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(RadiusScale.r16),
-      borderSide: BorderSide(color: color, width: _fieldBorder),
+  static InputDecorationTheme fieldTheme(
+    AppColorSet c,
+    ShadowTints shadows,
+    TextTheme text, {
+    bool onCard = false,
+  }) {
+    final edge = onCard ? const <BoxShadow>[] : shadows.edge;
+    final fill = onCard ? c.surfaceAlt : c.card;
+    final dimmedEdge = [
+      for (final s in edge)
+        s.copyWith(
+          color: s.color.withValues(alpha: s.color.a * OpacityScale.o50),
+        ),
+    ];
+    WidgetStateColor halfWhenOff(Color color) => WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.disabled)
+          ? color.withValues(alpha: color.a * OpacityScale.o50)
+          : color,
+    );
+    final sign = halfWhenOff(c.secondary);
+    final label = WidgetStateTextStyle.resolveWith(
+      (states) => TextStyle(color: sign.resolve(states)),
+    );
+    FieldBorder line(Color color) => FieldBorder(
+      borderSide: BorderSide(color: color, width: _fieldLine),
     );
     return InputDecorationTheme(
       filled: true,
-      fillColor: WidgetStateColor.resolveWith(
-        (states) =>
-            states.contains(WidgetState.disabled) ? c.surfaceAlt : c.card,
-      ),
+      fillColor: halfWhenOff(fill),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
-      border: outline(c.border),
-      enabledBorder: outline(c.border),
-      disabledBorder: outline(c.border),
-      focusedBorder: outline(c.primary),
-      errorBorder: outline(c.error),
-      focusedErrorBorder: outline(c.error),
-      hintStyle: TextStyle(color: c.secondary),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: SpacingScale.s16,
-        vertical: SpacingScale.s16,
-      ),
+      border: FieldBorder(edge: edge),
+      enabledBorder: FieldBorder(edge: edge),
+      disabledBorder: FieldBorder(edge: dimmedEdge),
+      focusedBorder: line(c.primary),
+      errorBorder: line(c.error),
+      focusedErrorBorder: line(c.error),
+      hintStyle: label,
+      labelStyle: label,
+      floatingLabelStyle: label,
+      errorStyle: text.bodySmall?.copyWith(color: c.error),
+      prefixIconColor: sign,
+      suffixIconColor: sign,
+      contentPadding: _fieldPadding,
     );
   }
 
@@ -451,7 +476,11 @@ abstract class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
-      inputDecorationTheme: _inputDecorationTheme(AppColors.light),
+      inputDecorationTheme: fieldTheme(
+        AppColors.light,
+        ShadowTints.light,
+        textTheme,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
@@ -583,7 +612,11 @@ abstract class AppTheme {
           minimumSize: const Size(0, 48),
         ),
       ),
-      inputDecorationTheme: _inputDecorationTheme(AppColors.dark),
+      inputDecorationTheme: fieldTheme(
+        AppColors.dark,
+        ShadowTints.dark,
+        textTheme,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
         selectedItemColor: AppColors.darkPrimary,
