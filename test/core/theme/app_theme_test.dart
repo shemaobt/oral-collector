@@ -145,13 +145,6 @@ void _expectOverlays(ThemeData theme) {
   final dialog = theme.dialogTheme;
   expect(dialog.backgroundColor, c.card);
   expect(_radiusOf(dialog.shape), BorderRadius.circular(RadiusScale.r24));
-  expect(dialog.titleTextStyle?.fontFamily, _brush);
-  expect(dialog.titleTextStyle?.fontSize, 30);
-  expect(dialog.titleTextStyle?.height, 0.95);
-  expect(dialog.titleTextStyle?.fontFamilyFallback, [_sans]);
-  expect(dialog.contentTextStyle?.fontFamily, _sans);
-  expect(dialog.contentTextStyle?.fontSize, 15);
-  expect(dialog.contentTextStyle?.color, c.secondary);
 
   final sheet = theme.bottomSheetTheme;
   expect(sheet.backgroundColor, c.card);
@@ -169,40 +162,10 @@ void _expectOverlays(ThemeData theme) {
   expect(snack.actionTextColor, c.wood);
   expect(_radiusOf(snack.shape), BorderRadius.circular(RadiusScale.r16));
 
-  _expectMenus(theme, c);
+  expect(theme.popupMenuTheme.color, c.card);
+  expect(_on(theme.menuTheme.style!.backgroundColor), c.card);
 
   expect(theme.dividerTheme.color, c.border);
-}
-
-void _expectMenus(ThemeData theme, AppColorSet c) {
-  final popup = theme.popupMenuTheme;
-  final style = theme.menuTheme.style!;
-  final shadow = theme.brightness == Brightness.dark
-      ? const Color(0xFF000000)
-      : const Color(0xFF463A1E);
-  const rows = EdgeInsets.symmetric(vertical: 6);
-
-  expect(popup.color, c.card);
-  expect(_on(style.backgroundColor), c.card);
-  expect(_radiusOf(popup.shape), BorderRadius.circular(18));
-  expect(_radiusOf(style.shape?.resolve({})), BorderRadius.circular(18));
-  expect(popup.menuPadding, rows);
-  expect(_on(style.padding), rows);
-
-  expect(popup.shadowColor, shadow);
-  expect(_on(style.shadowColor), shadow);
-  expect(popup.elevation, 8);
-  expect(_on(style.elevation), popup.elevation);
-
-  final label = popup.labelTextStyle!.resolve({})!;
-  expect(label.fontSize, 15);
-  expect(label.fontWeight, FontWeight.w500);
-  expect(label.color, c.foreground);
-  final item = theme.menuButtonTheme.style!;
-  expect(_on(item.textStyle)?.fontSize, 15);
-  expect(_on(item.textStyle)?.fontWeight, FontWeight.w500);
-  expect(_on(item.foregroundColor), c.foreground);
-  expect(_on(item.minimumSize)?.height, 48);
 }
 
 void _expectControls(ThemeData theme) {

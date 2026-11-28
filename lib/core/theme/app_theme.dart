@@ -253,7 +253,13 @@ abstract class AppTheme {
       elevation: MenuShadow.elevation,
       shadowColor: shadow,
       menuPadding: _menuRows,
-      labelTextStyle: WidgetStateProperty.all(_menuText(c)),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => _menuText(c).copyWith(
+          color: states.contains(WidgetState.disabled)
+              ? c.secondary
+              : c.foreground,
+        ),
+      ),
     );
   }
 
@@ -274,7 +280,11 @@ abstract class AppTheme {
     return MenuButtonThemeData(
       style: ButtonStyle(
         textStyle: WidgetStateProperty.all(_menuText(c)),
-        foregroundColor: WidgetStateProperty.all(c.foreground),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? c.secondary
+              : c.foreground,
+        ),
         minimumSize: WidgetStateProperty.all(const Size(0, _menuRowHeight)),
       ),
     );
