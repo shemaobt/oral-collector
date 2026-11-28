@@ -39,12 +39,12 @@ Path: @/lib/core/router
   returns to the branch's last screen, or to its first when the tab is already
   in use. Record always opens at its first screen.
 - **A tab's screen outlives its visit, so it refreshes on return.** The shell
-  publishes the tab in use (`tabInUseProvider`) whenever the branch changes, by
-  a tap or by a `go` that lands in another tab (a save goes to `/home`); Home,
-  Recordings, Projects and Profile rerun their entry fetches from it. Record is
-  the exception: its pages are rebuilt when the person leaves it, and keyed by
-  their address, so a flow left before recording starts fresh, as it did when
-  every tab change built a new page.
+  counts the entries into each tab (`TabVisits`), whether by a tap or by a `go`
+  that lands in another tab (a save goes to `/home`). Home, Recordings,
+  Projects and Profile refresh when that count rises past the one they were
+  built at, so a first visit fetches once. Record is the exception: its pages
+  are keyed by that count and by their address, so every entry starts a fresh
+  flow, as it did when every tab change built a new page.
 - Several routes gate on `projectNotifierProvider.activeProject` in their own
   `redirect` (record flow, quick-record, recovery-confirm, import-file):
   reading Riverpod state directly inside a `GoRoute.redirect`, rather than

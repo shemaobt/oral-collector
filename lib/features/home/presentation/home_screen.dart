@@ -7,7 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/router/navigation.dart';
-import '../../../core/router/tab_in_use.dart';
+import '../../../core/router/tab_visits.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -42,16 +42,20 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with RefreshOnReturn {
+  @override
+  ShellTab get tab => ShellTab.home;
+
+  @override
+  void refreshOnReturn() => _refresh();
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(_refreshOnEntry);
-  }
-
-  void _refreshOnEntry() {
-    ref.read(homeNotifierProvider.notifier).refreshAll();
-    _fetchRemoteData();
+    Future.microtask(() {
+      ref.read(homeNotifierProvider.notifier).refreshAll();
+      _fetchRemoteData();
+    });
   }
 
   void _fetchRemoteData() {
@@ -153,7 +157,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    onReturnTo(ref, ShellTab.home, _refreshOnEntry);
     final l10n = AppLocalizations.of(context);
     final projectState = ref.watch(projectNotifierProvider);
     final genreState = ref.watch(genreNotifierProvider);

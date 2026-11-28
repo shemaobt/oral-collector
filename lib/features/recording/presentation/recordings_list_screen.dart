@@ -9,7 +9,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/router/navigation.dart';
-import '../../../core/router/tab_in_use.dart';
+import '../../../core/router/tab_visits.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
@@ -61,7 +61,16 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RefreshOnReturn {
+  @override
+  ShellTab get tab => ShellTab.recordings;
+
+  @override
+  void refreshOnReturn() {
+    _applyGenreFromAddress();
+    _refreshAll();
+  }
+
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
 
@@ -75,12 +84,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       if (!mounted) return;
       final notifier = ref.read(recordingsListNotifierProvider.notifier);
       _applyGenreFromAddress();
-      // Applied only when the route names one, exactly like the genre: a
-      // pendency the user picked in the sheet is not in the URL, and clearing
-      // it here would make it the one filter that cannot survive leaving this
-      // screen and coming back. Route changes are `didUpdateWidget`'s job,
-      // including the change to null that the tab bar makes.
-      //
       // refresh: false — _refreshAll fetches on the next line, and the pendency
       // filter is a server-side one, so letting it fetch too would ask twice.
       if (flag != null) {
@@ -93,15 +96,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   @override
   void didUpdateWidget(RecordingsListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The tab bar, deep links and back navigation all reach this screen through
-    // the router, which rebuilds the widget with the route's parameters but
-    // reuses the State, so `initState` never runs again and a pendency from an
-    // earlier visit outlives the URL that named it.
-    //
     // The comparison is against the old widget, never against the notifier: a
     // filter the user picked from the sheet or a chip is not in the URL, and
     // keying this on the route alone would wipe it on any rebuild.
-    //
     if (widget.initialGenreId != oldWidget.initialGenreId ||
         widget.initialSubcategoryId != oldWidget.initialSubcategoryId) {
       Future.microtask(() {
@@ -238,7 +235,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
   @override
   Widget build(BuildContext context) {
-    onReturnTo(ref, ShellTab.recordings, _refreshAll);
     // Re-fetch when connectivity is restored
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
       if (next && prev == false) {
