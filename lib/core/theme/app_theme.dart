@@ -329,8 +329,8 @@ abstract class AppTheme {
       checkmarkColor: c.onPrimary,
       labelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
         color: WidgetStateColor.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? c.onPrimary
@@ -339,8 +339,8 @@ abstract class AppTheme {
       ),
       secondaryLabelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
         color: c.onPrimary,
       ),
       side: BorderSide.none,

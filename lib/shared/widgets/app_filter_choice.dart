@@ -38,13 +38,17 @@ class AppFilterChoice extends StatelessWidget {
         child: Container(
           height: _height,
           padding: const EdgeInsets.symmetric(horizontal: _padding),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 15,
-              fontWeight: chosen ? FontWeight.w600 : FontWeight.w500,
-              color: chosen ? colors.card : colors.foreground,
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 15,
+                fontWeight: chosen ? FontWeight.w600 : FontWeight.w500,
+                color: chosen ? colors.card : colors.foreground,
+              ),
             ),
           ),
         ),

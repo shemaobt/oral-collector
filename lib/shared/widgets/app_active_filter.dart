@@ -29,7 +29,6 @@ class AppActiveFilter extends StatelessWidget {
       child: Container(
         height: _height,
         padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
-        alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           spacing: _gap,
@@ -37,6 +36,7 @@ class AppActiveFilter extends StatelessWidget {
             Flexible(
               child: Text(
                 name,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontSize: 13,
