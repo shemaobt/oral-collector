@@ -81,7 +81,7 @@ TextScaler _platformScaler() => TextScaler.linear(
 );
 
 double _titleLine(TextScaler scaler) {
-  const line = AppTheme.screenTitleSize * AppTheme.screenTitleHeight;
+  const line = AppTheme.titleSize * AppTheme.titleHeight;
   return math.min(scaler.scale(line), line * _maxHeaderTextScale);
 }
 
