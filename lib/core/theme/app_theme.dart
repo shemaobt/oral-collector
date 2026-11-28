@@ -306,6 +306,27 @@ abstract class AppTheme {
     return DividerThemeData(color: c.border, thickness: 1);
   }
 
+  static DataTableThemeData _dataTableTheme(AppColorSet c, TextTheme text) {
+    return DataTableThemeData(
+      headingTextStyle: text.bodySmall?.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: c.secondary,
+      ),
+      dataTextStyle: text.bodyMedium?.copyWith(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: c.foreground,
+      ),
+      horizontalMargin: 16,
+      columnSpacing: 32,
+      dataRowMinHeight: 46,
+      dataRowMaxHeight: 46,
+      headingRowHeight: 43,
+      dividerThickness: 1,
+    );
+  }
+
   static ChipThemeData _chipTheme(AppColorSet c) {
     return ChipThemeData(
       backgroundColor: c.card,
@@ -495,6 +516,7 @@ abstract class AppTheme {
         indicatorColor: AppColors.accent.withValues(alpha: OpacityScale.o12),
       ),
       dividerTheme: _dividerTheme(AppColors.light),
+      dataTableTheme: _dataTableTheme(AppColors.light, textTheme),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -624,6 +646,7 @@ abstract class AppTheme {
         ),
       ),
       dividerTheme: _dividerTheme(AppColors.dark),
+      dataTableTheme: _dataTableTheme(AppColors.dark, textTheme),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
