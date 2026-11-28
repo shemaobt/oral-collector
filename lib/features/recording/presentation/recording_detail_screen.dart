@@ -18,7 +18,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/brush_sign.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/quick_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
@@ -155,7 +155,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     } else if (outcome == RecordingMutationResult.titleConflict) {
       // The new name is taken too; the recording stays conflicted so the banner
       // keeps offering another rename.
-      showErrorSnackBar(
+      showErrorNotice(
         context,
         '',
         template: (_) => l10n.recording_duplicateTitleMessage(result.title),
@@ -326,7 +326,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        showErrorSnackBar(context, e);
+        showErrorNotice(context, e);
       }
       return false;
     }
@@ -448,7 +448,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           // O motivo de AudioExporter é técnico/inglês (já registrado em log);
           // mapeá-lo dispararia ramos de import (ex.: "file not found"), então
           // ao usuário mostramos só a mensagem localizada de share.
-          showErrorSnackBar(
+          showErrorNotice(
             context,
             '',
             template: (_) => l10n.recording_exportShareFailed,
@@ -457,7 +457,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       } catch (e) {
         if (mounted) {
           Navigator.of(context).pop();
-          showErrorSnackBar(context, e);
+          showErrorNotice(context, e);
         }
       }
       return;
@@ -483,7 +483,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       sharePositionOrigin: _shareAnchorRect(),
     );
     if (!result.success && mounted) {
-      showErrorSnackBar(
+      showErrorNotice(
         context,
         '',
         template: (_) => l10n.recording_exportShareFailed,

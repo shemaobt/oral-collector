@@ -8,7 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
@@ -78,7 +78,7 @@ class _StorytellersListScreenState
     if (!mounted) return;
     if (!success) {
       final error = ref.read(projectStorytellersNotifierProvider).error;
-      showErrorSnackBar(context, error ?? l10n.error_generic);
+      showErrorNotice(context, error ?? l10n.error_generic);
     }
   }
 

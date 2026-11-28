@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
-import '../../../../../l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 
 /// Reports the [outcome] of a cache clear, naming the recordings that stayed on
@@ -10,15 +9,20 @@ import '../../../sync/presentation/notifiers/sync_notifier.dart';
 /// the user asked for space back and got less than they expected — and it would
 /// hide that audio the server never received is still waiting here (ENG-407).
 ///
-/// Takes the messenger and [l10n] rather than a `BuildContext` because the
+/// Takes the [notice] and [l10n] rather than a `BuildContext` because the
 /// caller resolves both before awaiting the clear, and the context it holds is a
 /// parameter no `mounted` check can vouch for.
-void showClearCacheResultSnackBar(
-  ScaffoldMessengerState messenger,
+void showClearCacheResultNotice(
+  QuickNotice notice,
   AppLocalizations l10n,
   ClearCacheOutcome outcome,
 ) {
-  messenger.showSnackBar(SnackBar(content: Text(_sentenceFor(l10n, outcome))));
+  notice.show(
+    _sentenceFor(l10n, outcome),
+    tone: outcome.keptUndeletable > 0
+        ? QuickNoticeTone.failed
+        : QuickNoticeTone.calm,
+  );
 }
 
 /// A delete that failed costs the sentence its opening claim: "Local cache

@@ -16,9 +16,10 @@ import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/sync_now.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../invite/presentation/notifiers/invite_notifier.dart';
@@ -28,7 +29,7 @@ import '../../recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../sync/presentation/notifiers/sync_state.dart';
 import 'notifiers/profile_notifier.dart';
-import 'widgets/clear_cache_snack_bar.dart';
+import 'widgets/clear_cache_notice.dart';
 import 'widgets/invitations_section.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/quick_stats_row.dart';
@@ -71,7 +72,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e);
+        showErrorNotice(context, e);
       }
     }
   }
@@ -158,7 +159,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? l10n.profile_inviteAcceptFailed);
+          showErrorNotice(context, err ?? l10n.profile_inviteAcceptFailed);
         }
       },
       onDecline: (invite) async {
@@ -172,7 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? l10n.profile_inviteDeclineFailed);
+          showErrorNotice(context, err ?? l10n.profile_inviteDeclineFailed);
         }
       },
       onRefresh: () {
@@ -234,11 +235,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             children: [
               ListTile(
-                leading: IconBox(
-                  icon: LucideIcons.logOut,
-                  color: colors.error,
-                  alpha: 0.1,
-                ),
+                leading: IconBox(icon: LucideIcons.logOut, color: colors.error),
                 title: Text(
                   l10n.profile_logOut,
                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -260,11 +257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: IconBox(
-                  icon: LucideIcons.trash2,
-                  color: colors.error,
-                  alpha: 0.1,
-                ),
+                leading: IconBox(icon: LucideIcons.trash2, color: colors.error),
                 title: Text(
                   l10n.profile_deleteAccount,
                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -447,7 +440,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _showClearCacheConfirmation(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final notice = quickNoticeOf(context);
     final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
@@ -475,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final kept = await ref
           .read(profileNotifierProvider.notifier)
           .clearCacheAndRefresh();
-      if (mounted) showClearCacheResultSnackBar(messenger, l10n, kept);
+      if (mounted) showClearCacheResultNotice(notice, l10n, kept);
     }
   }
 }
@@ -499,7 +492,7 @@ class _LanguageSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: ListTile(
-            leading: IconBox(icon: LucideIcons.globe, color: colors.primary),
+            leading: const IconBox(icon: LucideIcons.globe),
             title: Text(localeName),
             trailing: Icon(
               LucideIcons.chevronRight,
@@ -565,7 +558,7 @@ class _AboutSection extends StatelessWidget {
           child: Column(
             children: [
               ListTile(
-                leading: IconBox(icon: LucideIcons.info, color: colors.info),
+                leading: const IconBox(icon: LucideIcons.info),
                 title: Text(l10n.profile_appVersion),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
@@ -588,7 +581,7 @@ class _AboutSection extends StatelessWidget {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: IconBox(icon: LucideIcons.heart, color: colors.accent),
+                leading: const IconBox(icon: LucideIcons.heart),
                 title: Text(l10n.profile_byShema),
               ),
             ],
@@ -616,10 +609,7 @@ class _AdminSection extends ConsumerWidget {
             borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: ListTile(
-            leading: IconBox(
-              icon: LucideIcons.layoutDashboard,
-              color: colors.primary,
-            ),
+            leading: const IconBox(icon: LucideIcons.layoutDashboard),
             title: Text(l10n.profile_adminDashboard),
             subtitle: Text(l10n.profile_adminSubtitle),
             trailing: Icon(

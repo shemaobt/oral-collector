@@ -735,6 +735,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get sendState_needsYou => 'Perlu Anda';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'Mengirim $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => 'Konflik nama';
 
   @override

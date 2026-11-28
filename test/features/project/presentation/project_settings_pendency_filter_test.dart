@@ -11,13 +11,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/core/router/app_router.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
@@ -42,7 +42,9 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifie
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/utils/error_helpers.dart';
 
+import '../../../support/notice_fill.dart';
 import '../../../support/text_scale.dart';
 
 final _l10n = AppLocalizationsEn();
@@ -360,8 +362,14 @@ void main() {
       isNull,
     );
 
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(
+      noticeFill(
+        tester,
+        friendlyErrorFor(Exception('prefs unavailable'), _l10n),
+      ),
+      AppColors.light.error,
+    );
 
     expect(reporter.reported, hasLength(1));
     expect(reporter.stacks.single, isNotNull);

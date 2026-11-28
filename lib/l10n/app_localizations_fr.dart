@@ -743,6 +743,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sendState_needsYou => 'Besoin de vous';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'Envoi en cours $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => 'Conflit de nom';
 
   @override

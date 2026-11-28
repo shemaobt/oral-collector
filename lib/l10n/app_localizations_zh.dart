@@ -709,6 +709,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendState_needsYou => '需要你处理';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return '发送中 $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => '名称冲突';
 
   @override

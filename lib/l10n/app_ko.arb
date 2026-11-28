@@ -250,6 +250,7 @@
   "sendState_sending": "보내는 중",
   "sendState_sent": "보냄",
   "sendState_needsYou": "확인 필요",
+  "sendState_sendingPercent": "보내는 중 {percent}%",
   "recording_statusNameConflict": "이름 충돌",
   "recording_statusDescriptionTooShort": "설명이 너무 짧습니다",
   "recording_descriptionGapMessage": "설명을 더 길게 작성해야 이 녹음을 업로드할 수 있습니다.",

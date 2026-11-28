@@ -1,143 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/tokens.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
+import 'app_disc.dart';
+import 'brush_sign.dart';
 
-class UploadStatusBadge extends StatefulWidget {
+const double _signSize = 18;
+const double _rowWord = 13;
+const double _pageWord = 15;
+
+enum _SendState { sent, sending, onDevice, needsYou }
+
+_SendState _stateOf(String status) => switch (status) {
+  'uploaded' || 'verified' => _SendState.sent,
+  'uploading' || 'web_uploading' => _SendState.sending,
+  _ when status.startsWith('failed') => _SendState.needsYou,
+  _ => _SendState.onDevice,
+};
+
+class UploadStatusBadge extends StatelessWidget {
   const UploadStatusBadge({
     super.key,
     required this.status,
-    this.onRetry,
+    this.percent,
     this.compact = false,
   });
 
   final String status;
-  final VoidCallback? onRetry;
+  final int? percent;
   final bool compact;
-
-  @override
-  State<UploadStatusBadge> createState() => _UploadStatusBadgeState();
-}
-
-class _UploadStatusBadgeState extends State<UploadStatusBadge>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _animController;
-
-  @override
-  void initState() {
-    super.initState();
-    _setupAnimation();
-  }
-
-  @override
-  void didUpdateWidget(UploadStatusBadge oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.status != widget.status) {
-      _setupAnimation();
-    }
-  }
-
-  void _setupAnimation() {
-    if (widget.status == 'uploading') {
-      _animController ??= AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 1),
-      )..repeat();
-    } else {
-      _animController?.dispose();
-      _animController = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _animController?.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final iconSize = widget.compact ? 12.0 : 14.0;
-    // `null` keeps labelSmall's native 11 (== the old compact size); only the
-    // off-token 13 stays as an explicit override (ENG-114 convention).
-    final double? fontSize = widget.compact ? null : 13.0;
+    final state = _stateOf(status);
+    final (sign, color, word) = switch (state) {
+      _SendState.sent => (Sign.check, colors.info, l10n.sendState_sent),
+      _SendState.sending => (
+        Sign.up,
+        colors.deep,
+        percent == null
+            ? l10n.sendState_sending
+            : l10n.sendState_sendingPercent(percent!),
+      ),
+      _SendState.onDevice => (
+        Sign.device,
+        colors.secondary,
+        l10n.sendState_onDevice,
+      ),
+      _SendState.needsYou => (Sign.info, colors.error, l10n.sendState_needsYou),
+    };
 
-    final IconData icon;
-    final Color color;
-    final String label;
-
-    switch (widget.status) {
-      case 'uploaded':
-        icon = LucideIcons.checkCircle;
-        color = colors.info;
-        label = l10n.sendState_sent;
-        break;
-      case 'uploading':
-        icon = LucideIcons.upload;
-        color = colors.accent;
-        label = l10n.sendState_sending;
-        break;
-      case 'failed':
-        icon = LucideIcons.alertCircle;
-        color = colors.error;
-        label = l10n.sendState_needsYou;
-        break;
-      default:
-        icon = LucideIcons.smartphone;
-        color = colors.secondary;
-        label = l10n.sendState_onDevice;
+    if (compact) {
+      return switch (state) {
+        _SendState.sent => _keepSize(
+          BrushSign(sign, size: _signSize, color: color, label: word),
+        ),
+        _SendState.needsYou => _keepSize(_needsYouDisc(colors, label: word)),
+        _ => _word(context, word, color, _rowWord),
+      };
     }
 
-    Widget iconWidget = Icon(icon, size: iconSize, color: color);
-
-    if (widget.status == 'uploading' && _animController != null) {
-      iconWidget = RotationTransition(
-        turns: _animController!,
-        child: Icon(LucideIcons.refreshCw, size: iconSize, color: color),
-      );
-    }
-
+    final mark = state == _SendState.needsYou
+        ? _needsYouDisc(colors)
+        : BrushSign(sign, size: _signSize, color: color);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        iconWidget,
-        const SizedBox(width: SpacingScale.s4),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: fontSize,
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        if (widget.status == 'failed' && widget.onRetry != null) ...[
-          const SizedBox(width: SpacingScale.s4),
-          TextButton(
-            onPressed: widget.onRetry,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(44, 36),
-              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              l10n.common_retry,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontSize: fontSize,
-                color: colors.accent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+        mark,
+        const SizedBox(width: SpacingScale.s8),
+        Flexible(child: _word(context, word, color, _pageWord)),
       ],
     );
   }
+
+  Widget _keepSize(Widget child) =>
+      Align(widthFactor: 1, heightFactor: 1, child: child);
+
+  Widget _needsYouDisc(AppColorSet colors, {String? label}) => AppDisc(
+    size: DiscSize.small,
+    tone: DiscTone.failed,
+    child: BrushSign(
+      Sign.info,
+      size: _signSize,
+      color: colors.onSoft,
+      label: label,
+    ),
+  );
+
+  Widget _word(
+    BuildContext context,
+    String word,
+    Color color,
+    double fontSize,
+  ) => Text(
+    word,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+      fontSize: fontSize,
+      color: color,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }

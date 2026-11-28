@@ -6,7 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/language.dart';
@@ -86,7 +86,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedLanguage == null) {
-      showErrorSnackBar(
+      showErrorNotice(
         context,
         AppLocalizations.of(context).project_selectLanguage,
       );
@@ -110,7 +110,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
     final error = ref.read(projectNotifierProvider).error;
     if (error != null) {
       setState(() => _isSubmitting = false);
-      showErrorSnackBar(context, error);
+      showErrorNotice(context, error);
     } else {
       Navigator.of(context).pop(true);
     }
@@ -343,7 +343,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
     } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _isCreatingLanguage = false);
-      showErrorSnackBar(context, e);
+      showErrorNotice(context, e);
     }
   }
 

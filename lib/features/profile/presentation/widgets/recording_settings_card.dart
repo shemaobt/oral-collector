@@ -48,11 +48,7 @@ class _RecordingSettingsCardState extends ConsumerState<RecordingSettingsCard> {
         borderRadius: BorderRadius.circular(RadiusScale.r16),
       ),
       child: ListTile(
-        leading: IconBox(
-          icon: LucideIcons.mic,
-          color: widget.colors.secondary,
-          alpha: 0.1,
-        ),
+        leading: const IconBox(icon: LucideIcons.mic),
         title: Text(l10n.profile_defaultMicrophone),
         subtitle: Text(subtitle),
         trailing: Icon(

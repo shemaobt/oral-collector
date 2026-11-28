@@ -15,6 +15,7 @@ import '../../l10n/app_localizations.dart';
 import 'app_shell/floating_nav_bar.dart';
 import 'app_shell/tab_item.dart';
 import 'app_shell/web_sidebar.dart';
+import 'brush_sign.dart';
 import 'quick_notice.dart';
 
 class AppShell extends ConsumerStatefulWidget {
@@ -75,14 +76,11 @@ class _AppShellState extends ConsumerState<AppShell> {
     final state = ref.read(recordingSessionNotifierProvider);
     final l10n = AppLocalizations.of(context);
     if (state.isFinalizing || state.hasFinalizationError) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_savingPleaseWait),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+      showQuickNotice(
+        context,
+        l10n.recording_savingPleaseWait,
+        sign: Sign.info,
+      );
       return;
     }
 
