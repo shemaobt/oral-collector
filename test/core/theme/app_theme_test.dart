@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,8 @@ import 'package:oral_collector/core/theme/app_opacity.dart';
 import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_spacing.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
+import 'package:oral_collector/shared/widgets/hand_cut_rect.dart';
+import 'package:oral_collector/shared/widgets/printed_shadow_scope.dart';
 
 BorderRadiusGeometry? _radiusOf(ShapeBorder? shape) =>
     (shape as RoundedRectangleBorder?)?.borderRadius;
@@ -115,31 +118,6 @@ void _expectBrushTitles(ThemeData theme) {
 T? _on<T>(WidgetStateProperty<T>? p, [Set<WidgetState> s = const {}]) =>
     p?.resolve(s);
 
-void _expectButtons(ThemeData theme) {
-  final c = theme.extension<AppColorSet>()!;
-  const stadium = StadiumBorder();
-  final filled = theme.filledButtonTheme.style!;
-  final elevated = theme.elevatedButtonTheme.style!;
-  final outlined = theme.outlinedButtonTheme.style!;
-  final icon = theme.iconButtonTheme.style!;
-
-  for (final style in [filled, elevated]) {
-    expect(_on(style.shape), stadium);
-    expect(_on(style.minimumSize), const Size(0, 46));
-    expect(_on(style.backgroundColor), c.accent);
-    expect(_on(style.backgroundColor, {WidgetState.disabled}), c.surfaceAlt);
-  }
-
-  expect(_on(outlined.shape), stadium);
-  expect(_on(outlined.minimumSize), const Size(0, 46));
-  expect(_on(outlined.foregroundColor), c.primary);
-  expect(_on(outlined.side), BorderSide(color: c.border, width: 1.5));
-
-  expect(_on(icon.shape), const CircleBorder());
-  expect(_on(icon.fixedSize), const Size(44, 44));
-  expect(_on(icon.side), BorderSide(color: c.border, width: 1.5));
-}
-
 void _expectOverlays(ThemeData theme) {
   final c = theme.extension<AppColorSet>()!;
   final dialog = theme.dialogTheme;
@@ -206,13 +184,105 @@ void main() {
     ('darkTheme', AppTheme.darkTheme),
   ]) {
     group('$name buttons', () {
-      test('read as the design pills and round icon buttons', () {
-        _expectButtons(theme);
-      });
+      HandCutRectPainter painterOf(WidgetTester t, Finder button) =>
+          t
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: button,
+                      matching: find.byWidgetPredicate(
+                        (w) =>
+                            w is CustomPaint && w.painter is HandCutRectPainter,
+                      ),
+                    ),
+                  )
+                  .painter!
+              as HandCutRectPainter;
 
-      testWidgets('filled button label reads in the labelLarge role', (
+      Future<void> pumpButtons(
+        WidgetTester tester, {
+        required bool enabled,
+        bool inScope = false,
+      }) async {
+        Widget wrap(Widget w) => inScope ? PrintedShadowScope(child: w) : w;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: wrap(
+              Column(
+                children: [
+                  FilledButton(
+                    onPressed: enabled ? () {} : null,
+                    child: const Text('Salvar'),
+                  ),
+                  OutlinedButton(
+                    onPressed: enabled ? () {} : null,
+                    child: const Text('Depois'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      testWidgets('main and quiet buttons are 52 high, cut by hand', (
         tester,
       ) async {
+        await pumpButtons(tester, enabled: true);
+        final c = theme.extension<AppColorSet>()!;
+        for (final b in [
+          find.byType(FilledButton),
+          find.byType(OutlinedButton),
+        ]) {
+          expect(tester.getSize(b).height, 52);
+        }
+        final main = painterOf(tester, find.byType(FilledButton));
+        expect(main.fill, c.primary);
+        expect(main.radius, 14);
+        expect(main.shadow, isNotNull);
+        final quiet = painterOf(tester, find.byType(OutlinedButton));
+        expect(quiet.fill, c.card);
+        expect(quiet.shadow, isNotNull);
+      });
+
+      testWidgets('a button with no action is tint and paints no shadow', (
+        tester,
+      ) async {
+        await pumpButtons(tester, enabled: false);
+        final c = theme.extension<AppColorSet>()!;
+        for (final b in [
+          find.byType(FilledButton),
+          find.byType(OutlinedButton),
+        ]) {
+          final painter = painterOf(tester, b);
+          expect(painter.fill, c.tint);
+          expect(painter.shadow, isNull);
+        }
+      });
+
+      testWidgets('inside a piece that prints a shadow a button paints none', (
+        tester,
+      ) async {
+        await pumpButtons(tester, enabled: true, inScope: true);
+        expect(painterOf(tester, find.byType(FilledButton)).shadow, isNull);
+      });
+
+      testWidgets('under the pointer the label colour tints the fill', (
+        tester,
+      ) async {
+        await pumpButtons(tester, enabled: true);
+        final c = theme.extension<AppColorSet>()!;
+        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await mouse.addPointer(location: Offset.zero);
+        await mouse.moveTo(tester.getCenter(find.byType(FilledButton)));
+        await tester.pump();
+        expect(
+          painterOf(tester, find.byType(FilledButton)).fill,
+          Color.alphaBlend(c.onPrimary.withValues(alpha: 0.08), c.primary),
+        );
+      });
+
+      testWidgets('filled button label reads 17 in weight 600', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
@@ -223,8 +293,8 @@ void main() {
           tester.element(find.text('Go')),
         ).style;
         expect(style.fontFamily, theme.textTheme.labelLarge!.fontFamily);
-        expect(style.fontSize, theme.textTheme.labelLarge!.fontSize);
-        expect(style.fontWeight, theme.textTheme.labelLarge!.fontWeight);
+        expect(style.fontSize, 17);
+        expect(style.fontWeight, FontWeight.w600);
       });
 
       testWidgets('danger style reads the error colour', (tester) async {

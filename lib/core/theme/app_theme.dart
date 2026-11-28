@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/widgets/hand_cut_button_style.dart';
 import 'app_colors.dart';
 import 'app_shadows.dart';
 import 'genre_colors.dart';
@@ -12,8 +13,14 @@ const _brushFamily = 'CaveatBrush';
 abstract class AppButtonStyles {
   static ButtonStyle danger(BuildContext context) {
     final c = AppColors.of(context);
-    return AppTheme._filledStyle(c, c.error);
+    return AppTheme._pillStyle(c, c.error);
   }
+
+  static ButtonStyle quietOnCard(BuildContext context) => AppTheme._handCut(
+    AppColors.of(context),
+    PrintedShadows.of(context),
+    HandCutButtonTone.quietOnCard,
+  );
 }
 
 abstract class AppTheme {
@@ -79,7 +86,21 @@ abstract class AppTheme {
     horizontal: SpacingScale.s20,
   );
 
-  static ButtonStyle _filledStyle(AppColorSet c, Color fill) {
+  static ButtonStyle _handCut(
+    AppColorSet c,
+    PrintedShadows shadows,
+    HandCutButtonTone tone,
+  ) => handCutButtonStyle(c, shadows, tone).copyWith(
+    textStyle: const WidgetStatePropertyAll(
+      TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
+
+  static ButtonStyle _pillStyle(AppColorSet c, Color fill) {
     return FilledButton.styleFrom(
       foregroundColor: c.background,
       disabledBackgroundColor: c.surfaceAlt,
@@ -94,16 +115,6 @@ abstract class AppTheme {
   static WidgetStateProperty<Color> _fill(AppColorSet c, Color fill) {
     return WidgetStateProperty.resolveWith(
       (states) => states.contains(WidgetState.disabled) ? c.surfaceAlt : fill,
-    );
-  }
-
-  static ButtonStyle _outlinedStyle(AppColorSet c) {
-    return OutlinedButton.styleFrom(
-      foregroundColor: c.primary,
-      minimumSize: const Size(0, _buttonHeight),
-      padding: _buttonPadding,
-      side: BorderSide(color: c.border, width: _buttonBorder),
-      shape: const StadiumBorder(),
     );
   }
 
@@ -440,13 +451,25 @@ abstract class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: _filledStyle(AppColors.light, AppColors.light.accent),
+        style: _handCut(
+          AppColors.light,
+          PrintedShadows.light,
+          HandCutButtonTone.ink,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: _filledStyle(AppColors.light, AppColors.light.accent),
+        style: _handCut(
+          AppColors.light,
+          PrintedShadows.light,
+          HandCutButtonTone.ink,
+        ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: _outlinedStyle(AppColors.light),
+        style: _handCut(
+          AppColors.light,
+          PrintedShadows.light,
+          HandCutButtonTone.quiet,
+        ),
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
@@ -566,13 +589,25 @@ abstract class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: _filledStyle(AppColors.dark, AppColors.dark.accent),
+        style: _handCut(
+          AppColors.dark,
+          PrintedShadows.dark,
+          HandCutButtonTone.ink,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: _filledStyle(AppColors.dark, AppColors.dark.accent),
+        style: _handCut(
+          AppColors.dark,
+          PrintedShadows.dark,
+          HandCutButtonTone.ink,
+        ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: _outlinedStyle(AppColors.dark),
+        style: _handCut(
+          AppColors.dark,
+          PrintedShadows.dark,
+          HandCutButtonTone.quiet,
+        ),
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.dark)),
       textButtonTheme: TextButtonThemeData(
