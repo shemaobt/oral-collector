@@ -133,6 +133,7 @@ class _Row extends StatelessWidget {
               Expanded(
                 child: Text(row.label, style: word.copyWith(color: ink)),
               ),
+              const SizedBox(width: _gap),
               Text(row.action, style: word.copyWith(color: actionColor)),
               const SizedBox(width: 4),
               BrushSign(Sign.next, size: _chevron, color: actionColor),
