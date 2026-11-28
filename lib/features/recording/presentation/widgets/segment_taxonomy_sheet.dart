@@ -139,24 +139,13 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   SpacingScale.s20,
-                  SpacingScale.s16,
+                  SpacingScale.s24,
                   SpacingScale.s20,
                   0,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: SpacingScale.s16),
-                        decoration: BoxDecoration(
-                          color: colors.border.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
                     Row(
                       children: [
                         Icon(LucideIcons.tag, size: 18, color: colors.accent),

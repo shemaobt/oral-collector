@@ -52,20 +52,7 @@ class LocalePickerSheet extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(
-                top: SpacingScale.s12,
-                bottom: SpacingScale.s16,
-              ),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.border.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+          const SizedBox(height: SpacingScale.s24),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
             child: Column(
