@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_disc.dart';
 import 'brush_sign.dart';
 
 const double _signSize = 18;
+const double _rowWord = 13;
+const double _pageWord = 15;
 
 enum _SendState { sent, sending, onDevice, needsYou }
 
@@ -17,32 +20,66 @@ _SendState _stateOf(String status) => switch (status) {
 };
 
 class UploadStatusBadge extends StatelessWidget {
-  const UploadStatusBadge({super.key, required this.status});
+  const UploadStatusBadge({
+    super.key,
+    required this.status,
+    this.percent,
+    this.compact = false,
+  });
 
   final String status;
+  final int? percent;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    return switch (_stateOf(status)) {
-      _SendState.sent => BrushSign(
-        Sign.check,
-        size: _signSize,
-        color: colors.info,
-        label: l10n.sendState_sent,
+    final state = _stateOf(status);
+    final (sign, color, word) = switch (state) {
+      _SendState.sent => (Sign.check, colors.info, l10n.sendState_sent),
+      _SendState.sending => (
+        Sign.up,
+        colors.deep,
+        percent == null
+            ? l10n.sendState_sending
+            : l10n.sendState_sendingPercent(percent!),
       ),
-      _SendState.sending => _word(context, l10n.sendState_sending, colors.deep),
-      _SendState.onDevice => _word(
-        context,
-        l10n.sendState_onDevice,
+      _SendState.onDevice => (
+        Sign.device,
         colors.secondary,
+        l10n.sendState_onDevice,
       ),
-      _SendState.needsYou => _needsYouDisc(colors, l10n.sendState_needsYou),
+      _SendState.needsYou => (Sign.info, colors.error, l10n.sendState_needsYou),
     };
+
+    if (compact) {
+      return switch (state) {
+        _SendState.sent => _keepSize(
+          BrushSign(sign, size: _signSize, color: color, label: word),
+        ),
+        _SendState.needsYou => _keepSize(_needsYouDisc(colors, label: word)),
+        _ => _word(context, word, color, _rowWord),
+      };
+    }
+
+    final mark = state == _SendState.needsYou
+        ? _needsYouDisc(colors)
+        : BrushSign(sign, size: _signSize, color: color);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        mark,
+        const SizedBox(width: SpacingScale.s8),
+        Flexible(child: _word(context, word, color, _pageWord)),
+      ],
+    );
   }
 
-  Widget _needsYouDisc(AppColorSet colors, String label) => AppDisc(
+  Widget _keepSize(Widget child) =>
+      Align(widthFactor: 1, heightFactor: 1, child: child);
+
+  Widget _needsYouDisc(AppColorSet colors, {String? label}) => AppDisc(
     size: DiscSize.small,
     tone: DiscTone.failed,
     child: BrushSign(
@@ -53,12 +90,17 @@ class UploadStatusBadge extends StatelessWidget {
     ),
   );
 
-  Widget _word(BuildContext context, String word, Color color) => Text(
+  Widget _word(
+    BuildContext context,
+    String word,
+    Color color,
+    double fontSize,
+  ) => Text(
     word,
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-      fontSize: 13,
+      fontSize: fontSize,
       color: color,
       fontWeight: FontWeight.w600,
     ),

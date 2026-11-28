@@ -725,6 +725,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendState_needsYou => 'يحتاج إليك';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'جارٍ الإرسال $percent٪';
+  }
+
+  @override
   String get recording_statusNameConflict => 'تعارض في الاسم';
 
   @override
