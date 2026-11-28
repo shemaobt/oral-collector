@@ -131,7 +131,6 @@ abstract class AppTheme {
   }
 
   static const _fieldLine = 2.0;
-  static const _fieldHeight = 48.0;
   static const _fieldPadding = EdgeInsets.symmetric(
     horizontal: 14,
     vertical: SpacingScale.s12,
@@ -139,29 +138,33 @@ abstract class AppTheme {
 
   static InputDecorationTheme fieldTheme(
     AppColorSet c,
-    ShadowTints shadows, {
+    ShadowTints shadows,
+    TextTheme text, {
     bool onCard = false,
   }) {
     final edge = onCard ? const <BoxShadow>[] : shadows.edge;
     final fill = onCard ? c.surfaceAlt : c.card;
     final dimmedEdge = [
       for (final s in edge)
-        BoxShadow(
+        s.copyWith(
           color: s.color.withValues(alpha: s.color.a * OpacityScale.o50),
-          offset: s.offset,
-          blurRadius: s.blurRadius,
-          spreadRadius: s.spreadRadius,
         ),
     ];
-    FieldBorder line(Color color) =>
-        FieldBorder(borderSide: BorderSide(color: color, width: _fieldLine));
+    WidgetStateColor halfWhenOff(Color color) => WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.disabled)
+          ? color.withValues(alpha: color.a * OpacityScale.o50)
+          : color,
+    );
+    final sign = halfWhenOff(c.secondary);
+    final label = WidgetStateTextStyle.resolveWith(
+      (states) => TextStyle(color: sign.resolve(states)),
+    );
+    FieldBorder line(Color color) => FieldBorder(
+      borderSide: BorderSide(color: color, width: _fieldLine),
+    );
     return InputDecorationTheme(
       filled: true,
-      fillColor: WidgetStateColor.resolveWith(
-        (states) => states.contains(WidgetState.disabled)
-            ? fill.withValues(alpha: OpacityScale.o50)
-            : fill,
-      ),
+      fillColor: halfWhenOff(fill),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       border: FieldBorder(edge: edge),
       enabledBorder: FieldBorder(edge: edge),
@@ -169,17 +172,12 @@ abstract class AppTheme {
       focusedBorder: line(c.primary),
       errorBorder: line(c.error),
       focusedErrorBorder: line(c.error),
-      constraints: const BoxConstraints(minHeight: _fieldHeight),
       hintStyle: TextStyle(color: c.secondary),
-      labelStyle: TextStyle(color: c.secondary),
-      floatingLabelStyle: TextStyle(color: c.secondary),
-      errorStyle: TextStyle(
-        color: c.error,
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-      ),
-      prefixIconColor: c.secondary,
-      suffixIconColor: c.secondary,
+      labelStyle: label,
+      floatingLabelStyle: label,
+      errorStyle: text.bodySmall?.copyWith(color: c.error),
+      prefixIconColor: sign,
+      suffixIconColor: sign,
       contentPadding: _fieldPadding,
     );
   }
@@ -477,7 +475,11 @@ abstract class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
-      inputDecorationTheme: fieldTheme(AppColors.light, ShadowTints.light),
+      inputDecorationTheme: fieldTheme(
+        AppColors.light,
+        ShadowTints.light,
+        textTheme,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
@@ -608,7 +610,11 @@ abstract class AppTheme {
           minimumSize: const Size(0, 48),
         ),
       ),
-      inputDecorationTheme: fieldTheme(AppColors.dark, ShadowTints.dark),
+      inputDecorationTheme: fieldTheme(
+        AppColors.dark,
+        ShadowTints.dark,
+        textTheme,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
         selectedItemColor: AppColors.darkPrimary,
