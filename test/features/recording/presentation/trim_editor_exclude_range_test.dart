@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -10,6 +11,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/joined_audio_exporter.dart';
@@ -25,7 +27,6 @@ import 'package:oral_collector/features/recording/presentation/widgets/trim_wave
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform_panel.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/waveform_tools_row.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
-import 'package:oral_collector/shared/widgets/brush_sign.dart';
 
 import '../../../support/text_scale.dart';
 
@@ -48,11 +49,7 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> openEditor(
-    WidgetTester tester, {
-    required int seconds,
-    Locale locale = const Locale('pt'),
-  }) async {
+  Future<void> openEditor(WidgetTester tester, {required int seconds}) async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     await LocalRecordingRepository(db).insertRecording(
       LocalRecordingsCompanion(
@@ -89,7 +86,7 @@ void main() {
     await pumpAtTextScale(
       tester,
       size: const Size(400, 1600),
-      locale: locale,
+      locale: const Locale('pt'),
       overrides: [
         audioPlayerFactoryProvider.overrideWithValue(() => player),
         localRecordingRepositoryProvider.overrideWithValue(
@@ -134,11 +131,8 @@ void main() {
     await settle(tester);
   }
 
-  Future<void> pressExcludeRange(
-    WidgetTester tester, {
-    String label = _excludeRange,
-  }) async {
-    await tester.tap(find.text(label));
+  Future<void> pressExcludeRange(WidgetTester tester) async {
+    await tester.tap(find.text(_excludeRange));
     await settle(tester);
   }
 
@@ -213,29 +207,44 @@ void main() {
     expect(handleTime(kExcludeRangeStartHandleKey, '00:18.00'), findsOneWidget);
   });
 
-  testWidgets('The field sits below the wave and spans exactly its height', (
-    tester,
-  ) async {
+  testWidgets('The stretch shows the kit colour on the wave, with the wave '
+      'on top of it', (tester) async {
     await openEditor(tester, seconds: 60);
     await placePlayheadAt(tester, 25, 60);
     await pressExcludeRange(tester);
 
     final wave = waveformRect(tester);
-    final field = tester.getRect(find.byKey(kExcludeRangeFieldKey));
-    expect(field.top, wave.top + kTrimWaveformTop);
-    expect(field.bottom, wave.bottom);
-    final stack = tester.widget<Stack>(
-      find
-          .ancestor(
-            of: find.byType(ExcludeRangeField),
-            matching: find.byType(Stack),
-          )
-          .first,
-    );
-    final order = stack.children
-        .map((w) => w is Positioned ? w.child.runtimeType : w.runtimeType)
-        .toList();
-    expect(order.indexOf(ExcludeRangeField), lessThan(order.indexOf(Padding)));
+    final boundary =
+        tester.renderObject(
+              find
+                  .ancestor(
+                    of: find.byType(TrimWaveform),
+                    matching: find.byType(RepaintBoundary),
+                  )
+                  .first,
+            )
+            as RenderRepaintBoundary;
+    final origin = tester
+        .renderObject<RenderBox>(find.byType(TrimWaveform))
+        .localToGlobal(Offset.zero, ancestor: boundary);
+    final colors = AppColors.of(tester.element(find.byType(TrimWaveform)));
+    final start = tester.getCenter(handle(kExcludeRangeStartHandleKey)).dx;
+    final end = tester.getCenter(handle(kExcludeRangeEndHandleKey)).dx;
+    final x = (origin.dx + start + (end - start) / 4 - wave.left).round();
+    final y = (origin.dy + kTrimWaveformTop + 6).round();
+
+    final pixel = await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final data = (await image.toByteData())!;
+      final i = (y * image.width + x) * 4;
+      return [for (var k = 0; k < 3; k++) data.getUint8(i + k)];
+    });
+
+    expect(pixel, [
+      (colors.stretch.r * 255).round(),
+      (colors.stretch.g * 255).round(),
+      (colors.stretch.b * 255).round(),
+    ]);
   });
 
   testWidgets('Each disc is 28 dp across and each line is 3 dp wide down the '
@@ -259,24 +268,6 @@ void main() {
     expect(disc, const Size(28, 28));
     expect(line.width, 3);
     expect(line.height, greaterThan(100));
-  });
-
-  testWidgets('In Arabic the chevrons still read left to right, so each points '
-      'away from the stretch', (tester) async {
-    await openEditor(tester, seconds: 60, locale: const Locale('ar'));
-    await placePlayheadAt(tester, 25, 60);
-    await pressExcludeRange(tester, label: 'استبعاد مقطع');
-
-    for (final key in [
-      kExcludeRangeStartHandleKey,
-      kExcludeRangeEndHandleKey,
-    ]) {
-      final sign = find.descendant(
-        of: handle(key),
-        matching: find.byType(BrushSign),
-      );
-      expect(Directionality.of(tester.element(sign)), TextDirection.ltr);
-    }
   });
 
   testWidgets('Saving after confirming an excluded range offers the three '

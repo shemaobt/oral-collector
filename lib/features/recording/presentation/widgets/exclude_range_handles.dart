@@ -4,20 +4,16 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/brush_sign.dart';
 import '../../../../shared/widgets/hand_cut_disc.dart';
-import '../../../../shared/widgets/hand_cut_rect.dart';
 import '../exclude_range_draft.dart';
 import '../trim_edit_decision.dart';
-import 'trim_waveform.dart' show kTrimWaveformTop;
 
 const Key kExcludeRangeStartHandleKey = Key('exclude_range_start_handle');
 const Key kExcludeRangeEndHandleKey = Key('exclude_range_end_handle');
 const Key kExcludeRangeConfirmKey = Key('exclude_range_confirm');
 const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
-const Key kExcludeRangeFieldKey = Key('exclude_range_field');
 const Key kExcludeRangeLineKey = Key('exclude_range_line');
 const Key kExcludeRangeDiscKey = Key('exclude_range_disc');
 
@@ -33,51 +29,6 @@ class ExcludeRangeEditing {
 
   final ExcludeRangeDraft draft;
   final ValueChanged<ExcludeRangeDraft> onChanged;
-}
-
-class ExcludeRangeField extends StatelessWidget {
-  const ExcludeRangeField({
-    super.key,
-    required this.draft,
-    required this.zoom,
-    required this.panFraction,
-  });
-
-  final ExcludeRangeDraft draft;
-  final double zoom;
-  final double panFraction;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        double xOf(double f) => (f - panFraction) * zoom * width;
-        final startX = xOf(draft.start);
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              left: startX,
-              width: (xOf(draft.end) - startX).clamp(0.0, double.infinity),
-              top: kTrimWaveformTop,
-              bottom: kExcludeRangeDiscReach,
-              child: IgnorePointer(
-                child: CustomPaint(
-                  key: kExcludeRangeFieldKey,
-                  painter: HandCutRectPainter(
-                    fill: colors.stretch,
-                    radius: RadiusScale.r8,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class ExcludeRangeHandles extends StatefulWidget {

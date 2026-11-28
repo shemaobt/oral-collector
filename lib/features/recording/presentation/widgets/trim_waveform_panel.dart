@@ -202,14 +202,6 @@ class TrimWaveformPanel extends StatelessWidget {
           const SizedBox(height: SpacingScale.s8),
           Stack(
             children: [
-              if (excludeEditing != null)
-                Positioned.fill(
-                  child: ExcludeRangeField(
-                    draft: excludeEditing!.draft,
-                    zoom: zoom,
-                    panFraction: panFraction,
-                  ),
-                ),
               Padding(
                 padding: EdgeInsets.only(
                   bottom: excludeEditing == null ? 0 : kExcludeRangeDiscReach,
@@ -229,6 +221,12 @@ class TrimWaveformPanel extends StatelessWidget {
                   zoom: zoom,
                   panFraction: panFraction,
                   onZoomPanChanged: onZoomPanChanged,
+                  stretch: excludeEditing == null
+                      ? null
+                      : (
+                          start: excludeEditing!.draft.start,
+                          end: excludeEditing!.draft.end,
+                        ),
                 ),
               ),
               if (excludeEditing != null)
