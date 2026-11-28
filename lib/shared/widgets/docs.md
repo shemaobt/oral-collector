@@ -134,6 +134,13 @@ Path: @/lib/shared/widgets
   never when `enabled` is false (the disc is then at 40%), and never inside a
   piece that already paints one (`PrintedShadowScope`, which a piece with a
   printed shadow puts around its child). Shadow colours: `PrintedShadows`.
+- **`Pressable` and `PressLook` are the app's answer to a touch**
+  ([pressable.dart](pressable.dart)): held, the piece shrinks to 95% in 120 ms
+  and darkens by 5%; let go, it springs back in 320 ms past its full size. With
+  less motion it only darkens. `Pressable` keeps `InkWell`'s focus, Enter and
+  Space, cursor and tap target, and shows nothing when it has nothing to do.
+  `RoundButton` and `RecordButton` use it; the theme turns the spreading ink
+  off everywhere (`NoSplash`).
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
   failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**

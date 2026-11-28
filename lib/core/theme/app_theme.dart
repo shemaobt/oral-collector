@@ -343,6 +343,7 @@ abstract class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: NoSplash.splashFactory,
       fontFamily: _fontFamily,
       extensions: const <ThemeExtension<dynamic>>[
         AppColors.light,
@@ -474,6 +475,7 @@ abstract class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: NoSplash.splashFactory,
       fontFamily: _fontFamily,
       extensions: const <ThemeExtension<dynamic>>[
         AppColors.dark,
