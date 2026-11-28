@@ -32,6 +32,27 @@ class _UnreadableStorage extends FlutterSecureStorage {
   }) async => throw PlatformException(code: 'errSecInteractionNotAllowed');
 }
 
+class _LateRefreshTokenRead extends FlutterSecureStorage {
+  Completer<void>? held;
+
+  @override
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    final gate = key == 'refresh_token' ? held : null;
+    if (gate != null) held = null;
+    final value = await super.read(key: key);
+    await gate?.future;
+    return value;
+  }
+}
+
 class _MockReporter extends Mock implements ErrorReporter {}
 
 void main() {
@@ -39,11 +60,12 @@ void main() {
   late _MockAuthRepository repo;
   late _MockReporter reporter;
   late ProviderContainer container;
+  late _MockConnectivity connectivity;
 
   const user = User(id: 'u1', email: 'a@b.com', isPlatformAdmin: false);
 
   Future<void> signIn(FlutterSecureStorage storage) async {
-    final connectivity = _MockConnectivity();
+    connectivity = _MockConnectivity();
     when(() => connectivity.isOnline).thenAnswer((_) async => true);
     container = ProviderContainer(
       overrides: [
@@ -75,6 +97,8 @@ void main() {
   void expectSignedOutOnDevice() {
     expect(stored, isEmpty);
     expect(container.read(authNotifierProvider).isAuthenticated, isFalse);
+    expect(container.read(authNotifierProvider).error, isNull);
+    expect(container.read(authNotifierProvider).isLoading, isFalse);
   }
 
   test('asks the server to end the stored refresh token once and clears the '
@@ -133,4 +157,195 @@ void main() {
       expectSignedOutOnDevice();
     });
   }
+
+  group('a response landing after «Sair» signs nobody in again:', () {
+    late Completer<void> gate;
+    setUp(() => gate = Completer<void>());
+    Future<T> held<T>(T value) => gate.future.then((_) => value);
+
+    Future<T> heldFailure<T>() =>
+        gate.future.then((_) => throw const NetworkException());
+
+    final inFlight = <String, Future<void> Function()>{
+      'connectivity check at start-up': () {
+        when(() => connectivity.isOnline).thenAnswer((_) => held(true));
+        when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+        return notifier().refreshSessionIfOnline();
+      },
+      'user fetch after a refresh': () {
+        when(
+          () => repo.refreshToken('r1'),
+        ).thenAnswer((_) async => (accessToken: 'a1', refreshToken: 'r1'));
+        when(() => repo.getMe('a1')).thenAnswer((_) => held(user));
+        return notifier().handleUnauthorized();
+      },
+      'failing profile update': () {
+        when(
+          () => repo.updateMe('a1', displayName: 'Ana'),
+        ).thenAnswer((_) => heldFailure());
+        return notifier().updateProfile(displayName: 'Ana');
+      },
+      'failing avatar upload': () {
+        when(
+          () => repo.uploadImage('a1', 'f'),
+        ).thenAnswer((_) => heldFailure());
+        return notifier().uploadAvatar('f').catchError((_) {});
+      },
+      'refresh': () {
+        when(
+          () => repo.refreshToken('r1'),
+        ).thenAnswer((_) => held((accessToken: 'a1', refreshToken: 'r1')));
+        when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+        return notifier().handleUnauthorized();
+      },
+      'getMe at start-up': () {
+        when(() => repo.getMe('a1')).thenAnswer((_) => held(user));
+        return notifier().refreshSessionIfOnline();
+      },
+      'profile update': () {
+        when(
+          () => repo.updateMe('a1', displayName: 'Ana'),
+        ).thenAnswer((_) => held(user));
+        return notifier().updateProfile(displayName: 'Ana');
+      },
+      'avatar upload': () {
+        when(() => repo.uploadImage('a1', 'f')).thenAnswer((_) async => 'u');
+        when(
+          () => repo.updateMe('a1', avatarUrl: 'u'),
+        ).thenAnswer((_) => held(user));
+        return notifier().uploadAvatar('f');
+      },
+    };
+
+    for (final MapEntry(key: name, value: start) in inFlight.entries) {
+      test(name, () async {
+        final pending = start();
+        await pumpEventQueue();
+
+        await notifier().logout();
+        gate.complete();
+        await pending;
+
+        expectSignedOutOnDevice();
+      });
+    }
+  });
+
+  group('a refresh racing «Sair» signs nobody in again:', () {
+    setUp(() {
+      when(
+        () => repo.refreshToken('r1'),
+      ).thenAnswer((_) async => (accessToken: 'a2', refreshToken: 'r1'));
+      when(() => repo.getMe('a2')).thenAnswer((_) async => user);
+    });
+
+    final races = <String, Future<void> Function()>{
+      'a 401 right after «Sair»': () async {
+        final signOut = notifier().logout();
+        await notifier().handleUnauthorized();
+        await signOut;
+      },
+      'a 401 right before «Sair»': () async {
+        final refresh = notifier().handleUnauthorized();
+        await notifier().logout();
+        await refresh;
+      },
+    };
+    for (final MapEntry(key: name, value: race) in races.entries) {
+      test(name, () async {
+        await race();
+
+        expectSignedOutOnDevice();
+      });
+    }
+
+    test('a 401 whose token read answers after «Sair»', () async {
+      final storage = _LateRefreshTokenRead();
+      await signIn(storage);
+      final gate = storage.held = Completer<void>();
+      final refresh = notifier().handleUnauthorized();
+      await notifier().logout();
+      gate.complete();
+      await refresh;
+
+      expectSignedOutOnDevice();
+    });
+  });
+
+  group('a refresh left over from before «Sair» does not sign out the next '
+      'session:', () {
+    late Completer<void> gate;
+    setUp(() {
+      gate = Completer<void>();
+      when(() => repo.refreshToken('r1')).thenAnswer(
+        (_) => gate.future.then((_) => (accessToken: 'a1', refreshToken: 'r1')),
+      );
+      when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+    });
+
+    Future<void> signOutAndBackIn() async {
+      await pumpEventQueue();
+      await notifier().logout();
+      await notifier().login('a@b.com', 'pw');
+    }
+
+    void expectSignedIn() {
+      expect(container.read(authNotifierProvider).isAuthenticated, isTrue);
+      expect(stored['refresh_token'], 'r1');
+    }
+
+    final stale = <String, Future<void> Function()>{
+      '401 of the old session': () => notifier().handleUnauthorized(),
+      '401 at start-up': () {
+        when(() => repo.getMe('a1')).thenThrow(const UnauthorizedException());
+        return notifier().refreshSessionIfOnline();
+      },
+    };
+    for (final MapEntry(key: name, value: start) in stale.entries) {
+      test(name, () async {
+        final pending = start();
+        await signOutAndBackIn();
+        when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+
+        gate.complete();
+        await pending;
+
+        expectSignedIn();
+      });
+    }
+
+    test('a 401 of the new session refreshes on its own', () async {
+      final old = notifier().handleUnauthorized();
+      await signOutAndBackIn();
+
+      final fresh = notifier().handleUnauthorized();
+      gate.complete();
+      await old;
+
+      expect(await fresh, isTrue);
+      expectSignedIn();
+    });
+
+    test('the old refresh ending does not start a second one for the new '
+        'session', () async {
+      final old = notifier().handleUnauthorized();
+      await signOutAndBackIn();
+      final freshGate = Completer<void>();
+      when(() => repo.refreshToken('r1')).thenAnswer(
+        (_) => freshGate.future.then(
+          (_) => (accessToken: 'a1', refreshToken: 'r1'),
+        ),
+      );
+      final fresh = notifier().handleUnauthorized();
+      gate.complete();
+      await old;
+
+      final joined = notifier().handleUnauthorized();
+      freshGate.complete();
+      await Future.wait([fresh, joined]);
+
+      verify(() => repo.refreshToken('r1')).called(2);
+      expectSignedIn();
+    });
+  });
 }
