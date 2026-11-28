@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_opacity.dart';
 import '../../core/theme/app_shadows.dart';
 import 'hand_cut_disc.dart';
 import 'hand_cut_rect.dart';
@@ -11,7 +12,6 @@ const double _height = 30;
 const double _radius = 15;
 const double _knob = 24;
 const double _inset = 3;
-const Offset _shadowOffset = Offset(2, 3);
 
 class AppSwitch extends StatelessWidget {
   const AppSwitch({super.key, required this.on, required this.onChanged});
@@ -31,7 +31,7 @@ class AppSwitch extends StatelessWidget {
         fill: on ? colors.primary : colors.pale,
         radius: _radius,
         shadow: printed ? (on ? shadows.ink : shadows.paper) : null,
-        shadowOffset: _shadowOffset,
+        shadowOffset: markShadowOffset,
       ),
       child: Stack(
         children: [
@@ -47,16 +47,25 @@ class AppSwitch extends StatelessWidget {
         ],
       ),
     );
-    return Semantics(
-      toggled: on,
-      enabled: enabled,
-      onTap: enabled ? () => onChanged!(!on) : null,
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.4,
-        child: GestureDetector(
-          onTap: enabled ? () => onChanged!(!on) : null,
-          child: SizedBox(width: _width, height: _height, child: track),
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: Semantics(
+        toggled: on,
+        enabled: enabled,
+        onTap: enabled ? () => onChanged!(!on) : null,
+        excludeSemantics: true,
+        child: Opacity(
+          opacity: enabled ? 1 : OpacityScale.o40,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: enabled ? () => onChanged!(!on) : null,
+              borderRadius: BorderRadius.circular(_radius),
+              child: SizedBox(width: _width, height: _height, child: track),
+            ),
+          ),
         ),
       ),
     );

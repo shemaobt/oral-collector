@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_opacity.dart';
 import '../../core/theme/app_shadows.dart';
 import 'brush_sign.dart';
 import 'hand_cut_rect.dart';
@@ -11,7 +12,6 @@ const double _radius = 6;
 const double _signSize = 16;
 const double _minHeight = 44;
 const double _gap = 12;
-const Offset _shadowOffset = Offset(2, 3);
 
 class AppTick extends StatelessWidget {
   const AppTick({
@@ -39,7 +39,7 @@ class AppTick extends StatelessWidget {
           fill: marked ? colors.primary : colors.card,
           radius: _radius,
           shadow: printed ? shadow : null,
-          shadowOffset: _shadowOffset,
+          shadowOffset: markShadowOffset,
         ),
         child: marked
             ? Center(
@@ -56,6 +56,7 @@ class AppTick extends StatelessWidget {
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: _minHeight),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         spacing: _gap,
         children: [
           box,
@@ -71,17 +72,25 @@ class AppTick extends StatelessWidget {
         ],
       ),
     );
-    return Semantics(
-      checked: marked,
-      enabled: enabled,
-      label: text,
-      onTap: enabled ? () => onChanged!(!marked) : null,
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.4,
-        child: InkWell(
-          onTap: enabled ? () => onChanged!(!marked) : null,
-          child: row,
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: Semantics(
+        checked: marked,
+        enabled: enabled,
+        label: text,
+        onTap: enabled ? () => onChanged!(!marked) : null,
+        excludeSemantics: true,
+        child: Opacity(
+          opacity: enabled ? 1 : OpacityScale.o40,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: enabled ? () => onChanged!(!marked) : null,
+              child: row,
+            ),
+          ),
         ),
       ),
     );

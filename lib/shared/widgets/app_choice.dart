@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_opacity.dart';
 import 'brush_sign.dart';
 import 'hand_cut_disc.dart';
 
@@ -70,6 +71,7 @@ class AppChoice extends StatelessWidget {
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: _minHeight),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         spacing: _gap,
         children: [
           mark,
@@ -86,16 +88,24 @@ class AppChoice extends StatelessWidget {
       ),
     );
     final enabled = onChosen != null;
-    return Semantics(
-      checked: chosen,
-      inMutuallyExclusiveGroup: true,
-      enabled: enabled,
-      label: text,
-      onTap: onChosen,
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: enabled ? 1 : 0.4,
-        child: InkWell(onTap: onChosen, child: row),
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: Semantics(
+        checked: chosen,
+        inMutuallyExclusiveGroup: true,
+        enabled: enabled,
+        label: text,
+        onTap: onChosen,
+        excludeSemantics: true,
+        child: Opacity(
+          opacity: enabled ? 1 : OpacityScale.o40,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(onTap: onChosen, child: row),
+          ),
+        ),
       ),
     );
   }
