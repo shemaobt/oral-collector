@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/widgets/brush_sign.dart';
 import '../../../../shared/widgets/pressable.dart';
 import '../../../../shared/widgets/record_button.dart';
@@ -464,9 +465,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     return Pressable(
       onTap: () {
         HapticFeedback.selectionClick();
-        showModalBottomSheet<void>(
+        showAppSheet<void>(
           context: context,
-          showDragHandle: false,
           builder: (_) => const InputDevicePickerSheet(),
         );
       },
