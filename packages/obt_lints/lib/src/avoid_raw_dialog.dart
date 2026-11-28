@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/ast/ast.dart' show SimpleIdentifier;
 import 'package:analyzer/error/error.dart' show ErrorSeverity;
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
@@ -23,6 +24,14 @@ class AvoidRawDialog extends DartLintRule {
     'showBottomSheet',
   };
 
+  static bool _isFlutterBanned(SimpleIdentifier name) {
+    if (!_banned.contains(name.name)) return false;
+    final library = name.staticElement?.library?.source.uri;
+    return library != null &&
+        library.isScheme('package') &&
+        library.pathSegments.first == 'flutter';
+  }
+
   @override
   void run(
     CustomLintResolver resolver,
@@ -31,9 +40,7 @@ class AvoidRawDialog extends DartLintRule {
   ) {
     if (isRawDialogExempt(resolver.path)) return;
     context.registry.addMethodInvocation((node) {
-      if (node.target == null && _banned.contains(node.methodName.name)) {
-        reporter.atNode(node, _code);
-      }
+      if (_isFlutterBanned(node.methodName)) reporter.atNode(node, _code);
     });
   }
 }

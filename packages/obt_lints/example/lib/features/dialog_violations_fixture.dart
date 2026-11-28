@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 
 void opensRaw(BuildContext context) {
   // expect_lint: avoid_raw_dialog
@@ -21,4 +22,19 @@ void showDialog2(BuildContext context) {}
 
 void opensBenign(BuildContext context) {
   showDialog2(context);
+}
+
+void opensThroughScaffold(BuildContext context) {
+  // expect_lint: avoid_raw_dialog
+  Scaffold.of(context).showBottomSheet((_) => const SizedBox());
+}
+
+void opensThroughPrefix(BuildContext context) {
+  // expect_lint: avoid_raw_dialog
+  material.showModalBottomSheet<void>(
+    context: context,
+    builder: (_) => const SizedBox(),
+  );
+  // expect_lint: avoid_raw_dialog
+  material.showDialog<void>(context: context, builder: (_) => const SizedBox());
 }
