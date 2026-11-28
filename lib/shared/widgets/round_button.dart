@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'app_disc.dart';
+import 'brush_sign.dart';
 import 'pressable.dart';
 
 enum RoundButtonSize {
@@ -33,16 +34,27 @@ enum RoundButtonTone {
 class RoundButton extends StatelessWidget {
   const RoundButton({
     super.key,
-    required this.icon,
+    required IconData this.icon,
     required this.semanticLabel,
     this.onPressed,
     this.size = RoundButtonSize.medium,
     this.tone = RoundButtonTone.action,
-  });
+  }) : sign = null;
+
+  const RoundButton.sign({
+    super.key,
+    required Sign this.sign,
+    required this.semanticLabel,
+    this.onPressed,
+    this.size = RoundButtonSize.medium,
+    this.tone = RoundButtonTone.action,
+  }) : icon = null;
 
   static const double minTouchTarget = 48;
+  static const double _signSize = 18;
 
-  final IconData icon;
+  final IconData? icon;
+  final Sign? sign;
   final String semanticLabel;
   final VoidCallback? onPressed;
   final RoundButtonSize size;
@@ -69,7 +81,9 @@ class RoundButton extends StatelessWidget {
               tone: tone.disc,
               pressable: true,
               enabled: onPressed != null,
-              child: Icon(icon),
+              child: sign == null
+                  ? Icon(icon)
+                  : BrushSign(sign!, size: _signSize),
             ),
           ),
         ),

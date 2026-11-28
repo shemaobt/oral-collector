@@ -8,7 +8,7 @@ Path: @/lib/shared/widgets
   the app chrome (`app_shell.dart`'s responsive nav scaffold, composed from the
   mobile bottom bar / web sidebar sub-widgets in
   [app_shell/](app_shell), and
-  [screen_header.dart](screen_header.dart)'s one-row top: brush title, optional back disc and actions),
+  [screen_header.dart](screen_header.dart)'s top: brush title, optional back disc and actions),
   list/section affordances ([empty_state.dart](empty_state.dart),
   `section_header.dart`, `status_banner.dart`), status chips
   ([upload_status_badge.dart](upload_status_badge.dart),
@@ -98,8 +98,7 @@ Path: @/lib/shared/widgets
     ellipsizing rather than overflowing.
   - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
     bar / nav item in
-    [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the 54px
-    top row in `screen_header.dart`). They
+    [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the top in `screen_header.dart` is the exception, see below). They
     clip rather than grow, keeping the base design; content adapts *within* the
     fixed chrome. This mirrors the resilience approach in the feature screens:
     the recording flow
@@ -107,9 +106,10 @@ Path: @/lib/shared/widgets
     and, since ENG-180, the profile + project widgets
     ([/lib/features/profile/presentation/widgets](/lib/features/profile/presentation/widgets),
     [/lib/features/project/presentation/widgets](/lib/features/project/presentation/widgets)).
-  - `screen_header.dart` keeps its own 1.3× text ceiling: the title is one
-    line that shrinks to fit the fixed row instead of clipping, with no second
-    line; regression guards cover 1.0×–2.0×.
+  - `screen_header.dart` keeps its own 1.3× text ceiling: the row has a minimum
+    height and grows with the title up to that ceiling; a longer title ends in
+    an ellipsis. The back disc and each action are their own semantic nodes,
+    apart from the title's heading. Regression guards cover 1.0×–2.0×.
 - **`compact` font sizing uses `null` for the on-token size.** The upload badge sets
   `fontSize` to `null` in compact mode (which keeps `labelSmall`'s native 11)
   and only carries the off-token `13` as an explicit override — same typography
