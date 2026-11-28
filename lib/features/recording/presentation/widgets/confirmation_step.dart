@@ -20,6 +20,7 @@ import '../../../../shared/utils/recording_description.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/error_notice.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -782,8 +783,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
                         padding: const EdgeInsets.only(
                           bottom: SpacingScale.s12,
                         ),
-                        child: GestureDetector(
+                        child: Pressable(
                           onTap: _togglePlayback,
+                          customBorder: const CircleBorder(),
                           child: Container(
                             width: 56,
                             height: 56,

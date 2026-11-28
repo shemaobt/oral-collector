@@ -11,6 +11,7 @@ import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
 import '../../../../shared/widgets/brush_sign.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
@@ -460,8 +461,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ? selected!.label
         : l10n.recording_builtInMicrophone;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Pressable(
       onTap: () {
         HapticFeedback.selectionClick();
         showModalBottomSheet<void>(
@@ -608,7 +608,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     String label,
   ) {
     final isSelected = value == current;
-    return GestureDetector(
+    return Pressable(
       onTap: () {
         HapticFeedback.selectionClick();
         ref.read(noiseSensitivityProvider.notifier).state = value;

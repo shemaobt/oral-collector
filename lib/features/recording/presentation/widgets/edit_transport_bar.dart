@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/pressable.dart';
 
 class EditTransportBar extends StatelessWidget {
   const EditTransportBar({
@@ -40,7 +41,7 @@ class EditTransportBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              GestureDetector(
+              Pressable(
                 onTap: () {
                   HapticFeedback.lightImpact();
                   onPlayPause();

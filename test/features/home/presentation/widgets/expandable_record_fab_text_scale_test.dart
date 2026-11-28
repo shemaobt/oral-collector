@@ -40,7 +40,7 @@ Future<void> _pumpExpanded(
   Locale locale = const Locale('en'),
 }) async {
   await _pump(tester, scale, locale: locale);
-  await tester.tap(find.byType(InkWell));
+  await tester.tap(find.byType(InkWell).last);
   await tester.pumpAndSettle();
 }
 

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/pressable.dart';
 
 class ExpandableRecordFab extends StatefulWidget {
   const ExpandableRecordFab({
@@ -212,8 +213,9 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                 ),
               ),
               const SizedBox(width: SpacingScale.s8),
-              GestureDetector(
+              Pressable(
                 onTap: onTap,
+                customBorder: const CircleBorder(),
                 child: Container(
                   width: _miniButtonSize,
                   height: _miniButtonSize,

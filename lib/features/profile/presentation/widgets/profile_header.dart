@@ -5,6 +5,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/domain/entities/user.dart';
 import 'info_badge.dart';
@@ -31,7 +32,7 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GestureDetector(
+        Pressable(
           onTap: isUploadingAvatar ? null : onPickAvatar,
           child: Stack(
             alignment: Alignment.center,
@@ -121,7 +122,7 @@ class ProfileHeader extends StatelessWidget {
 
         const SizedBox(height: SpacingScale.s16),
 
-        GestureDetector(
+        Pressable(
           onTap: onEditName,
           child: Row(
             mainAxisSize: MainAxisSize.min,

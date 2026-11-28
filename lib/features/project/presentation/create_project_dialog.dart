@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_notice.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/language.dart';
@@ -183,7 +184,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
               ),
               const SizedBox(height: SpacingScale.s16),
 
-              GestureDetector(
+              Pressable(
                 onTap: _pickLanguage,
                 child: InputDecorator(
                   decoration: InputDecoration(

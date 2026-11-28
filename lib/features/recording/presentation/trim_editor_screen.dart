@@ -17,6 +17,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_question.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
@@ -658,7 +659,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         : null;
 
     final hasExclusion = state.decision.hasExclusion;
-    final restoreAll = GestureDetector(
+    final restoreAll = Pressable(
       onTap: () {
         HapticFeedback.lightImpact();
         _notifier.restoreAllExcluded();

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../exclude_range_draft.dart';
 import '../excluded_range.dart';
 import 'exclude_range_handles.dart';
@@ -114,7 +115,7 @@ class TrimWaveformPanel extends StatelessWidget {
                 ),
               ),
               if (isZoomed && onResetZoom != null)
-                GestureDetector(
+                Pressable(
                   onTap: () {
                     HapticFeedback.lightImpact();
                     onResetZoom!();
@@ -149,7 +150,7 @@ class TrimWaveformPanel extends StatelessWidget {
                   ),
                 ),
               if (hasSplits)
-                GestureDetector(
+                Pressable(
                   onTap: () {
                     HapticFeedback.lightImpact();
                     onClearAll();
