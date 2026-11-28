@@ -44,10 +44,7 @@ class RecoveryConfirmScreen extends ConsumerWidget {
         ref.read(pendingRecoveryProvider.notifier).state = null;
 
     return Scaffold(
-      appBar: ScreenHeader(
-        title: l10n.recording_saveRecording,
-        subtitle: l10n.quickRecord_subtitle,
-      ),
+      appBar: ScreenHeader(title: l10n.recording_saveRecording),
       body: ConfirmationStep(
         result: pending.result,
         genreId: pending.genreId,

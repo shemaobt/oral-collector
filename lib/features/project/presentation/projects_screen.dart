@@ -76,7 +76,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     return Scaffold(
       appBar: ScreenHeader(
         title: l10n.project_projects,
-        subtitle: l10n.project_subtitle,
         actions: const [SyncStatusIndicator()],
       ),
       floatingActionButton: canCreate

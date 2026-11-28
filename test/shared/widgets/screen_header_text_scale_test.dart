@@ -1,5 +1,5 @@
-// ENG-178: the shared ScreenHeader / ScreenHeaderSliver must keep the title and
-// subtitle inside the fixed 96px header under large system fonts without
+// ENG-178: the shared ScreenHeader / ScreenHeaderSliver must keep the title
+// inside the fixed header under large system fonts without
 // overflowing. Rendered on a realistic phone viewport via pumpAtTextScale.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,7 +8,6 @@ import 'package:oral_collector/shared/widgets/screen_header.dart';
 import '../../support/text_scale.dart';
 
 const _title = 'Recordings Library Overview';
-const _subtitle = 'All of your captured stories in one place';
 
 void main() {
   group('ScreenHeader (AppBar)', () {
@@ -17,7 +16,7 @@ void main() {
         tester,
         scale: scale,
         child: const Scaffold(
-          appBar: ScreenHeader(title: _title, subtitle: _subtitle),
+          appBar: ScreenHeader(title: _title),
           body: SizedBox.expand(),
         ),
       );
@@ -44,7 +43,7 @@ void main() {
         scale: scale,
         child: const CustomScrollView(
           slivers: [
-            ScreenHeaderSliver(title: _title, subtitle: _subtitle),
+            ScreenHeaderSliver(title: _title),
             SliverFillRemaining(child: SizedBox()),
           ],
         ),

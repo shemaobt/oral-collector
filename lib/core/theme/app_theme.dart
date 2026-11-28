@@ -55,7 +55,7 @@ abstract class AppTheme {
 
     return base.copyWith(
       displayLarge: brush(base.displayLarge, 44, 0.92),
-      displayMedium: brush(base.displayMedium, 36, 0.92),
+      displayMedium: brush(base.displayMedium, 42, 0.95),
       displaySmall: brush(base.displaySmall, 28, 1),
       headlineLarge: brush(base.headlineLarge, 28, 1),
       headlineMedium: brush(base.headlineMedium, 23, 1),

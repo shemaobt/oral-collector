@@ -44,10 +44,7 @@ class _QuickRecordingScreenState extends ConsumerState<QuickRecordingScreen> {
 
     return RecordingNavigationGuard(
       child: Scaffold(
-        appBar: ScreenHeader(
-          title: l10n.quickRecord_title,
-          subtitle: l10n.quickRecord_subtitle,
-        ),
+        appBar: ScreenHeader(title: l10n.quickRecord_title),
         body: _currentStep == _QuickStep.recording
             ? RecordingStep(
                 genreId: kUnclassifiedGenreId,

@@ -52,7 +52,7 @@ const _sans = 'Montserrat';
 
 final _roles = <String, (String, double, FontWeight)>{
   'displayLarge': (_brush, 44, FontWeight.w400),
-  'displayMedium': (_brush, 36, FontWeight.w400),
+  'displayMedium': (_brush, 42, FontWeight.w400),
   'displaySmall': (_brush, 28, FontWeight.w400),
   'headlineLarge': (_brush, 28, FontWeight.w400),
   'headlineMedium': (_brush, 23, FontWeight.w400),
