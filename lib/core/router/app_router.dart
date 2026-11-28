@@ -29,6 +29,7 @@ import '../../shared/widgets/app_shell.dart';
 import '../auth/auth_notifier.dart';
 import '../auth/auth_state.dart';
 import '../config/recording_config.dart';
+import 'tab_in_use.dart';
 
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
@@ -160,18 +161,47 @@ List<RouteBase> _routesFor(Ref ref, {required bool isWeb}) => [
     ),
   ],
 
-  ShellRoute(
-    builder: (context, state, child) => AppShell(child: child),
-    routes: [
-      ..._homeRoutes(isWeb: isWeb),
-      ..._recordRoutes(ref),
-      ..._recordingsRoutes(ref, isWeb: isWeb),
-      ..._projectsRoutes(isWeb: isWeb),
-      ..._profileRoutes(),
-      if (isWeb) ..._adminRoutes(),
+  StatefulShellRoute.indexedStack(
+    builder: (context, state, navigationShell) =>
+        AppShell(navigationShell: navigationShell),
+    branches: [
+      for (final routes in [
+        _homeRoutes(isWeb: isWeb),
+        _recordRoutes(ref),
+        _recordingsRoutes(ref, isWeb: isWeb),
+        _projectsRoutes(isWeb: isWeb),
+        _profileRoutes(),
+        if (isWeb) _adminRoutes(),
+      ])
+        StatefulShellBranch(routes: routes),
     ],
   ),
 ];
+
+class _FreshOnEveryEntry extends ConsumerStatefulWidget {
+  const _FreshOnEveryEntry({required this.address, required this.child});
+
+  final Uri address;
+  final Widget child;
+
+  @override
+  ConsumerState<_FreshOnEveryEntry> createState() => _FreshOnEveryEntryState();
+}
+
+class _FreshOnEveryEntryState extends ConsumerState<_FreshOnEveryEntry> {
+  int _departures = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(tabInUseProvider, (was, now) {
+      if (was == ShellTab.record) setState(() => _departures++);
+    });
+    return KeyedSubtree(
+      key: ValueKey((_departures, widget.address)),
+      child: widget.child,
+    );
+  }
+}
 
 List<RouteBase> _homeRoutes({required bool isWeb}) => [
   GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
@@ -188,20 +218,29 @@ List<RouteBase> _recordRoutes(Ref ref) => [
   GoRoute(
     path: '/record',
     redirect: _requireActiveProject(ref),
-    builder: (context, state) => RecordingFlowScreen(
-      genreId: state.uri.queryParameters['genreId'],
-      subcategoryId: state.uri.queryParameters['subcategoryId'],
+    builder: (context, state) => _FreshOnEveryEntry(
+      address: state.uri,
+      child: RecordingFlowScreen(
+        genreId: state.uri.queryParameters['genreId'],
+        subcategoryId: state.uri.queryParameters['subcategoryId'],
+      ),
     ),
   ),
   GoRoute(
     path: '/quick-record',
     redirect: _requireActiveProject(ref),
-    builder: (context, state) => const QuickRecordingScreen(),
+    builder: (context, state) => _FreshOnEveryEntry(
+      address: state.uri,
+      child: const QuickRecordingScreen(),
+    ),
   ),
   GoRoute(
     path: '/recovery-confirm',
     redirect: _requireActiveProject(ref),
-    builder: (context, state) => const RecoveryConfirmScreen(),
+    builder: (context, state) => _FreshOnEveryEntry(
+      address: state.uri,
+      child: const RecoveryConfirmScreen(),
+    ),
   ),
 ];
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/platform/file_ops.dart' as file_ops;
+import '../../core/router/tab_in_use.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
@@ -19,9 +20,9 @@ import 'brush_sign.dart';
 import 'quick_notice.dart';
 
 class AppShell extends ConsumerStatefulWidget {
-  const AppShell({super.key, required this.child});
+  const AppShell({super.key, required this.navigationShell});
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
   static const double scrollBottomPadding = 120;
   static const double wideBreakpoint = 1024;
@@ -72,7 +73,29 @@ int _currentIndexFrom(BuildContext context, List<TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  Future<void> _navigateToTab(String targetPath) async {
+  @override
+  void initState() {
+    super.initState();
+    _publishTabInUse();
+  }
+
+  @override
+  void didUpdateWidget(AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.navigationShell.currentIndex !=
+        oldWidget.navigationShell.currentIndex) {
+      _publishTabInUse();
+    }
+  }
+
+  void _publishTabInUse() {
+    final tab = ShellTab.values[widget.navigationShell.currentIndex];
+    Future.microtask(() {
+      if (mounted) ref.read(tabInUseProvider.notifier).state = tab;
+    });
+  }
+
+  Future<void> _navigateToTab(List<TabItem> tabs, int index) async {
     final state = ref.read(recordingSessionNotifierProvider);
     final l10n = AppLocalizations.of(context);
     if (state.isFinalizing || state.hasFinalizationError) {
@@ -114,7 +137,16 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     if (!mounted) return;
-    context.go(targetPath);
+    final shell = widget.navigationShell;
+    if (index >= shell.route.branches.length) {
+      return context.go(tabs[index].path);
+    }
+    shell.goBranch(
+      index,
+      initialLocation:
+          index == shell.currentIndex ||
+          ShellTab.values[index] == ShellTab.record,
+    );
   }
 
   List<TabItem> _buildWebTabs(AppLocalizations l10n) {
@@ -152,10 +184,10 @@ class _AppShellState extends ConsumerState<AppShell> {
             WebSidebar(
               tabs: tabs,
               selectedIndex: selectedIndex,
-              onTabTapped: (index) => _navigateToTab(tabs[index].path),
+              onTabTapped: (index) => _navigateToTab(tabs, index),
               pendingInvites: pendingInvites,
             ),
-            Expanded(child: widget.child),
+            Expanded(child: widget.navigationShell),
           ],
         ),
       );
@@ -163,11 +195,11 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: QuickNoticeFloor(child: widget.child),
+      body: QuickNoticeFloor(child: widget.navigationShell),
       bottomNavigationBar: FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),
-        onTabTapped: (index) => _navigateToTab(mobileTabs[index].path),
+        onTabTapped: (index) => _navigateToTab(mobileTabs, index),
         colors: colors,
         pendingInvites: pendingInvites,
         bottomPadding: MediaQuery.of(context).padding.bottom,
