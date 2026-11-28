@@ -202,6 +202,8 @@ Path: @/lib/shared/widgets
   is part of the label the caller passes. The choice changes at once, with no
   slide.
 
+- **`AppField`** ([app_field.dart](app_field.dart)) is the one text field a screen may use: it wraps `TextFormField` and takes its whole look from the theme's field (no style of its own). `onCard` swaps in the on-a-card variant (`AppTheme.fieldTheme(onCard: true)`); `enabled: false` switches it off.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
