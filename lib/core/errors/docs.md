@@ -33,7 +33,7 @@ Path: @/lib/core/errors
   `messageForException` is an **exhaustive** `switch` over the sealed type that
   maps each leaf to an `l10n.error_*` key, and `friendlyErrorFor(Object)`
   dispatches typed-first before falling back to legacy string matching. The
-  snack bar entry point is
+  quick notice entry point is
   [../../shared/widgets/error_notice.dart](../../shared/widgets/error_notice.dart),
   whose `showErrorNotice(context, Object)` calls `friendlyErrorFor`.
 - **The exception type is preserved until that UI boundary (ENG-173).** Feature

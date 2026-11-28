@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../features/sync/presentation/notifiers/sync_state.dart';
 import '../../l10n/app_localizations.dart';
-import '../widgets/error_notice.dart';
+import '../widgets/brush_sign.dart';
+import '../widgets/quick_notice.dart';
 
 /// Drains the upload queue and reports back at the control the user pressed.
 ///
@@ -16,10 +17,10 @@ Future<void> syncNowWithFeedback(BuildContext context, WidgetRef ref) async {
   if (!context.mounted) return;
 
   if (ref.read(syncNotifierProvider).blockReason == SyncBlockReason.wifiOnly) {
-    showErrorNotice(
+    showQuickNotice(
       context,
-      '',
-      template: (_) => AppLocalizations.of(context).sync_waitingForWifi,
+      AppLocalizations.of(context).sync_waitingForWifi,
+      sign: Sign.info,
     );
   }
 }

@@ -19,6 +19,7 @@ import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../invite/presentation/notifiers/invite_notifier.dart';
@@ -28,7 +29,7 @@ import '../../recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../sync/presentation/notifiers/sync_state.dart';
 import 'notifiers/profile_notifier.dart';
-import 'widgets/clear_cache_snack_bar.dart';
+import 'widgets/clear_cache_notice.dart';
 import 'widgets/invitations_section.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/quick_stats_row.dart';
@@ -439,7 +440,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _showClearCacheConfirmation(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final notice = quickNoticeOf(context);
     final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
@@ -467,7 +468,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final kept = await ref
           .read(profileNotifierProvider.notifier)
           .clearCacheAndRefresh();
-      if (mounted) showClearCacheResultSnackBar(messenger, l10n, kept);
+      if (mounted) showClearCacheResultNotice(notice, l10n, kept);
     }
   }
 }
