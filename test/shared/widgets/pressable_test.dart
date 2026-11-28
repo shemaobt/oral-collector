@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/shared/widgets/app_disc.dart';
+import 'package:oral_collector/shared/widgets/pressable.dart';
 import 'package:oral_collector/shared/widgets/record_button.dart';
 import 'package:oral_collector/shared/widgets/round_button.dart';
 
@@ -50,6 +51,28 @@ Future<TestGesture> hold(WidgetTester tester, Finder piece) async {
 }
 
 void main() {
+  testWidgets('a pressed piece is one button holding its label and its tap', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await pumpPiece(
+      tester,
+      Pressable(onTap: () {}, child: const Text('Alpha')),
+    );
+
+    expect(
+      tester.getSemantics(find.text('Alpha')),
+      matchesSemantics(
+        label: 'Alpha',
+        isButton: true,
+        isFocusable: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
   testWidgets('a slid-off finger fires nothing and the disc springs back', (
     tester,
   ) async {

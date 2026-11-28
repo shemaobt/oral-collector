@@ -6,6 +6,7 @@
 // Stack throws no overflow exception and find.text still finds a clipped label.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/home/presentation/widgets/expandable_record_fab.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
@@ -40,7 +41,12 @@ Future<void> _pumpExpanded(
   Locale locale = const Locale('en'),
 }) async {
   await _pump(tester, scale, locale: locale);
-  await tester.tap(find.byType(InkWell).last);
+  await tester.tap(
+    find.ancestor(
+      of: find.byIcon(LucideIcons.mic),
+      matching: find.byType(InkWell),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
