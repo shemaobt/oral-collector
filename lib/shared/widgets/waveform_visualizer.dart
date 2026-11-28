@@ -44,7 +44,7 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: DurationScale.ms150,
+      duration: MotionScale.levelMeter,
     );
     _bars = _isLive
         ? List.filled(widget.barCount, 0.0, growable: true)

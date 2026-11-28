@@ -62,7 +62,7 @@ class SegmentCard extends StatelessWidget {
     final showTaxonomyRow = onClassify != null && !isExcluded;
 
     return AnimatedContainer(
-      duration: DurationScale.ms200,
+      duration: context.motion.fast,
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
         vertical: SpacingScale.s12,
