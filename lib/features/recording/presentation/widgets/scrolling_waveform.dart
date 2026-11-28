@@ -10,13 +10,11 @@ class ScrollingWaveform extends StatefulWidget {
     super.key,
     this.amplitudeStream,
     this.height = 200,
-    this.barColor,
     this.isPaused = false,
   });
 
   final Stream<double>? amplitudeStream;
   final double height;
-  final Color? barColor;
   final bool isPaused;
 
   @override
@@ -79,7 +77,7 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
             painter: _ScrollingWaveformPainter(
               amplitudes: _amplitudes,
               revision: _revision,
-              barColor: widget.barColor ?? AppColors.of(context).mic,
+              barColor: AppColors.of(context).mic,
               isPaused: widget.isPaused,
             ),
           );
@@ -135,10 +133,9 @@ class _ScrollingWaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final centerX = size.width * 0.55;
     final centerY = size.height / 2;
 
-    final maxBars = (centerX / slotWidth).floor();
+    final maxBars = ((size.width + barGap) / slotWidth).floor();
     final startIdx = amplitudes.length > maxBars
         ? amplitudes.length - maxBars
         : 0;
@@ -148,8 +145,7 @@ class _ScrollingWaveformPainter extends CustomPainter {
 
     for (var i = 0; i < visibleCount; i++) {
       final amp = amplitudes[startIdx + i];
-      final x = centerX - (visibleCount - i) * slotWidth;
-      if (x < -barWidth) continue;
+      final x = size.width - barWidth - (visibleCount - 1 - i) * slotWidth;
 
       final barHeight = (amp * size.height * 0.85).clamp(
         2.0,

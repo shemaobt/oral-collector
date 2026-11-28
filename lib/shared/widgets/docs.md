@@ -52,14 +52,14 @@ Path: @/lib/shared/widgets
   in the kit's ten brush numbers and a colon (`Glyph`, held in
   `brush_signs.dart` and generated from `ia/n-*.svg`). `height` is multiplied
   by the text scale; width follows from each character's own width plus 0.04 of
-  the height between two. Colour defaults to the text colour around it. The
+  the height between two, or, with `tabular`, every digit takes the widest
+  digit's slot (equal-width digit slots) so the width holds as digits change. Colour defaults to the text colour around it. The
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
 - [recording_clock.dart](recording_clock.dart) is the recording time in brush
   numbers (`formatClock`, hours only from one hour on), `count` colour, `secondary`
-  when `paused`, `height` 72 unless asked. Tabular: every digit has the widest
-  digit's slot, so the width holds from one second to the next.
+  when `paused`, `height` 72 unless asked. It is `tabular`.
 - [sound_strokes.dart](sound_strokes.dart) paints the kit's strokes of sound
   in `color` behind its `child` (a disc of `diameter`) while `sounding`: a box
   138% of the disc, centred, under the child, no taps, no semantics, still. Not
