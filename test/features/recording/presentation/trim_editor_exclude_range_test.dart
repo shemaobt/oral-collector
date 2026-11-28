@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -10,6 +11,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/joined_audio_exporter.dart';
@@ -185,6 +187,87 @@ void main() {
     expect(state.splitPoints, isEmpty);
     expect(state.segmentCount, 1);
     expect(handle(kExcludeRangeStartHandleKey), findsNothing);
+  });
+
+  testWidgets('Dragging from the disc under the wave moves the start handle '
+      'from 20 s to 18 s', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    final wave = waveformRect(tester);
+    final pxPerSecond = wave.width / 60;
+    final disc = Offset(
+      tester.getCenter(handle(kExcludeRangeStartHandleKey)).dx,
+      wave.bottom + 10,
+    );
+
+    await tester.dragFrom(disc, Offset(-2 * pxPerSecond, 0));
+    await settle(tester);
+
+    expect(handleTime(kExcludeRangeStartHandleKey, '00:18.00'), findsOneWidget);
+  });
+
+  testWidgets('The stretch shows the kit colour on the wave, with the wave '
+      'on top of it', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    final wave = waveformRect(tester);
+    final boundary =
+        tester.renderObject(
+              find
+                  .ancestor(
+                    of: find.byType(TrimWaveform),
+                    matching: find.byType(RepaintBoundary),
+                  )
+                  .first,
+            )
+            as RenderRepaintBoundary;
+    final origin = tester
+        .renderObject<RenderBox>(find.byType(TrimWaveform))
+        .localToGlobal(Offset.zero, ancestor: boundary);
+    final colors = AppColors.of(tester.element(find.byType(TrimWaveform)));
+    final start = tester.getCenter(handle(kExcludeRangeStartHandleKey)).dx;
+    final end = tester.getCenter(handle(kExcludeRangeEndHandleKey)).dx;
+    final x = (origin.dx + start + (end - start) / 4 - wave.left).round();
+    final y = (origin.dy + kTrimWaveformTop + 6).round();
+
+    final pixel = await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final data = (await image.toByteData())!;
+      final i = (y * image.width + x) * 4;
+      return [for (var k = 0; k < 3; k++) data.getUint8(i + k)];
+    });
+
+    expect(pixel, [
+      (colors.stretch.r * 255).round(),
+      (colors.stretch.g * 255).round(),
+      (colors.stretch.b * 255).round(),
+    ]);
+  });
+
+  testWidgets('Each disc is 28 dp across and each line is 3 dp wide down the '
+      'handle', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    final disc = tester.getSize(
+      find.descendant(
+        of: handle(kExcludeRangeStartHandleKey),
+        matching: find.byKey(kExcludeRangeDiscKey),
+      ),
+    );
+    final line = tester.getSize(
+      find.descendant(
+        of: handle(kExcludeRangeStartHandleKey),
+        matching: find.byKey(kExcludeRangeLineKey),
+      ),
+    );
+    expect(disc, const Size(28, 28));
+    expect(line.width, 3);
+    expect(line.height, greaterThan(100));
   });
 
   testWidgets('Saving after confirming an excluded range offers the three '

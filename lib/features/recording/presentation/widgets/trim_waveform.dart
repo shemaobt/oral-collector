@@ -4,8 +4,11 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/hand_cut_rect.dart';
 import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
+
+const double kTrimWaveformTop = 28.0;
 
 class TrimWaveform extends StatefulWidget {
   const TrimWaveform({
@@ -25,6 +28,7 @@ class TrimWaveform extends StatefulWidget {
     this.panFraction = 0.0,
     this.onZoomPanChanged,
     this.maxZoom = 16.0,
+    this.stretch,
   });
 
   final List<double> bars;
@@ -45,6 +49,7 @@ class TrimWaveform extends StatefulWidget {
   final double panFraction;
   final ValueChanged<({double zoom, double panFraction})>? onZoomPanChanged;
   final double maxZoom;
+  final ({double start, double end})? stretch;
 
   @override
   State<TrimWaveform> createState() => _TrimWaveformState();
@@ -150,7 +155,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final totalHeight = _waveformHeight + _handleRadius * 2 + 4;
+    final totalHeight = _waveformHeight + kTrimWaveformTop;
 
     return Semantics(
       label: AppLocalizations.of(context).a11y_splitWaveform,
@@ -257,6 +262,8 @@ class _TrimWaveformState extends State<TrimWaveform> {
                   playheadFraction: widget.playheadFraction,
                   zoom: widget.zoom,
                   panFraction: widget.panFraction,
+                  stretch: widget.stretch,
+                  stretchColor: colors.stretch,
                   accentColor: colors.accent,
                   barColor: isDark
                       ? colors.foreground.withValues(alpha: 0.18)
@@ -287,6 +294,8 @@ class _SplitWaveformPainter extends CustomPainter {
     required this.playheadFraction,
     required this.zoom,
     required this.panFraction,
+    required this.stretch,
+    required this.stretchColor,
     required this.accentColor,
     required this.barColor,
     required this.selectedBarColor,
@@ -305,6 +314,8 @@ class _SplitWaveformPainter extends CustomPainter {
   final double? playheadFraction;
   final double zoom;
   final double panFraction;
+  final ({double start, double end})? stretch;
+  final Color stretchColor;
   final Color accentColor;
   final Color barColor;
   final Color selectedBarColor;
@@ -322,8 +333,7 @@ class _SplitWaveformPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (bars.isEmpty) return;
 
-    final handleDiameter = handleRadius * 2;
-    final waveTop = handleDiameter + 4;
+    const waveTop = kTrimWaveformTop;
     final waveBottom = waveTop + waveformHeight;
     final boundaries = [0.0, ...splitPoints, 1.0];
     final segmentCount = boundaries.length - 1;
@@ -350,6 +360,8 @@ class _SplitWaveformPainter extends CustomPainter {
       boundaries,
       segmentCount,
     );
+
+    _drawStretch(canvas, size, waveTop);
 
     _drawBars(canvas, size, waveTop, waveBottom, boundaries, segmentCount);
 
@@ -504,6 +516,20 @@ class _SplitWaveformPainter extends CustomPainter {
     }
   }
 
+  void _drawStretch(Canvas canvas, Size size, double waveTop) {
+    final range = stretch;
+    if (range == null) return;
+    final left = _fullToLocal(range.start, size.width);
+    final right = _fullToLocal(range.end, size.width);
+    canvas.save();
+    canvas.translate(left, waveTop);
+    HandCutRectPainter(fill: stretchColor, radius: RadiusScale.r8).paint(
+      canvas,
+      Size((right - left).clamp(0.0, double.infinity), waveformHeight),
+    );
+    canvas.restore();
+  }
+
   void _drawBars(
     Canvas canvas,
     Size size,
@@ -650,6 +676,8 @@ class _SplitWaveformPainter extends CustomPainter {
         oldDelegate.playheadFraction != playheadFraction ||
         oldDelegate.zoom != zoom ||
         oldDelegate.panFraction != panFraction ||
+        oldDelegate.stretch != stretch ||
+        oldDelegate.stretchColor != stretchColor ||
         oldDelegate.accentColor != accentColor ||
         oldDelegate.isDark != isDark;
   }

@@ -202,21 +202,32 @@ class TrimWaveformPanel extends StatelessWidget {
           const SizedBox(height: SpacingScale.s8),
           Stack(
             children: [
-              TrimWaveform(
-                bars: waveformBars,
-                splitPoints: splitPoints,
-                totalDuration: totalDuration,
-                onSplitPointsChanged: onSplitPointsChanged,
-                playingSegment: playingSegment,
-                excludedSegments: excludedSegments,
-                excludedRanges: excludedRanges,
-                allowSplit: excludeEditing == null,
-                playheadFraction: playheadFraction,
-                onPlayheadSeek: onPlayheadSeek,
-                onSeekAndPlay: onSeekAndPlay,
-                zoom: zoom,
-                panFraction: panFraction,
-                onZoomPanChanged: onZoomPanChanged,
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: excludeEditing == null ? 0 : kExcludeRangeDiscReach,
+                ),
+                child: TrimWaveform(
+                  bars: waveformBars,
+                  splitPoints: splitPoints,
+                  totalDuration: totalDuration,
+                  onSplitPointsChanged: onSplitPointsChanged,
+                  playingSegment: playingSegment,
+                  excludedSegments: excludedSegments,
+                  excludedRanges: excludedRanges,
+                  allowSplit: excludeEditing == null,
+                  playheadFraction: playheadFraction,
+                  onPlayheadSeek: onPlayheadSeek,
+                  onSeekAndPlay: onSeekAndPlay,
+                  zoom: zoom,
+                  panFraction: panFraction,
+                  onZoomPanChanged: onZoomPanChanged,
+                  stretch: excludeEditing == null
+                      ? null
+                      : (
+                          start: excludeEditing!.draft.start,
+                          end: excludeEditing!.draft.end,
+                        ),
+                ),
               ),
               if (excludeEditing != null)
                 Positioned.fill(
