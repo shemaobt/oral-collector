@@ -2,68 +2,82 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/brush_sign.dart';
+import '../../../../shared/widgets/round_button.dart';
+import '../../../../shared/widgets/sound_strokes.dart';
 
 class ControlButton extends StatelessWidget {
   const ControlButton({
     super.key,
-    required this.icon,
+    required this.sign,
     required this.label,
     required this.onTap,
-  });
+  }) : stop = false,
+       sounding = false,
+       semanticLabel = null;
 
-  final IconData icon;
+  const ControlButton.stop({
+    super.key,
+    required this.label,
+    required this.semanticLabel,
+    required this.onTap,
+    required this.sounding,
+  }) : sign = Sign.stop,
+       stop = true;
+
+  final Sign sign;
   final String label;
+  final String? semanticLabel;
   final VoidCallback onTap;
+  final bool stop;
+  final bool sounding;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final size = stop ? RoundButtonSize.huge : RoundButtonSize.medium;
+    void press() {
+      stop ? HapticFeedback.heavyImpact() : HapticFeedback.lightImpact();
+      onTap();
+    }
 
-    return Semantics(
-      label: label,
-      button: true,
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDark ? colors.surfaceAlt : colors.foreground,
-                boxShadow: [
-                  BoxShadow(
-                    color: (isDark ? AppColors.black : colors.foreground)
-                        .withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                color: isDark ? colors.foreground : colors.background,
-                size: 26,
-              ),
-            ),
-            const SizedBox(height: SpacingScale.s8),
-            Text(
+    final button = RoundButton.sign(
+      sign: sign,
+      semanticLabel: semanticLabel ?? label,
+      size: size,
+      tone: stop ? RoundButtonTone.record : RoundButtonTone.resting,
+      signSize: size.diameter * 0.46,
+      onPressed: press,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        stop
+            ? SoundStrokes(
+                diameter: size.diameter,
+                color: colors.mic,
+                sounding: sounding,
+                child: button,
+              )
+            : button,
+        const SizedBox(height: 14),
+        ExcludeSemantics(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: press,
+            child: Text(
               label,
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 13,
                 color: colors.secondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
