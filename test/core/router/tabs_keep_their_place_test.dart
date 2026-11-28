@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/router/app_router.dart';
 import 'package:oral_collector/features/genre/domain/entities/genre.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_state.dart';
 import 'package:oral_collector/features/home/presentation/home_screen.dart';
 import 'package:oral_collector/features/home/presentation/notifiers/home_notifier.dart';
 import 'package:oral_collector/features/home/presentation/notifiers/home_state.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/interrupted_sessions_notifier.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/features/recording/presentation/recordings_list_screen.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/genre_selection_step.dart';
 
@@ -82,5 +86,28 @@ void main() {
     await _tapTab(tester, 'Record');
 
     expect(find.byType(GenreSelectionStep), findsOneWidget);
+  });
+
+  testWidgets('a second recovery opens on its own recording', (tester) async {
+    final app = await _pump(tester, at: '/home');
+    Future<RecordingResult> recover(String name) async {
+      final result = RecordingResult(filePath: name, durationSeconds: 5);
+      app.read(pendingRecoveryProvider.notifier).state = PendingRecovery(
+        result: result,
+        sessionId: name,
+        genreId: 'g1',
+        subcategoryId: null,
+      );
+      app.read(routerProvider).go('/recovery-confirm');
+      await settle(tester);
+      return result;
+    }
+
+    await recover('first');
+    app.read(routerProvider).go('/home');
+    await settle(tester);
+    final second = await recover('second');
+
+    expect(app.read(pendingRecordingDecisionProvider), same(second));
   });
 }

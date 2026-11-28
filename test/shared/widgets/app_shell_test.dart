@@ -109,15 +109,11 @@ GoRouter _buildRouter() {
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
         branches: [
-          for (final (path, name) in [
-            ('/home', 'home'),
-            ('/record', 'record'),
-            ('/recordings', 'recordings'),
-          ])
+          for (final name in ['home', 'record', 'recordings'])
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: path,
+                  path: '/$name',
                   builder: (_, _) => Scaffold(
                     key: ValueKey('$name-screen'),
                     body: Center(child: Text('$name page')),
