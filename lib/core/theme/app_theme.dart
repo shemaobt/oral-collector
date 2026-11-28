@@ -337,6 +337,7 @@ abstract class AppTheme {
       horizontalMargin: 16,
       columnSpacing: 32,
       dataRowMinHeight: 46,
+      dataRowMaxHeight: 46,
       headingRowHeight: 43,
       dividerThickness: 1,
     );

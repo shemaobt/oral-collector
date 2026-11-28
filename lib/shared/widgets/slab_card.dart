@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'brush_number.dart';
@@ -11,6 +12,7 @@ const double _rowHeight = 56;
 const double _countSlot = 32;
 const double _countHeight = 30;
 const double _chevron = 14;
+const double _gap = 14;
 
 class SlabRow {
   const SlabRow({
@@ -20,7 +22,7 @@ class SlabRow {
     this.onTap,
   });
 
-  final String count;
+  final int count;
   final String label;
   final String action;
   final VoidCallback? onTap;
@@ -104,11 +106,20 @@ class _Row extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: _countSlot),
-                child: BrushNumber(row.count, height: _countHeight, color: ink),
+              SizedBox(
+                width: _countSlot,
+                child: OverflowBox(
+                  fit: OverflowBoxFit.deferToChild,
+                  maxWidth: double.infinity,
+                  alignment: Alignment.centerLeft,
+                  child: BrushNumber(
+                    '${row.count}',
+                    height: _countHeight,
+                    color: ink,
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: _gap),
               Expanded(
                 child: Text(row.label, style: word.copyWith(color: ink)),
               ),
