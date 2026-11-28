@@ -252,6 +252,18 @@ Widget _confirmationStep(RecordingResult result) => ConfirmationStep(
   onSaved: () {},
 );
 
+Widget _stepLeavingHome(BuildContext context, RecordingResult result) =>
+    ConfirmationStep(
+      result: result,
+      genreId: 'g1',
+      subcategoryId: null,
+      genreName: 'Genre',
+      subcategoryName: null,
+      onReRecord: () {},
+      onDiscard: () => context.go('/home'),
+      onKeepForLater: () => context.go('/home'),
+    );
+
 Widget _confirmationApp(ProviderContainer container, RecordingResult result) {
   return _app(container, Scaffold(body: _confirmationStep(result)));
 }
@@ -287,14 +299,17 @@ Widget _shellApp(ProviderContainer container, RecordingResult result) {
             AppShell(navigationShell: navigationShell),
         branches: [
           for (final (path, page) in [
-            ('/home', const Center(child: Text('home page'))),
-            ('/record', _confirmationStep(result)),
+            ('/home', (_) => const Center(child: Text('home page'))),
+            (
+              '/record',
+              (BuildContext context) => _stepLeavingHome(context, result),
+            ),
           ])
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: path,
-                  builder: (_, _) => Scaffold(body: page),
+                  builder: (context, _) => Scaffold(body: page(context)),
                 ),
               ],
             ),
@@ -480,6 +495,53 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await _settle(tester);
   });
+
+  testWidgets('7 — depois de salvar, trocar de aba não pergunta nada', (
+    tester,
+  ) async {
+    final container = _makeContainer();
+    final result = await _seedFinishedRecording();
+    await tester.pumpWidget(_shellApp(container, result));
+    await _settle(tester);
+    await _fillTheForm(tester);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Save Recording'));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await _settle(tester);
+    expect(find.text('home page'), findsOneWidget);
+
+    await _tapHomeTab(tester);
+
+    expect(find.text(_cancelLabel), findsNothing);
+    expect(File(result.filePath).existsSync(), isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await _settle(tester);
+  });
+
+  for (final (label, exit) in [
+    ('guardar para depois', _keepForLaterLabel),
+    ('descartar', _discardLabel),
+  ]) {
+    testWidgets('8 — depois de $label pelo formulário, trocar de aba não '
+        'pergunta nada', (tester) async {
+      final container = _makeContainer();
+      final result = await _seedFinishedRecording();
+      await tester.pumpWidget(_shellApp(container, result));
+      await _settle(tester);
+      await _tapDialogAction(tester, _discardLabel);
+      await _tapDialogAction(tester, exit);
+      expect(find.text('home page'), findsOneWidget);
+
+      await _tapHomeTab(tester);
+
+      expect(find.text(_cancelLabel), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      await _settle(tester);
+    });
+  }
 
   testWidgets('5 — a gravação guardada volta a ser editável', (tester) async {
     final container = _makeContainer();
