@@ -523,7 +523,11 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
           _buildRing(200, 44, colors.border.withValues(alpha: 0.12)),
           _buildRing(160, 36, colors.border.withValues(alpha: 0.22)),
           _buildRing(120, 28, colors.border.withValues(alpha: 0.38)),
-          RecordButton(state: RecordButtonState.ready, onTap: onTap),
+          RecordButton(
+            state: RecordButtonState.ready,
+            calling: true,
+            onTap: onTap,
+          ),
         ],
       ),
     );
