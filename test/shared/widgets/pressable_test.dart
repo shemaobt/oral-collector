@@ -15,7 +15,6 @@ Future<void> pumpPiece(
 }) => tester.pumpWidget(
   MaterialApp(
     theme: AppTheme.lightTheme,
-    locale: const Locale('en'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: const [
       AppLocalizations.delegate,
@@ -30,6 +29,16 @@ Future<void> pumpPiece(
   ),
 );
 
+RoundButton add(
+  VoidCallback onPressed, [
+  RoundButtonSize size = RoundButtonSize.medium,
+]) => RoundButton(
+  icon: Icons.add,
+  semanticLabel: 'add',
+  size: size,
+  onPressed: onPressed,
+);
+
 double discWidth(WidgetTester tester) =>
     tester.getRect(find.byType(AppDisc)).width;
 
@@ -41,61 +50,40 @@ Future<TestGesture> hold(WidgetTester tester, Finder piece) async {
 }
 
 void main() {
-  testWidgets('a finger that slides off fires nothing and the disc springs '
-      'back', (tester) async {
+  testWidgets('a slid-off finger fires nothing and the disc springs back', (
+    tester,
+  ) async {
     var taps = 0;
-    await pumpPiece(
-      tester,
-      RoundButton(
-        icon: Icons.add,
-        semanticLabel: 'add',
-        onPressed: () => taps++,
-      ),
-    );
+    await pumpPiece(tester, add(() => taps++));
 
     final finger = await hold(tester, find.byType(RoundButton));
     expect(discWidth(tester), closeTo(53.2, 0.05));
     await finger.moveBy(const Offset(0, 200));
     await finger.up();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
 
     expect(taps, 0);
     expect(discWidth(tester), closeTo(56, 0.01));
   });
 
   testWidgets('with less motion the disc never changes size', (tester) async {
-    await pumpPiece(
-      tester,
-      RoundButton(icon: Icons.add, semanticLabel: 'add', onPressed: () {}),
-      reduceMotion: true,
-    );
+    await pumpPiece(tester, add(() {}), reduceMotion: true);
 
     await hold(tester, find.byType(RoundButton));
 
     expect(discWidth(tester), 56);
   });
 
-  testWidgets(
-    'a round button of 44 answers a tap at the edge of its 48 target',
-    (tester) async {
-      var taps = 0;
-      await pumpPiece(
-        tester,
-        RoundButton(
-          icon: Icons.add,
-          semanticLabel: 'add',
-          size: RoundButtonSize.small,
-          onPressed: () => taps++,
-        ),
-      );
+  testWidgets('the 44 button answers a tap in its 48 target', (tester) async {
+    var taps = 0;
+    await pumpPiece(tester, add(() => taps++, RoundButtonSize.small));
 
-      final centre = tester.getCenter(find.byType(RoundButton));
-      await tester.tapAt(centre + const Offset(0, 23));
+    await tester.tapAt(
+      tester.getCenter(find.byType(RoundButton)) + const Offset(0, 23),
+    );
 
-      expect(taps, 1);
-    },
-  );
+    expect(taps, 1);
+  });
 
   testWidgets('Enter presses the focused disc', (tester) async {
     var taps = 0;
