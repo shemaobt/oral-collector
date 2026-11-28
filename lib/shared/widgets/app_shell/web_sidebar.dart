@@ -153,7 +153,7 @@ class _SidebarNavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(_pillHeight),
           child: AnimatedContainer(
-            duration: DurationScale.ms200,
+            duration: context.motion.fast,
             constraints: const BoxConstraints(minHeight: _pillHeight),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 16),

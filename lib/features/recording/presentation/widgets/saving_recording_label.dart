@@ -22,8 +22,14 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: DurationScale.ms1100,
-    )..repeat();
+      duration: MotionScale.savingDots,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller.loopUnless(still: context.motion.still);
   }
 
   @override

@@ -11,7 +11,6 @@ const double _trackPad = 4;
 const double _trackRadius = 14;
 const double _partRadius = 10;
 const double _partPadX = 8;
-const Offset _shadowOffset = Offset(2, 3);
 
 class AppSelector extends StatelessWidget {
   AppSelector({
@@ -124,7 +123,7 @@ class _Part extends StatelessWidget {
                   fill: fill,
                   radius: _partRadius,
                   shadow: shadow,
-                  shadowOffset: _shadowOffset,
+                  shadowOffset: markShadowOffset,
                 ),
                 child: part,
               ),

@@ -79,8 +79,8 @@ class FloatingNavBar extends StatelessWidget {
                         onTap: () => onTabTapped(i),
                         borderRadius: BorderRadius.circular(RadiusScale.r24),
                         child: AnimatedContainer(
-                          duration: DurationScale.ms300,
-                          curve: Curves.easeInOut,
+                          duration: context.motion.base,
+                          curve: context.motion.enter,
                           width: isSelected ? selectedWidth : unselectedWidth,
                           height: 54,
                           decoration: BoxDecoration(
@@ -160,9 +160,9 @@ class _NavItemContent extends StatelessWidget {
         : iconWidget;
 
     return AnimatedSwitcher(
-      duration: DurationScale.ms200,
-      switchInCurve: Curves.easeIn,
-      switchOutCurve: Curves.easeOut,
+      duration: context.motion.fast,
+      switchInCurve: context.motion.enter,
+      switchOutCurve: context.motion.leave.flipped,
       child: isSelected
           ? Row(
               key: const ValueKey(true),

@@ -27,6 +27,28 @@ abstract final class MotionScale {
   static const double noticeDrop = 44;
   static const Duration noticeStay = Duration(milliseconds: 3000);
   static const Duration noticeStayAction = Duration(milliseconds: 6000);
+  static const Duration recordPulse = Duration(milliseconds: 1200);
+  static const Duration levelMeter = Duration(milliseconds: 150);
+  static const Duration savingDots = Duration(milliseconds: 1100);
+  static const Duration finalizingBar = Duration(milliseconds: 120);
+  static const Duration finalizingSweep = Duration(milliseconds: 2500);
+  static const Duration blink = Duration(milliseconds: 900);
+}
+
+extension MotionLoop on AnimationController {
+  /// Runs the loop, or parks it at [rest] while the person asks for less motion.
+  void loopUnless({
+    required bool still,
+    bool reverse = false,
+    double rest = 0,
+  }) {
+    if (still) {
+      stop();
+      value = rest;
+    } else if (!isAnimating) {
+      repeat(reverse: reverse);
+    }
+  }
 }
 
 /// Theme-scoped motion tokens. Read via `context.motion`, which zeroes the six

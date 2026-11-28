@@ -17,14 +17,12 @@ class FinalizingWaveform extends StatefulWidget {
     this.barWidth = 3,
     this.gap = 2.5,
     this.height = 78,
-    this.sweepDuration = const Duration(milliseconds: 2500),
   });
 
   final int barCount;
   final double barWidth;
   final double gap;
   final double height;
-  final Duration sweepDuration;
 
   @override
   State<FinalizingWaveform> createState() => _FinalizingWaveformState();
@@ -46,8 +44,14 @@ class _FinalizingWaveformState extends State<FinalizingWaveform>
     });
     _controller = AnimationController(
       vsync: this,
-      duration: widget.sweepDuration,
-    )..repeat();
+      duration: MotionScale.finalizingSweep,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller.loopUnless(still: context.motion.still);
   }
 
   @override
@@ -117,7 +121,7 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: DurationScale.ms120,
+      duration: MotionScale.finalizingBar,
       width: width,
       height: height,
       decoration: BoxDecoration(

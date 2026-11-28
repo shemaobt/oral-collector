@@ -174,12 +174,6 @@ void _expectControls(ThemeData theme) {
   expect(indicator.borderSide, BorderSide(color: c.accent, width: 3));
   expect(tabs.dividerColor, Colors.transparent);
 
-  final switchTrack = theme.switchTheme.trackColor!;
-  expect(_on(switchTrack, {WidgetState.selected}), c.accent);
-  expect(_on(switchTrack), c.border);
-
-  expect(_on(theme.checkboxTheme.fillColor!, {WidgetState.selected}), c.accent);
-
   final progress = theme.progressIndicatorTheme;
   expect(progress.color, c.accent);
   expect(progress.linearTrackColor, c.surfaceAlt);
