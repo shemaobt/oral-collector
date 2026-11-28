@@ -43,86 +43,68 @@ class CompleteFichaSheet extends StatelessWidget {
     final nextStep = _firstOpenStep;
     final openCount = _openCount;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r20),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: SpacingScale.s8),
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: SpacingScale.s24),
+          // The steps scroll and the action does not: under a large system
+          // font the list alone can outgrow the screen, and an action that
+          // scrolls with it ends up below the bottom edge with nothing left
+          // to scroll it back into view.
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s20,
+                0,
               ),
-            ),
-            // The steps scroll and the action does not: under a large system
-            // font the list alone can outgrow the screen, and an action that
-            // scrolls with it ends up below the bottom edge with nothing left
-            // to scroll it back into view.
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  SpacingScale.s20,
-                  SpacingScale.s20,
-                  SpacingScale.s20,
-                  0,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.recording_completeFichaTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  // Nothing open means nothing to count; the ticked-off list
+                  // says the rest.
+                  if (openCount > 0) ...[
+                    const SizedBox(height: SpacingScale.s4),
                     Text(
-                      l10n.recording_completeFichaTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      l10n.recording_completeFichaSubtitle(openCount),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.foreground.withValues(alpha: 0.6),
                       ),
                     ),
-                    // Nothing open means nothing to count; the ticked-off list
-                    // says the rest.
-                    if (openCount > 0) ...[
-                      const SizedBox(height: SpacingScale.s4),
-                      Text(
-                        l10n.recording_completeFichaSubtitle(openCount),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.foreground.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: SpacingScale.s16),
-                    for (var i = 0; i < steps.length; i++)
-                      CompleteFichaStepTile(
-                        kind: steps[i],
-                        position: i + 1,
-                        done: resolved.contains(steps[i]),
-                        onTap: () => onStep(steps[i]),
-                      ),
                   ],
-                ),
+                  const SizedBox(height: SpacingScale.s16),
+                  for (var i = 0; i < steps.length; i++)
+                    CompleteFichaStepTile(
+                      kind: steps[i],
+                      position: i + 1,
+                      done: resolved.contains(steps[i]),
+                      onTap: () => onStep(steps[i]),
+                    ),
+                ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(SpacingScale.s20),
-              child: _Cta(
-                label: resolved.isEmpty
-                    ? l10n.recording_completeFichaStart
-                    : l10n.recording_completeFichaContinue,
-                onTap: nextStep == null ? null : () => onStep(nextStep),
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(SpacingScale.s20),
+            child: _Cta(
+              label: resolved.isEmpty
+                  ? l10n.recording_completeFichaStart
+                  : l10n.recording_completeFichaContinue,
+              onTap: nextStep == null ? null : () => onStep(nextStep),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

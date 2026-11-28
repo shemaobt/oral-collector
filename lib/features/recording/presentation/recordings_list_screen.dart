@@ -14,6 +14,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_question.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
@@ -295,19 +296,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       const SyncStatusIndicator(),
                       FiltersIconButton(
                         count: listState.activeFilterCount,
-                        onTap: () => showModalBottomSheet<void>(
+                        onTap: () => showAppSheet<void>(
                           context: context,
                           isScrollControlled: true,
                           useSafeArea: true,
                           useRootNavigator: true,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(RadiusScale.r20),
-                            ),
-                          ),
                           builder: (_) => RecordingsFilterSheet(
                             projectId: activeProject.id,
                           ),
