@@ -17,7 +17,9 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/brush_sign.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
@@ -95,20 +97,21 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
     switch (result) {
       case RecordingMutationResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_updateNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.savedLocallyOnly:
         _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+          l10n.recording_updateFailed,
+          tone: QuickNoticeTone.failed,
+        );
       case RecordingMutationResult.success:
         break;
     }
@@ -144,11 +147,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     if (outcome == RecordingMutationResult.forbidden) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.recording_updateNoPermission),
-          backgroundColor: AppColors.of(context).warning,
-        ),
+      showQuickNotice(
+        context,
+        l10n.recording_updateNoPermission,
+        tone: QuickNoticeTone.failed,
       );
     } else if (outcome == RecordingMutationResult.titleConflict) {
       // The new name is taken too; the recording stays conflicted so the banner
@@ -169,19 +171,20 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
     switch (result) {
       case RecordingMutationResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_updateNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.savedLocallyOnly:
         _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_cleaningStatusFailed)),
+        showQuickNotice(
+          context,
+          l10n.recording_cleaningStatusFailed,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.success:
         break;
@@ -201,11 +204,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   /// create call. (Reporting it as pending at all is an ENG-399 quirk, not a
   /// lost edit.)
   void _showSavedOnDeviceOnly() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).recording_savedOnDeviceOnly),
-        backgroundColor: AppColors.of(context).warning,
-      ),
+    showQuickNotice(
+      context,
+      AppLocalizations.of(context).recording_savedOnDeviceOnly,
+      sign: Sign.info,
     );
   }
 
@@ -242,17 +244,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (!mounted) return;
     switch (result) {
       case DeleteRecordingResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_deleteNoPermission,
+          tone: QuickNoticeTone.failed,
         );
         return;
       case DeleteRecordingResult.failed:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
+          l10n.recording_deleteFailed,
+          tone: QuickNoticeTone.failed,
+        );
         return;
       case DeleteRecordingResult.ok:
         break;
@@ -374,8 +377,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (!hasLocalFile) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_audioNotAvailable)),
+        showQuickNotice(
+          context,
+          l10n.recording_audioNotAvailable,
+          tone: QuickNoticeTone.failed,
         );
       }
       return;
@@ -410,8 +415,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (kIsWeb) {
       final gcsUrl = recording.gcsUrl;
       if (gcsUrl == null || gcsUrl.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_audioNotAvailable)),
+        showQuickNotice(
+          context,
+          l10n.recording_audioNotAvailable,
+          tone: QuickNoticeTone.failed,
         );
         return;
       }
@@ -459,8 +466,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final hasLocalFile = await _ensureLocalFile(recording);
     if (!hasLocalFile) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_audioNotAvailable)),
+        showQuickNotice(
+          context,
+          l10n.recording_audioNotAvailable,
+          tone: QuickNoticeTone.failed,
         );
       }
       return;
@@ -489,8 +498,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
 
     if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.recording_replaceNotAvailableWeb)),
+      showQuickNotice(
+        context,
+        l10n.recording_replaceNotAvailableWeb,
+        tone: QuickNoticeTone.failed,
       );
       return;
     }
@@ -528,12 +539,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (!kSupportedAudioExtensions.contains(pickedExt) ||
         pickedExt != fresh.format.toLowerCase()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.recording_replaceFormatMismatch(fresh.format, pickedExt),
-            ),
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_replaceFormatMismatch(fresh.format, pickedExt),
+          tone: QuickNoticeTone.failed,
         );
       }
       return;
@@ -542,8 +551,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final duration = await _probeDuration(pickedPath);
     if (duration <= 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_replaceInvalidAudio)),
+        showQuickNotice(
+          context,
+          l10n.recording_replaceInvalidAudio,
+          tone: QuickNoticeTone.failed,
         );
       }
       return;
@@ -569,12 +580,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
     if (!mounted) return;
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? l10n.recording_replaceSuccess : l10n.recording_replaceFailed,
-        ),
-      ),
+    showQuickNotice(
+      context,
+      ok ? l10n.recording_replaceSuccess : l10n.recording_replaceFailed,
+      tone: ok ? QuickNoticeTone.calm : QuickNoticeTone.failed,
     );
   }
 
@@ -601,24 +610,23 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
     switch (outcome) {
       case RecordingMutationResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_moveNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_moveNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.savedLocallyOnly:
         _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+          l10n.recording_updateFailed,
+          tone: QuickNoticeTone.failed,
+        );
       case RecordingMutationResult.success:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_movedSuccess)));
+        showQuickNotice(context, l10n.recording_movedSuccess);
     }
   }
 
@@ -638,24 +646,23 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
     switch (outcome) {
       case RecordingMutationResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_moveNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_moveNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.savedLocallyOnly:
         _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+          l10n.recording_updateFailed,
+          tone: QuickNoticeTone.failed,
+        );
       case RecordingMutationResult.success:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.classify_success)));
+        showQuickNotice(context, l10n.classify_success);
     }
   }
 
@@ -718,24 +725,23 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final l10n = AppLocalizations.of(context);
     switch (outcome) {
       case RecordingMutationResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_moveNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_moveNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case RecordingMutationResult.savedLocallyOnly:
         _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+          l10n.recording_updateFailed,
+          tone: QuickNoticeTone.failed,
+        );
       case RecordingMutationResult.success:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(successMessage)));
+        showQuickNotice(context, successMessage);
     }
   }
 
