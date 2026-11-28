@@ -41,10 +41,7 @@ Future<ProviderContainer> _pump(
 }) => pumpApp(
   tester,
   at: at,
-  overrides: [
-    homeNotifierProvider.overrideWith(_QuietHome.new),
-    ...overrides,
-  ],
+  overrides: [homeNotifierProvider.overrideWith(_QuietHome.new), ...overrides],
 );
 
 State _stateOf(WidgetTester tester, Type screen) =>
