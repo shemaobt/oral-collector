@@ -206,6 +206,23 @@ Path: @/lib/shared/widgets
   has no style of its own. `onCard` gives the on-a-card field.
   `enabled: false` switches it off.
 
+- **`AppTick` and `AppSwitch`** ([app_tick.dart](app_tick.dart),
+  [app_switch.dart](app_switch.dart)) are the kit's hand-cut tick (26 square,
+  `check` sign when marked) and switch (52 × 30, knob at the start edge off, the
+  end edge on). Both keep their own size under any parent and take the keyboard.
+  They paint the printed shadow unless switched off (`onChanged` null, then 40%)
+  or inside a piece that paints one. The tick takes an optional `label` that is
+  tappable and read once; the knob and the label follow the reading direction.
+  The state changes at once, with no slide. No screen uses them yet; the
+  theme's Material switch and tick take the kit's colours until each screen
+  moves.
+
+- **`AppChoice`** ([app_choice.dart](app_choice.dart)) is the kit's choose-one: a
+  hand-drawn ring with a disc inside when chosen, no printed shadow, 26 square.
+  It keeps that size under any parent and takes the keyboard. It takes an
+  optional `label` that is tappable and read once; `onChosen` null switches it
+  off (40%). The state changes at once, with no slide. No screen uses it yet.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
@@ -233,6 +250,16 @@ Path: @/lib/shared/widgets
   `ink` (the main one) or `quiet`; `quietOnCard` when it stands on a card. An
   optional `sign` leads the word. Off (`onPressed: null`) it takes the `tint`
   fill and no printed shadow; inside a `PrintedShadowScope` it paints none
-  either. The focus tint shows only under keyboard navigation.
+  either. The focus tint shows only under keyboard navigation. `small` makes
+  it 44 high; `danger` is the terracotta button, for inside the question that
+  confirms and nowhere else.
+- **`AppWordButton`** ([app_word_button.dart](app_word_button.dart)) is a
+  word in `error` («Descartar») with no fill and no printed shadow.
+- **`AppLink`** ([app_link.dart](app_link.dart)) is an underlined word
+  («Ver todas») with no fill. The underline sits flush with the word: Flutter
+  has no offset for it, so the kit's 4px gap is not drawn.
+- **`AppSignButton`** ([app_sign_button.dart](app_sign_button.dart)) is a lone
+  sign with no ring and a touch area of 44 by 44. `semanticLabel` names it for
+  the screen reader, which can press it.
 
 Created and maintained by Nori.

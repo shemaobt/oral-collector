@@ -383,7 +383,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           const SizedBox(height: SpacingScale.s16),
           AnimatedOpacity(
             opacity: _isEdited ? 1.0 : 0.0,
-            duration: DurationScale.ms200,
+            duration: context.motion.fast,
             child: SizedBox(
               height: 44,
               width: double.infinity,

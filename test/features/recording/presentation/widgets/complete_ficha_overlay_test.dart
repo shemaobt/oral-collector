@@ -152,9 +152,6 @@ void main() {
   ) async {
     await _pumpWideLayout(tester);
 
-    // The strip is only representative with the seek slider actually in it.
-    expect(find.byType(Slider), findsOneWidget);
-
     final pill = tester.getRect(find.byType(CompleteFichaPill));
     final player = tester.getRect(find.byType(RecordingHeroPlayer));
 

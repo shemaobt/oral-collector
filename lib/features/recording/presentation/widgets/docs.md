@@ -57,11 +57,11 @@ Path: @/lib/features/recording/presentation/widgets
   wide vs phone layout for its own chrome, but the underlying player
   is the same provider entry across both layouts — rotation does not
   recreate it.
-- `RecordingPlayerControls` renders the play/pause button, slider,
-  position label, and duration label. It reads the long-lived
-  `AudioPlayer` via `notifier.audioPlayer()` and wires the slider's
-  `onChanged` to `notifier.seek`; the play/pause button calls
-  `notifier.togglePlay`.
+- `RecordingPlayerControls` renders one bar: the play/pause disc, the
+  `SeekWave` and a "position / duration" label that shrinks before the
+  wave loses width. It reads the long-lived `AudioPlayer` via
+  `notifier.audioPlayer()` and wires the wave's `onSeek` to
+  `notifier.seek`; the disc calls `notifier.togglePlay`.
   The space-bar shortcut is provided by `PlaybackKeyHandler`, which
   is web-only.
 - The taxonomy-edit dialogs (classify, move category, secondary

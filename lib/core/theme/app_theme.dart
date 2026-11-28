@@ -358,9 +358,11 @@ abstract class AppTheme {
 
   static SwitchThemeData _switchTheme(AppColorSet c) {
     return SwitchThemeData(
-      thumbColor: WidgetStateProperty.all(Colors.white),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? c.card : c.knob,
+      ),
       trackColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? c.accent : c.border,
+        (states) => states.contains(WidgetState.selected) ? c.primary : c.pale,
       ),
       trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
     );
@@ -368,10 +370,10 @@ abstract class AppTheme {
 
   static CheckboxThemeData _checkboxTheme(AppColorSet c) {
     return CheckboxThemeData(
-      checkColor: WidgetStateProperty.all(Colors.white),
+      checkColor: WidgetStateProperty.all(c.card),
       fillColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? c.accent
+            ? c.primary
             : Colors.transparent,
       ),
       side: BorderSide(color: c.border, width: _buttonBorder),

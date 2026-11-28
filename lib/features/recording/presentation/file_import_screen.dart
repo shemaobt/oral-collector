@@ -420,7 +420,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         if (ctx != null) {
           Scrollable.ensureVisible(
             ctx,
-            duration: DurationScale.ms300,
+            duration: context.motion.base,
             alignment: 0.1,
             alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
           );

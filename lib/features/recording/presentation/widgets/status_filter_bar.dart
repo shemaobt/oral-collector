@@ -59,8 +59,8 @@ class StatusFilterBar extends StatelessWidget {
           return GestureDetector(
             onTap: () => onFilterChanged(filter),
             child: AnimatedContainer(
-              duration: DurationScale.ms200,
-              curve: Curves.easeOut,
+              duration: context.motion.fast,
+              curve: context.motion.enter,
               padding: const EdgeInsets.symmetric(
                 horizontal: SpacingScale.s16,
                 vertical: SpacingScale.s8,
