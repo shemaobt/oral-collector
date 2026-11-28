@@ -14,6 +14,7 @@ import 'seek_wave.dart';
 
 const _barHeight = 64.0;
 const _gap = 14.0;
+const _minWaveWidth = 72.0;
 final _discSlack =
     (RoundButton.minTouchTarget - RoundButtonSize.small.diameter) / 2;
 
@@ -91,7 +92,6 @@ class _WaveAndTime extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.bodySmall?.copyWith(
-      fontSize: 13,
       fontWeight: FontWeight.w600,
       color: AppColors.of(context).primary,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -104,22 +104,43 @@ class _WaveAndTime extends StatelessWidget {
           stream: player.positionStream,
           builder: (context, positionSnapshot) {
             final position = positionSnapshot.data ?? Duration.zero;
-            return Row(
-              children: [
-                Expanded(
-                  child: SeekWave(
-                    position: position,
-                    duration: duration,
-                    onSeek: onSeek,
+            final widest =
+                '${formatClock(duration)} / ${formatClock(duration)}';
+            final current =
+                '${formatClock(position)} / ${formatClock(duration)}';
+            return LayoutBuilder(
+              builder: (context, constraints) => Row(
+                children: [
+                  Expanded(
+                    child: SeekWave(
+                      position: position,
+                      duration: duration,
+                      onSeek: onSeek,
+                    ),
                   ),
-                ),
-                const SizedBox(width: _gap),
-                Text(
-                  '${formatClock(position)} / ${formatClock(duration)}',
-                  style: style,
-                  maxLines: 1,
-                ),
-              ],
+                  const SizedBox(width: _gap),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: (constraints.maxWidth - _gap - _minWaveWidth)
+                          .clamp(0.0, double.infinity),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Stack(
+                        children: [
+                          ExcludeSemantics(
+                            child: Opacity(
+                              opacity: 0,
+                              child: Text(widest, style: style, maxLines: 1),
+                            ),
+                          ),
+                          Text(current, style: style, maxLines: 1),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
