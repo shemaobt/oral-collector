@@ -206,6 +206,12 @@ Path: @/lib/shared/widgets
   has no style of its own. `onCard` gives the on-a-card field.
   `enabled: false` switches it off.
 
+- **`AppChoice`** ([app_choice.dart](app_choice.dart)) is the kit's choose-one: a
+  hand-drawn ring with a disc inside when chosen, no printed shadow, 26 square.
+  It keeps that size under any parent and takes the keyboard. It takes an
+  optional `label` that is tappable and read once; `onChosen` null switches it
+  off (40%). The state changes at once, with no slide. No screen uses it yet.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
