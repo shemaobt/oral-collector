@@ -9,14 +9,12 @@ import '../../core/theme/app_spacing.dart';
 import 'hand_cut_rect.dart';
 import 'printed_shadow_scope.dart';
 
-const _buttonRadius = 14.0;
-const _shadowOffset = Offset(3, 4);
 const _clipRoom = 1.02;
 
 class HandCutButtonBorder extends OutlinedBorder {
   const HandCutButtonBorder({
-    this.radius = _buttonRadius,
-    this.shadowOffset = _shadowOffset,
+    this.radius = 14,
+    this.shadowOffset = const Offset(3, 4),
     super.side,
   });
 
@@ -63,35 +61,65 @@ class HandCutButtonBorder extends OutlinedBorder {
   );
 }
 
-enum HandCutButtonTone { ink, quiet, quietOnCard }
+enum HandCutButtonTone { ink, quiet, quietOnCard, danger }
+
+enum HandCutButtonSize {
+  regular(52, 14, Offset(3, 4), SpacingScale.s20, 17),
+  small(44, 12, Offset(2, 3), 14, 15);
+
+  const HandCutButtonSize(
+    this.height,
+    this.radius,
+    this.shadowOffset,
+    this.padding,
+    this.fontSize,
+  );
+
+  final double height;
+  final double radius;
+  final Offset shadowOffset;
+  final double padding;
+  final double fontSize;
+}
 
 ButtonStyle handCutButtonStyle(
   AppColorSet c,
   PrintedShadows shadows,
   HandCutButtonTone tone,
-  TextStyle? labelStyle,
-) {
+  TextStyle? labelStyle, {
+  HandCutButtonSize size = HandCutButtonSize.regular,
+  bool dark = false,
+}) {
   final (fill, label, shadow) = switch (tone) {
     HandCutButtonTone.ink => (c.primary, c.onPrimary, shadows.ink),
     HandCutButtonTone.quiet => (c.card, c.foreground, shadows.paper),
     HandCutButtonTone.quietOnCard => (c.pale, c.foreground, shadows.paper),
+    HandCutButtonTone.danger => (
+      c.error,
+      dark ? c.background : const Color(0xFFFFFFFF),
+      shadows.danger,
+    ),
   };
   Color labelFor(Set<WidgetState> s) =>
       s.contains(WidgetState.disabled) ? c.secondary : label;
 
   return ButtonStyle(
-    minimumSize: const WidgetStatePropertyAll(Size(0, 52)),
-    padding: const WidgetStatePropertyAll(
-      EdgeInsets.symmetric(horizontal: SpacingScale.s20),
+    minimumSize: WidgetStatePropertyAll(Size(0, size.height)),
+    padding: WidgetStatePropertyAll(
+      EdgeInsets.symmetric(horizontal: size.padding),
     ),
-    shape: const WidgetStatePropertyAll(HandCutButtonBorder()),
+    shape: WidgetStatePropertyAll(
+      HandCutButtonBorder(radius: size.radius, shadowOffset: size.shadowOffset),
+    ),
     elevation: const WidgetStatePropertyAll(0),
     backgroundColor: const WidgetStatePropertyAll(AppColors.transparent),
     shadowColor: const WidgetStatePropertyAll(AppColors.transparent),
     overlayColor: const WidgetStatePropertyAll(AppColors.transparent),
     textStyle: WidgetStatePropertyAll(
-      labelStyle?.copyWith(fontSize: 17, fontWeight: FontWeight.w600) ??
-          const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      (labelStyle ?? const TextStyle()).copyWith(
+        fontSize: size.fontSize,
+        fontWeight: FontWeight.w600,
+      ),
     ),
     foregroundColor: WidgetStateProperty.resolveWith(labelFor),
     iconSize: const WidgetStatePropertyAll(18),
@@ -110,8 +138,8 @@ ButtonStyle handCutButtonStyle(
         final painted = CustomPaint(
           painter: HandCutRectPainter(
             fill: Color.alphaBlend(label.withValues(alpha: tint), base),
-            radius: _buttonRadius,
-            shadowOffset: _shadowOffset,
+            radius: size.radius,
+            shadowOffset: size.shadowOffset,
             shadow: printed ? shadow : null,
           ),
           child: child,

@@ -88,6 +88,7 @@ class PrintedShadows {
   final Color tile;
   final Color clay;
   final Color terracotta;
+  final Color danger;
 
   const PrintedShadows({
     required this.ink,
@@ -96,6 +97,7 @@ class PrintedShadows {
     required this.tile,
     required this.clay,
     required this.terracotta,
+    required this.danger,
   });
 
   static const light = PrintedShadows(
@@ -105,6 +107,7 @@ class PrintedShadows {
     tile: Color(0xFFEBC9AD),
     clay: Color(0xFFE4DBCB),
     terracotta: Color(0xFFE4BFA6),
+    danger: Color(0xFFE3C6B0),
   );
 
   static const dark = PrintedShadows(
@@ -114,6 +117,7 @@ class PrintedShadows {
     tile: Color(0xFF16160E),
     clay: Color(0xFF16160E),
     terracotta: Color(0xFF16160E),
+    danger: Color(0xFF16160E),
   );
 
   static PrintedShadows of(BuildContext context) =>

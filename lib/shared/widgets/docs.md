@@ -227,6 +227,13 @@ Path: @/lib/shared/widgets
   `ink` (the main one) or `quiet`; `quietOnCard` when it stands on a card. An
   optional `sign` leads the word. Off (`onPressed: null`) it takes the `tint`
   fill and no printed shadow; inside a `PrintedShadowScope` it paints none
-  either. The focus tint shows only under keyboard navigation.
+  either. The focus tint shows only under keyboard navigation. `small` makes
+  it 44 high; `danger` is the terracotta button, for inside the question that
+  confirms and nowhere else.
+- **`AppWordButton`, `AppLink`, `AppSignButton`**
+  ([app_plain_buttons.dart](app_plain_buttons.dart)) are what is pressed with
+  no fill and no printed shadow: a word in `error` («Descartar»), an
+  underlined link («Ver todas»), and a lone sign with no ring and a touch area
+  of 44 by 44.
 
 Created and maintained by Nori.
