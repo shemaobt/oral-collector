@@ -11,7 +11,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
@@ -42,6 +41,7 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifie
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/widgets/brush_sign.dart';
 
 import '../../../support/text_scale.dart';
 
@@ -360,8 +360,8 @@ void main() {
       isNull,
     );
 
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(find.byType(BrushSign), findsOneWidget);
 
     expect(reporter.reported, hasLength(1));
     expect(reporter.stacks.single, isNotNull);

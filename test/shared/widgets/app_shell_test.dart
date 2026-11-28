@@ -357,12 +357,13 @@ void main() {
       expect(find.text('home page'), findsOneWidget);
 
       await tester.tap(find.bySemanticsLabel('Record tab'));
-      await tester.pump(); // start snackbar animation
+      await tester.pump(); // start notice animation
 
       expect(
         find.text('Saving your recording — please wait a moment.'),
         findsOneWidget,
       );
+      expect(find.byType(SnackBar), findsNothing);
       // Did NOT navigate
       expect(find.text('record page'), findsNothing);
       expect(find.text('home page'), findsOneWidget);
@@ -395,6 +396,7 @@ void main() {
         find.text('Saving your recording — please wait a moment.'),
         findsOneWidget,
       );
+      expect(find.byType(SnackBar), findsNothing);
       expect(find.text('record page'), findsNothing);
     },
   );

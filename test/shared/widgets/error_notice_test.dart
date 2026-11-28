@@ -1,16 +1,15 @@
 // Behavior of the single error-presentation helper showErrorNotice (ENG-186):
 // it maps the raw error to a friendly message once, optionally wraps it with a
-// caller-supplied template, and renders the styled (alert-icon) snackbar.
+// caller-supplied template, and shows it as the failed quick notice.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
-import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/widgets/error_notice.dart';
 
+import '../../support/notice_fill.dart';
 import '../../support/text_scale.dart';
 
 void main() {
@@ -18,12 +17,10 @@ void main() {
 
   Future<void> pumpTrigger(
     WidgetTester tester,
-    void Function(BuildContext context) onPressed, {
-    ThemeData? theme,
-  }) async {
+    void Function(BuildContext context) onPressed,
+  ) async {
     await pumpAtTextScale(
       tester,
-      theme: theme,
       child: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () => onPressed(context),
@@ -35,11 +32,11 @@ void main() {
 
   Future<void> tapAndSettle(WidgetTester tester) async {
     await tester.tap(find.text('trigger'));
-    await tester.pump(); // schedule the snackbar
+    await tester.pump(); // schedule the notice
     await tester.pump(const Duration(milliseconds: 400)); // entry animation
   }
 
-  testWidgets('renders the styled alert-icon snackbar for a typed exception', (
+  testWidgets('shows the failed quick notice for a typed exception', (
     tester,
   ) async {
     await pumpTrigger(
@@ -50,7 +47,8 @@ void main() {
     await tapAndSettle(tester);
 
     expect(find.text(l10n.error_noPermission), findsOneWidget);
-    expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(noticeFill(tester, l10n.error_noPermission), AppColors.light.error);
   });
 
   testWidgets('wraps the friendly message with the given template', (
@@ -110,26 +108,4 @@ void main() {
       expect(find.text(l10n.recording_exportShareFailed), findsOneWidget);
     },
   );
-
-  for (final (name, theme, colors) in [
-    ('light', AppTheme.lightTheme, AppColors.light),
-    ('dark', AppTheme.darkTheme, AppColors.dark),
-  ]) {
-    testWidgets('$name: the error notice reads the error colour', (
-      tester,
-    ) async {
-      await pumpTrigger(
-        tester,
-        (context) => showErrorNotice(context, const ForbiddenException()),
-        theme: theme,
-      );
-
-      await tapAndSettle(tester);
-
-      final snack = tester.widget<SnackBar>(find.byType(SnackBar));
-      expect(snack.backgroundColor, colors.error);
-      final text = tester.widget<Text>(find.text(l10n.error_noPermission));
-      expect(text.style?.color, colors.background);
-    });
-  }
 }

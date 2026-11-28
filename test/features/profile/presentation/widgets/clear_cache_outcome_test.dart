@@ -19,7 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/platform/file_ops.dart' as file_ops;
-import 'package:oral_collector/features/profile/presentation/widgets/clear_cache_snack_bar.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/features/profile/presentation/widgets/clear_cache_notice.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
@@ -29,8 +30,10 @@ import 'package:oral_collector/features/sync/domain/repositories/sync_engine.dar
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/widgets/quick_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../support/notice_fill.dart';
 import '../../../../support/text_scale.dart';
 
 class _MockConnectivity extends Mock implements ConnectivityService {}
@@ -135,8 +138,8 @@ void main() {
       tester,
       child: Builder(
         builder: (context) => ElevatedButton(
-          onPressed: () => showClearCacheResultSnackBar(
-            ScaffoldMessenger.of(context),
+          onPressed: () => showClearCacheResultNotice(
+            quickNoticeOf(context),
             AppLocalizations.of(context),
             outcome,
           ),
@@ -145,7 +148,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('trigger'));
-    await tester.pump(); // schedule the snackbar
+    await tester.pump(); // schedule the notice
     await tester.pump(const Duration(milliseconds: 400)); // entry animation
   }
 
@@ -161,6 +164,10 @@ void main() {
     await clearAndShow(tester, stuck: {stuck.file.path});
 
     expect(find.text(l10n.profile_cacheNotFreed(1)), findsOneWidget);
+    expect(
+      noticeFill(tester, l10n.profile_cacheNotFreed(1)),
+      AppColors.light.error,
+    );
     // The reassuring reason is a lie here: this recording is on the server, and
     // what kept it was a delete that failed.
     expect(find.text(l10n.profile_cacheClearedKept(1)), findsNothing);

@@ -115,6 +115,7 @@ void main() {
       await tapChip(tester);
 
       expect(find.text(l10n.sync_waitingForWifi), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
     });
 
     testWidgets('a queue that runs says nothing', (tester) async {

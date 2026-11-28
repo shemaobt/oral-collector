@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -184,13 +183,11 @@ void main() {
         await tester.tap(find.byType(ElevatedButton));
         await Future<void>.delayed(const Duration(milliseconds: 200));
       });
-      await tester.pump(); // flush setState/showSnackBar scheduled in _save
+      await tester.pump(); // flush setState/notice scheduled in _save
       await tester.pump();
 
-      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
       expect(find.textContaining('Upload failed'), findsOneWidget);
-      // Routed through the unified showErrorNotice -> styled alert icon.
-      expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
 
       final saveButton = tester.widget<ElevatedButton>(
         find.byType(ElevatedButton),

@@ -3,10 +3,13 @@
 // that audio the server never received is still waiting on the phone.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/features/profile/presentation/widgets/clear_cache_snack_bar.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/features/profile/presentation/widgets/clear_cache_notice.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
+import '../../../../support/notice_fill.dart';
 import '../../../../support/text_scale.dart';
 
 void main() {
@@ -17,8 +20,8 @@ void main() {
       tester,
       child: Builder(
         builder: (context) => ElevatedButton(
-          onPressed: () => showClearCacheResultSnackBar(
-            ScaffoldMessenger.of(context),
+          onPressed: () => showClearCacheResultNotice(
+            quickNoticeOf(context),
             AppLocalizations.of(context),
             (keptUnsent: keptCount, keptUndeletable: 0),
           ),
@@ -27,7 +30,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('trigger'));
-    await tester.pump(); // schedule the snackbar
+    await tester.pump(); // schedule the notice
     await tester.pump(const Duration(milliseconds: 400)); // entry animation
   }
 
@@ -45,5 +48,9 @@ void main() {
     await pumpAndTap(tester, 0);
 
     expect(find.text(l10n.profile_cacheCleared), findsOneWidget);
+    expect(
+      noticeFill(tester, l10n.profile_cacheCleared),
+      AppColors.light.primary,
+    );
   });
 }
