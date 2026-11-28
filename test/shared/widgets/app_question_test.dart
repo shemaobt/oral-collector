@@ -97,4 +97,32 @@ void main() {
     await t.ensureVisible(find.text('Discard'));
     expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
   });
+
+  testWidgets('the caller builder runs once per open', (t) async {
+    var builds = 0;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) => TextButton(
+            onPressed: () => showAppDialog<void>(
+              context: c,
+              builder: (ctx) {
+                builds++;
+                return TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('fechar'),
+                );
+              },
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('fechar'));
+    await t.pumpAndSettle();
+    expect(builds, 1);
+  });
 }
