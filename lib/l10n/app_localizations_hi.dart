@@ -735,6 +735,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sendState_needsYou => 'आपकी ज़रूरत है';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'भेजा जा रहा है $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => 'नाम विरोध';
 
   @override

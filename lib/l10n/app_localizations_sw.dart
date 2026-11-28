@@ -733,6 +733,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get sendState_needsYou => 'Inakuhitaji';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'Inatumwa $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => 'Mgongano wa jina';
 
   @override
