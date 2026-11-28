@@ -9,6 +9,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/router/navigation.dart';
+import '../../../core/router/tab_visits.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
@@ -60,7 +61,13 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RefreshOnReturn {
+  @override
+  ShellTab get tab => ShellTab.recordings;
+
+  @override
+  void refreshOnReturn() => _refreshAll();
+
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
 

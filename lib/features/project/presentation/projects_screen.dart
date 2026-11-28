@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/router/navigation.dart';
+import '../../../core/router/tab_visits.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -32,7 +33,14 @@ class ProjectsScreen extends ConsumerStatefulWidget {
   ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
 }
 
-class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen>
+    with RefreshOnReturn {
+  @override
+  ShellTab get tab => ShellTab.projects;
+
+  @override
+  void refreshOnReturn() => _fetchRemoteData();
+
   @override
   void initState() {
     super.initState();

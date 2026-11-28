@@ -13,3 +13,23 @@ class TabVisits extends InheritedWidget {
   @override
   bool updateShouldNotify(TabVisits oldWidget) => oldWidget.counts != counts;
 }
+
+mixin RefreshOnReturn<T extends StatefulWidget> on State<T> {
+  ShellTab get tab;
+
+  void refreshOnReturn();
+
+  int? _seenVisits;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final visits = TabVisits.of(context, tab);
+    final seen = _seenVisits;
+    _seenVisits = visits;
+    if (seen == null || visits <= seen) return;
+    Future.microtask(() {
+      if (mounted) refreshOnReturn();
+    });
+  }
+}

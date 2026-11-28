@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/router/navigation.dart';
+import '../../../core/router/tab_visits.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -41,23 +42,36 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with RefreshOnReturn {
+  @override
+  ShellTab get tab => ShellTab.home;
+
+  @override
+  void refreshOnReturn() {
+    ref.read(homeNotifierProvider.notifier).refreshAll();
+    _fetchRemoteData();
+  }
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(homeNotifierProvider.notifier).refreshAll();
-      _fetchRemoteData();
+      _fetchAndAskLocale();
     });
   }
 
-  void _fetchRemoteData() {
-    if (!ref.read(syncNotifierProvider).isOnline) return;
-    ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
-      if (!mounted) return;
+  void _fetchAndAskLocale() => _fetchRemoteData().then((fetched) {
+    if (fetched) _checkFirstLoginLocale();
+  });
+
+  Future<bool> _fetchRemoteData() {
+    if (!ref.read(syncNotifierProvider).isOnline) return Future.value(false);
+    return ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
+      if (!mounted) return false;
       ref.read(genreNotifierProvider.notifier).fetchGenres();
       _fetchStatsIfNeeded();
-      _checkFirstLoginLocale();
+      return true;
     });
   }
 
@@ -167,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Re-fetch remote data when connectivity is restored
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
       if (next && prev == false) {
-        _fetchRemoteData();
+        _fetchAndAskLocale();
       }
     });
 
