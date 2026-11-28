@@ -250,6 +250,14 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         isRefreshing: false,
         isLoadingMore: false,
       );
+      final sameFilters =
+          answered == null ||
+          (answered.userId == question.userId &&
+              answered.storytellerId == question.storytellerId &&
+              answered.reviewFlag == question.reviewFlag);
+      if (online && question.reviewFlag == null && sameFilters) {
+        unawaited(_showDevice(projectId, gen));
+      }
     }
 
     if (!online) {
@@ -296,6 +304,19 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         fetchFailed: true,
       );
     }
+  }
+
+  /// Puts the device's rows on screen while the server has not answered. The
+  /// server's answer wins: a read that lands after it is dropped.
+  Future<void> _showDevice(String projectId, int gen) async {
+    final device = await _loadLocal(projectId);
+    if (gen != _fetchGeneration || !state.isLoading) return;
+    if (device == null || device.isEmpty) return;
+    state = state.copyWith(
+      recordings: device,
+      isLoading: false,
+      isRefreshing: true,
+    );
   }
 
   Future<void> loadMore() async {
