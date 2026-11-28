@@ -241,13 +241,14 @@ void main() {
       final container = makeContainer(online: false);
       addTearDown(container.dispose);
       final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
       final seen = <RecordingsListState>[];
       container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
 
       await notifier.fetchRecordings();
-      await notifier.fetchRecordings();
 
       expect(seen.any((s) => s.isRefreshing), isFalse);
+      expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
       expect(seen.last.recordings.map((r) => r.id), ['r1']);
     });
   });
@@ -598,18 +599,19 @@ void main() {
           'storyteller filter': (n) => n.setStorytellerFilter('s-1'),
           'pendency filter': (n) =>
               n.setReviewFlagFilter(PendencyKind.storyteller),
-          'filters cleared': (n) async {
-            await n.setUserFilter('u-1');
-            asked = false;
-            await n.clearAllFilters();
-          },
+          'filters cleared': (n) => n.clearAllFilters(),
         };
+    final askedBefore = <String, Future<void> Function(RecordingsListNotifier)>{
+      'filters cleared': (n) => n.setUserFilter('u-1'),
+    };
     for (final entry in questionChanges.entries) {
       test('${entry.key}: the list empties and loads', () async {
         final container = await holdingRows();
         final notifier = container.read(
           recordingsListNotifierProvider.notifier,
         );
+        await askedBefore[entry.key]?.call(notifier);
+        expect(read(container).recordings, isNotEmpty);
         final gate = hold();
 
         final change = entry.value(notifier);
@@ -623,6 +625,33 @@ void main() {
         await change;
       });
     }
+
+    test('loadMore asks the server nothing while a refresh runs', () async {
+      final container = await holdingRows();
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      serve(
+        () async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
+      );
+      await notifier.fetchRecordings();
+      final gate = hold();
+      final reload = notifier.fetchRecordings();
+      await pumpUntil(() => asked);
+
+      await notifier.loadMore();
+
+      verifyNever(
+        () => api.listRecordings(
+          any(),
+          offset: 50,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      );
+      gate.complete(const []);
+      await reload;
+    });
 
     test('a failed refresh ends with refreshing off and fetchFailed', () async {
       final container = await holdingRows();
@@ -746,68 +775,6 @@ void main() {
   );
 
   group('race guards', () {
-    test(
-      'loadMore asks the server nothing while a refresh is running',
-      () async {
-        when(
-          () => api.listRecordings(
-            'proj-1',
-            offset: 0,
-            limit: any(named: 'limit'),
-            userId: any(named: 'userId'),
-            storytellerId: any(named: 'storytellerId'),
-          ),
-        ).thenAnswer(
-          (_) async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
-        );
-        when(
-          () => local.getAllRecordings('proj-1'),
-        ).thenAnswer((_) async => const []);
-        final container = makeContainer(online: true);
-        addTearDown(container.dispose);
-        final notifier = container.read(
-          recordingsListNotifierProvider.notifier,
-        );
-        await notifier.fetchRecordings();
-
-        final gate = Completer<List<ServerRecording>>();
-        var asked = false;
-        when(
-          () => api.listRecordings(
-            'proj-1',
-            offset: 0,
-            limit: any(named: 'limit'),
-            userId: any(named: 'userId'),
-            storytellerId: any(named: 'storytellerId'),
-          ),
-        ).thenAnswer((_) {
-          asked = true;
-          return gate.future;
-        });
-        final reload = notifier.fetchRecordings();
-        await pumpUntil(() => asked);
-        expect(
-          container.read(recordingsListNotifierProvider).isRefreshing,
-          isTrue,
-        );
-
-        await notifier.loadMore();
-
-        verifyNever(
-          () => api.listRecordings(
-            'proj-1',
-            offset: 50,
-            limit: any(named: 'limit'),
-            userId: any(named: 'userId'),
-            storytellerId: any(named: 'storytellerId'),
-            reviewFlag: any(named: 'reviewFlag'),
-          ),
-        );
-        gate.complete(const []);
-        await reload;
-      },
-    );
-
     test('a stale fetch does not overwrite a newer fetch', () async {
       final fetchAGate = Completer<List<ServerRecording>>();
       final fetchBGate = Completer<List<ServerRecording>>();
