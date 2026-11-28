@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/app_tile.dart';
+import '../../../../shared/widgets/brush_sign.dart';
+import '../../../../shared/widgets/round_button.dart';
 import '../notifiers/recording_player_notifier.dart';
 import 'playback_key_handler.dart';
+import 'seek_wave.dart';
+
+const _barHeight = 64.0;
+const _gap = 14.0;
+const _minWaveWidth = 72.0;
+final _discSlack =
+    (RoundButton.minTouchTarget - RoundButtonSize.small.diameter) / 2;
 
 class RecordingPlayerControls extends ConsumerWidget {
   const RecordingPlayerControls({super.key, required this.recordingId});
@@ -22,170 +30,119 @@ class RecordingPlayerControls extends ConsumerWidget {
 
     return PlaybackKeyHandler(
       onSpace: notifier.togglePlay,
-      child: SizedBox(
-        height: 72.0,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                _PlayPauseButton(player: player, onTap: notifier.togglePlay),
-                const SizedBox(width: SpacingScale.s12),
-                Expanded(
-                  child: _SeekSlider(player: player, notifier: notifier),
+      child: AppTile(
+        radius: 18,
+        padding: EdgeInsetsDirectional.only(start: 10 - _discSlack, end: 18),
+        child: SizedBox(
+          height: _barHeight,
+          child: Row(
+            children: [
+              _PlayPauseDisc(player: player, onTap: notifier.togglePlay),
+              SizedBox(width: _gap - _discSlack),
+              Expanded(
+                child: _WaveAndTime(
+                  player: player,
+                  onSeek: (position) {
+                    player.pause();
+                    notifier.seek(position);
+                  },
                 ),
-              ],
-            ),
-            const SizedBox(height: SpacingScale.s4),
-            Row(
-              children: [
-                const SizedBox(width: 60),
-                _PositionLabel(player: player),
-                const Spacer(),
-                _DurationLabel(player: player),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _PlayPauseButton extends StatelessWidget {
-  const _PlayPauseButton({required this.player, required this.onTap});
+class _PlayPauseDisc extends StatelessWidget {
+  const _PlayPauseDisc({required this.player, required this.onTap});
 
   final AudioPlayer player;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     return StreamBuilder<PlayerState>(
       stream: player.playerStateStream,
       builder: (context, snapshot) {
         final playerState = snapshot.data;
-        final processingState = playerState?.processingState;
-        final playing = playerState?.playing ?? false;
-        final showPlay = processingState == ProcessingState.completed
-            ? true
-            : !playing;
-        return Semantics(
-          label: showPlay ? l10n.a11y_playAudio : l10n.a11y_pauseAudio,
-          button: true,
-          child: Material(
-            color: colors.accent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: onTap,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: SpacingScale.s48,
-                height: SpacingScale.s48,
-                child: Center(
-                  child: Icon(
-                    showPlay ? LucideIcons.play : LucideIcons.pause,
-                    color: AppColors.white,
-                    size: 22.0,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        final showPlay =
+            playerState?.processingState == ProcessingState.completed ||
+            !(playerState?.playing ?? false);
+        return RoundButton.sign(
+          sign: showPlay ? Sign.play : Sign.pause,
+          semanticLabel: showPlay ? l10n.a11y_playAudio : l10n.a11y_pauseAudio,
+          size: RoundButtonSize.small,
+          onPressed: onTap,
         );
       },
     );
   }
 }
 
-class _SeekSlider extends StatelessWidget {
-  const _SeekSlider({required this.player, required this.notifier});
+class _WaveAndTime extends StatelessWidget {
+  const _WaveAndTime({required this.player, required this.onSeek});
 
   final AudioPlayer player;
-  final RecordingPlayerNotifier notifier;
+  final ValueChanged<Duration> onSeek;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return StreamBuilder<Duration>(
-      stream: player.positionStream,
-      builder: (context, snapshot) {
-        final position = snapshot.data ?? Duration.zero;
-        final duration = player.duration ?? Duration.zero;
-        final maxVal = duration.inMilliseconds.toDouble();
-        return SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 4.0,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7.0),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
-            activeTrackColor: colors.primary,
-            inactiveTrackColor: colors.border,
-            thumbColor: colors.primary,
-            overlayColor: colors.primary.withValues(alpha: 0.2),
-          ),
-          child: Slider(
-            min: 0,
-            max: maxVal > 0 ? maxVal : 1.0,
-            value: position.inMilliseconds.toDouble().clamp(
-              0,
-              maxVal > 0 ? maxVal : 1.0,
-            ),
-            onChangeStart: (_) => player.pause(),
-            onChanged: (value) {
-              notifier.seek(Duration(milliseconds: value.toInt()));
-            },
-          ),
-        );
-      },
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: AppColors.of(context).primary,
+      fontFeatures: const [FontFeature.tabularFigures()],
     );
-  }
-}
-
-class _PositionLabel extends StatelessWidget {
-  const _PositionLabel({required this.player});
-
-  final AudioPlayer player;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return StreamBuilder<Duration>(
-      stream: player.positionStream,
-      builder: (context, snapshot) {
-        final position = snapshot.data ?? Duration.zero;
-        return Text(
-          formatDurationFromDuration(position),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            fontSize: 12.0,
-            color: colors.foreground,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DurationLabel extends StatelessWidget {
-  const _DurationLabel({required this.player});
-
-  final AudioPlayer player;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     return StreamBuilder<Duration?>(
       stream: player.durationStream,
-      builder: (context, snapshot) {
-        final duration = snapshot.data ?? Duration.zero;
-        return Text(
-          formatDurationFromDuration(duration),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            fontSize: 12.0,
-            color: colors.foreground.withValues(alpha: 0.6),
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+      builder: (context, durationSnapshot) {
+        final duration = durationSnapshot.data ?? Duration.zero;
+        return StreamBuilder<Duration>(
+          stream: player.positionStream,
+          builder: (context, positionSnapshot) {
+            final position = positionSnapshot.data ?? Duration.zero;
+            final widest =
+                '${formatClock(duration)} / ${formatClock(duration)}';
+            final current =
+                '${formatClock(position)} / ${formatClock(duration)}';
+            return LayoutBuilder(
+              builder: (context, constraints) => Row(
+                children: [
+                  Expanded(
+                    child: SeekWave(
+                      position: position,
+                      duration: duration,
+                      onSeek: onSeek,
+                    ),
+                  ),
+                  const SizedBox(width: _gap),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: (constraints.maxWidth - _gap - _minWaveWidth)
+                          .clamp(0.0, double.infinity),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Stack(
+                        children: [
+                          ExcludeSemantics(
+                            child: Opacity(
+                              opacity: 0,
+                              child: Text(widest, style: style, maxLines: 1),
+                            ),
+                          ),
+                          Text(current, style: style, maxLines: 1),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
