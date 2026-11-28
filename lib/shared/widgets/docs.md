@@ -65,9 +65,11 @@ Path: @/lib/shared/widgets
   138% of the disc, centred, under the child, no taps, no semantics, still. Not
   sounding, it paints nothing and the child stays mounted. The disc's own sign
   size is `RoundButton.signSize` (default 18).
-- [call_ring.dart](call_ring.dart) is the same piece for the kit's hand-drawn ring that calls (`calling`);
-  [outline_halo.dart](outline_halo.dart) is the box both share. `RecordButton` draws the ring when `calling` and
-  ready, the microphone sign when ready or paused, the stop sign with the strokes while recording.
+- [call_ring.dart](call_ring.dart) is the same piece for the kit's hand-drawn
+  ring that calls (`calling`); [outline_halo.dart](outline_halo.dart) is the box
+  both share. `RecordButton` draws the ring when `calling` and ready, the
+  microphone sign when ready or paused, the stop sign with the strokes while
+  recording. Only the disc swells; the ring and the strokes stay still.
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an

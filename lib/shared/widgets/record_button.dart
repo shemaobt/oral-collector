@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
@@ -77,25 +78,6 @@ class _RecordButtonState extends State<RecordButton>
 
   @override
   Widget build(BuildContext context) {
-    final size = widget.size.diameter;
-
-    return SizedBox(
-      width: size,
-      height: size,
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          final isRecording = widget.state == RecordButtonState.recording;
-          final scale = isRecording ? _pulseAnimation.value : 1.0;
-
-          return Transform.scale(scale: scale, child: child);
-        },
-        child: _buildButton(),
-      ),
-    );
-  }
-
-  Widget _buildButton() {
     final isRecording = widget.state == RecordButtonState.recording;
     final isPaused = widget.state == RecordButtonState.paused;
 
@@ -110,28 +92,37 @@ class _RecordButtonState extends State<RecordButton>
     }
 
     final colors = AppColors.of(context);
-    final diameter = widget.size.diameter;
+    final size = widget.size.diameter;
 
-    return CallRing(
-      diameter: diameter,
-      color: colors.accent,
-      calling: widget.calling && widget.state == RecordButtonState.ready,
-      child: SoundStrokes(
-        diameter: diameter,
-        color: colors.mic,
-        sounding: isRecording,
-        child: Pressable(
-          label: semanticLabel,
-          onTap: widget.onTap,
-          onLongPress: widget.onLongPress,
-          customBorder: const CircleBorder(),
-          child: AppDisc(
-            size: widget.size,
-            tone: DiscTone.record,
-            pressable: true,
-            child: BrushSign(
-              isRecording ? Sign.stop : Sign.mic,
-              size: diameter * 0.46,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CallRing(
+        diameter: size,
+        color: colors.accent,
+        calling: widget.calling && widget.state == RecordButtonState.ready,
+        child: SoundStrokes(
+          diameter: size,
+          color: colors.mic,
+          sounding: isRecording,
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              final scale = isRecording ? _pulseAnimation.value : 1.0;
+
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: Pressable(
+              label: semanticLabel,
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              customBorder: const CircleBorder(),
+              child: AppDisc(
+                size: widget.size,
+                tone: DiscTone.record,
+                pressable: true,
+                child: BrushSign(isRecording ? Sign.stop : Sign.mic),
+              ),
             ),
           ),
         ),
