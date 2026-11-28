@@ -82,7 +82,7 @@ class ProjectSettingsHeader extends StatelessWidget {
                   Text(
                     project.name,
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -249,7 +249,7 @@ class _SheetHeader extends StatelessWidget {
                 Text(
                   l10n.recovery_unsavedTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     color: colors.foreground,
                   ),
                 ),

@@ -31,7 +31,7 @@ class StatItem extends StatelessWidget {
           Text(
             value,
             style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 2),

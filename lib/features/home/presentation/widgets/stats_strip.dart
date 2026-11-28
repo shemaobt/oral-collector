@@ -157,7 +157,7 @@ class _StatTile extends StatelessWidget {
               data.value,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 color: data.color,
                 height: 1.1,
               ),

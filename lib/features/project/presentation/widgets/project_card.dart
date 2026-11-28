@@ -85,7 +85,7 @@ class ProjectCard extends StatelessWidget {
                                     : '?',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: colors.onPrimary,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),

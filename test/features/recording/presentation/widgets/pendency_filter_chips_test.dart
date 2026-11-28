@@ -361,7 +361,7 @@ void main() {
         find.ancestor(of: count, matching: find.byType(Container)),
         findsNothing,
       );
-      expect(tester.widget<Text>(count).style?.fontWeight, FontWeight.w800);
+      expect(tester.widget<Text>(count).style?.fontWeight, FontWeight.w600);
     });
 
     testWidgets('each pendency chip carries the glyph of the field it names, '
