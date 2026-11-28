@@ -10,6 +10,7 @@ import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/l10n/supported_locales.dart';
 import '../../../core/router/navigation.dart';
+import '../../../core/router/tab_in_use.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -51,12 +52,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(profileNotifierProvider.notifier).loadStorageUsed();
-      if (ref.read(syncNotifierProvider).isOnline) {
-        ref.read(inviteNotifierProvider.notifier).fetchInvites();
-      }
-    });
+    Future.microtask(_refresh);
+  }
+
+  void _refresh() {
+    ref.read(profileNotifierProvider.notifier).loadStorageUsed();
+    if (ref.read(syncNotifierProvider).isOnline) {
+      ref.read(inviteNotifierProvider.notifier).fetchInvites();
+    }
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -128,6 +131,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    onReturnTo(ref, ShellTab.profile, _refresh);
     final authState = ref.watch(authNotifierProvider);
     final syncState = ref.watch(syncNotifierProvider);
     final inviteState = ref.watch(inviteNotifierProvider);
