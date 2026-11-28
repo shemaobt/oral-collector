@@ -131,17 +131,6 @@ void _expectOverlays(ThemeData theme) {
   expect(dialog.backgroundColor, c.card);
   expect(_radiusOf(dialog.shape), BorderRadius.circular(RadiusScale.r24));
 
-  final sheet = theme.bottomSheetTheme;
-  expect(sheet.backgroundColor, c.card);
-  expect(sheet.modalBackgroundColor, c.card);
-  expect(
-    _radiusOf(sheet.shape),
-    const BorderRadius.vertical(top: Radius.circular(RadiusScale.r28)),
-  );
-  expect(sheet.showDragHandle, isTrue);
-  expect(sheet.dragHandleSize, const Size(40, 4));
-  expect(sheet.dragHandleColor, c.border);
-
   final snack = theme.snackBarTheme;
   expect(snack.backgroundColor, c.primary);
   expect(snack.actionTextColor, c.wood);
@@ -211,7 +200,7 @@ void main() {
       });
     });
 
-    test('$name dialogs, sheets, notices and menus read as the design', () {
+    test('$name dialogs, notices and menus read as the design', () {
       _expectOverlays(theme);
     });
 

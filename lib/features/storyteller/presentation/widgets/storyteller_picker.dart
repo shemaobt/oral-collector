@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../domain/entities/storyteller.dart';
 import '../notifiers/project_storytellers_notifier.dart';
@@ -16,16 +17,10 @@ Future<Storyteller?> showStorytellerPickerSheet(
   required String projectId,
   bool showAddNew = false,
 }) {
-  return showModalBottomSheet<Storyteller?>(
+  return showAppSheet<Storyteller?>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(RadiusScale.r20),
-      ),
-    ),
     builder: (_) =>
         _StorytellerPickerSheet(projectId: projectId, showAddNew: showAddNew),
   );
