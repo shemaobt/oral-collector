@@ -8,73 +8,85 @@ class AppField extends StatelessWidget {
   const AppField({
     super.key,
     this.controller,
-    this.focusNode,
     this.label,
     this.hint,
-    this.prefix,
-    this.suffix,
+    this.prefixIcon,
+    this.suffixIcon,
     this.validator,
+    this.errorText,
+    this.errorMaxLines,
     this.onChanged,
     this.onFieldSubmitted,
     this.keyboardType,
     this.textInputAction,
-    this.autofillHints,
+    this.textCapitalization = TextCapitalization.none,
+    this.autofocus = false,
+    this.autocorrect = true,
     this.obscureText = false,
     this.enabled = true,
+    this.minLines,
     this.maxLines = 1,
     this.onCard = false,
   });
 
   final TextEditingController? controller;
-  final FocusNode? focusNode;
   final String? label;
   final String? hint;
-  final Widget? prefix;
-  final Widget? suffix;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
   final FormFieldValidator<String>? validator;
+  final String? errorText;
+  final int? errorMaxLines;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
-  final Iterable<String>? autofillHints;
+  final TextCapitalization textCapitalization;
+  final bool autofocus;
+  final bool autocorrect;
   final bool obscureText;
   final bool enabled;
+  final int? minLines;
   final int maxLines;
   final bool onCard;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final field = TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      validator: validator,
-      onChanged: onChanged,
-      onFieldSubmitted: onFieldSubmitted,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      autofillHints: autofillHints,
-      obscureText: obscureText,
-      enabled: enabled,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: prefix,
-        suffixIcon: suffix,
-      ),
-    );
-    if (!onCard) return field;
     return Theme(
-      data: theme.copyWith(
-        inputDecorationTheme: AppTheme.fieldTheme(
-          AppColors.of(context),
-          ShadowTints.of(context),
-          theme.textTheme,
-          onCard: true,
+      data: onCard
+          ? theme.copyWith(
+              inputDecorationTheme: AppTheme.fieldTheme(
+                AppColors.of(context),
+                ShadowTints.of(context),
+                theme.textTheme,
+                onCard: true,
+              ),
+            )
+          : theme,
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        onChanged: onChanged,
+        onFieldSubmitted: onFieldSubmitted,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        textCapitalization: textCapitalization,
+        autofocus: autofocus,
+        autocorrect: autocorrect,
+        obscureText: obscureText,
+        enabled: enabled,
+        minLines: minLines,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          errorText: errorText,
+          errorMaxLines: errorMaxLines,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
         ),
       ),
-      child: field,
     );
   }
 }
