@@ -16,8 +16,10 @@ import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/brush_sign.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
@@ -176,16 +178,17 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       case DeleteRecordingResult.ok:
         break;
       case DeleteRecordingResult.forbidden:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: AppColors.of(context).warning,
-          ),
+        showQuickNotice(
+          context,
+          l10n.recording_deleteNoPermission,
+          tone: QuickNoticeTone.failed,
         );
       case DeleteRecordingResult.failed:
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
+          l10n.recording_deleteFailed,
+          tone: QuickNoticeTone.failed,
+        );
     }
   }
 
@@ -211,8 +214,10 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
           .read(recordingsListNotifierProvider.notifier)
           .retryFailedUploads();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.recordings_retryQueuedCount(requeued))),
+      showQuickNotice(
+        context,
+        l10n.recordings_retryQueuedCount(requeued),
+        sign: requeued == 0 ? Sign.info : null,
       );
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);

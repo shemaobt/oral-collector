@@ -13,6 +13,7 @@ import '../../../../shared/widgets/app_question.dart';
 import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/widgets/brush_sign.dart';
 import '../../../../shared/widgets/pressable.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../../../shared/widgets/recording_clock.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -213,11 +214,10 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       ref
           .read(recordingSessionNotifierProvider.notifier)
           .acknowledgeLastStopError();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).recording_recoveryFailed),
-          duration: const Duration(seconds: 4),
-        ),
+      showQuickNotice(
+        context,
+        AppLocalizations.of(context).recording_recoveryFailed,
+        tone: QuickNoticeTone.failed,
       );
     });
   }

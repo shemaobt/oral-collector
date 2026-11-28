@@ -121,9 +121,9 @@ Path: @/lib/features/recording/presentation
   `LocalRecordingEntity` as of ENG-197 — the list already holds entities, the
   detail screen converts its Drift row at the call site via
   `localRecordingToEntity`), and `switch` on the
-  returned `DeleteRecordingResult` to pick the snackbar (`forbidden` →
-  permission warning in `AppColors.of(context).warning`, `failed` → generic
-  failure, `ok` → no snackbar). The notifier owns the whole flow — remote
+  returned `DeleteRecordingResult` to pick the notice (`forbidden` →
+  the permission message as a failed quick notice with the info sign, `failed` →
+  generic failure, `ok` → no notice). The notifier owns the whole flow — remote
   delete, the local Drift row, the audio file, and optimistic state removal
   — so the screens no longer touch `recordingApiRepositoryProvider`,
   `localRecordingRepositoryProvider`, `kIsWeb`, or `ForbiddenException` for
@@ -495,7 +495,7 @@ Path: @/lib/features/recording/presentation
   exception, including `UnauthorizedException` (401) and `ConflictException`
   (409) — is unreachable: the edit is mirrored to the local row anyway and
   the method returns `RecordingMutationResult.savedLocallyOnly`, and the
-  screen shows a warning snackbar (`recording_savedOnDeviceOnly`) telling the
+  screen shows a quick notice with the info sign (`recording_savedOnDeviceOnly`) telling the
   user the change is on this device and will be sent when the connection
   returns. Web has no local row, so an
   unreachable server there is treated the same as a refusal (`_pushMetadata`
@@ -513,7 +513,7 @@ Path: @/lib/features/recording/presentation
   and `SyncEngine` drains that queue on every pass, rebuilding the request by
   reading the current value back off the row rather than replaying a stored
   payload — see [/lib/features/sync/docs.md](../../sync/docs.md) for the
-  drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
+  drain and its error taxonomy. The `recording_savedOnDeviceOnly` notice
   was rewritten to match (ENG-403): it said the change stopped at this device
   and asked the user to **redo it online**, which is now wasted work, and says
   instead that it will be sent on its own when the connection comes back.

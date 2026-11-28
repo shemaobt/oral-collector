@@ -21,6 +21,7 @@ import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/error_notice.dart';
 import '../../../../shared/widgets/pressable.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -539,9 +540,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
 
       if (mounted) {
         unawaited(HapticFeedback.mediumImpact());
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
+        showQuickNotice(context, l10n.recording_saved);
         if (widget.onSaved != null) {
           widget.onSaved!();
         } else {
@@ -652,9 +651,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
 
       if (mounted) {
         unawaited(HapticFeedback.mediumImpact());
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
+        showQuickNotice(context, l10n.recording_saved);
         context.go('/home');
       }
     } catch (e) {

@@ -14,6 +14,7 @@ import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/invite_dialog.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../recording/domain/entities/review_pendency.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
@@ -186,10 +187,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         });
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).projectSettings_updated),
-        ),
+      showQuickNotice(
+        context,
+        AppLocalizations.of(context).projectSettings_updated,
       );
     } finally {
       if (mounted) {
@@ -235,9 +235,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.projectSettings_memberRemoved)),
-      );
+      showQuickNotice(context, l10n.projectSettings_memberRemoved);
     } else {
       final error = ref.read(memberNotifierProvider).error;
       showErrorNotice(
@@ -293,12 +291,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     );
 
     if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).projectSettings_inviteSent,
-          ),
-        ),
+      showQuickNotice(
+        context,
+        AppLocalizations.of(context).projectSettings_inviteSent,
       );
       unawaited(
         ref

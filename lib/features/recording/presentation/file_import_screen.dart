@@ -22,6 +22,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/error_notice.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
@@ -288,11 +289,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   void _showRejectedSnack(List<RejectedFile> rejected) {
     if (rejected.isEmpty) return;
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(localizeRejectionGroup(l10n, rejected)),
-        behavior: SnackBarBehavior.floating,
-      ),
+    showQuickNotice(
+      context,
+      localizeRejectionGroup(l10n, rejected),
+      tone: QuickNoticeTone.failed,
     );
   }
 
@@ -429,11 +429,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.import_validationBanner(invalid.length)),
-            behavior: SnackBarBehavior.floating,
-          ),
+        showQuickNotice(
+          context,
+          l10n.import_validationBanner(invalid.length),
+          tone: QuickNoticeTone.failed,
         );
       }
       return;

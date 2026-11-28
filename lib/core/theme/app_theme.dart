@@ -223,23 +223,6 @@ abstract class AppTheme {
     );
   }
 
-  static SnackBarThemeData _snackBarTheme(AppColorSet c) {
-    return SnackBarThemeData(
-      backgroundColor: c.primary,
-      actionTextColor: c.wood,
-      contentTextStyle: TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: c.onPrimary,
-      ),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r16),
-      ),
-    );
-  }
-
   static const _questionTitleSize = 30.0;
   static const _menuTextSize = 15.0;
   static const _menuRadius = 18.0;
@@ -304,6 +287,27 @@ abstract class AppTheme {
 
   static DividerThemeData _dividerTheme(AppColorSet c) {
     return DividerThemeData(color: c.border, thickness: 1);
+  }
+
+  static DataTableThemeData _dataTableTheme(AppColorSet c, TextTheme text) {
+    return DataTableThemeData(
+      headingTextStyle: text.bodySmall?.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: c.secondary,
+      ),
+      dataTextStyle: text.bodyMedium?.copyWith(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: c.foreground,
+      ),
+      horizontalMargin: 16,
+      columnSpacing: 32,
+      dataRowMinHeight: 46,
+      dataRowMaxHeight: 46,
+      headingRowHeight: 43,
+      dividerThickness: 1,
+    );
   }
 
   static ChipThemeData _chipTheme(AppColorSet c) {
@@ -495,6 +499,7 @@ abstract class AppTheme {
         indicatorColor: AppColors.accent.withValues(alpha: OpacityScale.o12),
       ),
       dividerTheme: _dividerTheme(AppColors.light),
+      dataTableTheme: _dataTableTheme(AppColors.light, textTheme),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -514,7 +519,6 @@ abstract class AppTheme {
       menuTheme: _menuTheme(AppColors.light, MenuShadow.light),
       menuButtonTheme: _menuButtonTheme(AppColors.light),
       popupMenuTheme: _popupMenuTheme(AppColors.light, MenuShadow.light),
-      snackBarTheme: _snackBarTheme(AppColors.light),
       tabBarTheme: _tabBarTheme(AppColors.light),
       sliderTheme: _sliderTheme(AppColors.light),
       switchTheme: _switchTheme(AppColors.light),
@@ -624,6 +628,7 @@ abstract class AppTheme {
         ),
       ),
       dividerTheme: _dividerTheme(AppColors.dark),
+      dataTableTheme: _dataTableTheme(AppColors.dark, textTheme),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -643,7 +648,6 @@ abstract class AppTheme {
       menuTheme: _menuTheme(AppColors.dark, MenuShadow.dark),
       menuButtonTheme: _menuButtonTheme(AppColors.dark),
       popupMenuTheme: _popupMenuTheme(AppColors.dark, MenuShadow.dark),
-      snackBarTheme: _snackBarTheme(AppColors.dark),
       tabBarTheme: _tabBarTheme(AppColors.dark),
       sliderTheme: _sliderTheme(AppColors.dark),
       switchTheme: _switchTheme(AppColors.dark),

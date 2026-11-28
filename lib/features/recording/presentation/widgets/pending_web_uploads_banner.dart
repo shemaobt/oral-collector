@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/platform/file_source.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/error_notice.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/local_recording_entity.dart';
@@ -103,8 +104,10 @@ class _PendingWebUploadsBannerState
         // original ones and there is nothing to check them against.
         if (source.length != row.fileSizeBytes) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.recording_resumeSizeMismatch)),
+            showQuickNotice(
+              context,
+              l10n.recording_resumeSizeMismatch,
+              tone: QuickNoticeTone.failed,
             );
           }
           source.dispose();
