@@ -246,8 +246,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
     unawaited(_draftStore.write(widget.result.filePath, _currentDraft));
   }
 
+  void _releaseDecision() => _pendingDecisionController.update(
+    (owner) => owner == widget.result ? null : owner,
+  );
+
   /// The recording's fate is decided: the draft has no owner left.
   Future<void> _closeDraft() async {
+    _releaseDecision();
     _draftWriteTimer?.cancel();
     _draftWriteTimer = null;
     _draftClosed = true;
@@ -682,6 +687,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
       canKeepForLater: sessionId != null,
     );
     if (choice == null) return;
+    _releaseDecision();
 
     if (choice == LeaveRecordingChoice.keepForLater) {
       // Neither the audio nor the draft is touched: the person is coming back

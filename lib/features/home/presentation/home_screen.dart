@@ -47,24 +47,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RefreshOnReturn {
   ShellTab get tab => ShellTab.home;
 
   @override
-  void refreshOnReturn() => _refresh();
+  void refreshOnReturn() {
+    ref.read(homeNotifierProvider.notifier).refreshAll();
+    _fetchRemoteData();
+  }
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(homeNotifierProvider.notifier).refreshAll();
-      _fetchRemoteData();
+      _fetchAndAskLocale();
     });
   }
 
-  void _fetchRemoteData() {
-    if (!ref.read(syncNotifierProvider).isOnline) return;
-    ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
-      if (!mounted) return;
+  void _fetchAndAskLocale() => _fetchRemoteData().then((fetched) {
+    if (fetched) _checkFirstLoginLocale();
+  });
+
+  Future<bool> _fetchRemoteData() {
+    if (!ref.read(syncNotifierProvider).isOnline) return Future.value(false);
+    return ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
+      if (!mounted) return false;
       ref.read(genreNotifierProvider.notifier).fetchGenres();
       _fetchStatsIfNeeded();
-      _checkFirstLoginLocale();
+      return true;
     });
   }
 
@@ -174,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RefreshOnReturn {
     // Re-fetch remote data when connectivity is restored
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
       if (next && prev == false) {
-        _fetchRemoteData();
+        _fetchAndAskLocale();
       }
     });
 

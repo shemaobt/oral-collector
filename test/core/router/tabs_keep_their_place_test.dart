@@ -209,6 +209,19 @@ void main() {
     expect(find.byType(RecordingCard), findsOneWidget);
   });
 
+  testWidgets('coming back to Home keeps its genres on screen', (tester) async {
+    await _pump(
+      tester,
+      at: '/home',
+      overrides: [genreNotifierProvider.overrideWith(_OneGenre.new)],
+    );
+    await _tapTab(tester, 'Recordings');
+    await _tapTab(tester, 'Home');
+
+    expect(find.text('Folk Tale'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
   testWidgets('coming back to Projects shows the projects it gained', (
     tester,
   ) async {
@@ -312,5 +325,28 @@ void main() {
     await _tapTab(tester, 'Record');
 
     expect(find.byType(GenreSelectionStep), findsOneWidget);
+  });
+
+  testWidgets('a new entry into Record leaves no question for the tabs', (
+    tester,
+  ) async {
+    final app = await _pump(tester, at: '/home');
+    app.read(pendingRecoveryProvider.notifier).state = const PendingRecovery(
+      result: RecordingResult(filePath: 'left', durationSeconds: 5),
+      sessionId: 'left',
+      genreId: 'g1',
+      subcategoryId: null,
+    );
+    app.read(routerProvider).go('/recovery-confirm');
+    await settle(tester);
+    app.read(routerProvider).go('/home');
+    await settle(tester);
+    app.read(routerProvider).go('/record');
+    await settle(tester);
+
+    await _tapTab(tester, 'Home');
+
+    expect(find.text('Cancel'), findsNothing);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 }
