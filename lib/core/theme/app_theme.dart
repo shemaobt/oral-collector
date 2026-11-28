@@ -7,7 +7,7 @@ import 'genre_colors.dart';
 import 'screen_transition.dart';
 import 'tokens.dart';
 
-const _fontFamily = 'Montserrat';
+const _fontFamily = 'Geist';
 const _brushFamily = 'CaveatBrush';
 
 abstract class AppButtonStyles {
@@ -60,16 +60,16 @@ abstract class AppTheme {
       displaySmall: brush(base.displaySmall, 28, 1),
       headlineLarge: brush(base.headlineLarge, 28, 1),
       headlineMedium: brush(base.headlineMedium, 23, 1),
-      headlineSmall: sans(base.headlineSmall, 16, FontWeight.w700, 1.25),
-      titleLarge: sans(base.titleLarge, 16, FontWeight.w700, 1.25),
-      titleMedium: sans(base.titleMedium, 14, FontWeight.w700, 1.25),
-      titleSmall: sans(base.titleSmall, 14, FontWeight.w600, 1.3),
-      bodyLarge: sans(base.bodyLarge, 16, FontWeight.w500, 1.5),
-      bodyMedium: sans(base.bodyMedium, 14, FontWeight.w500, 1.5),
+      headlineSmall: sans(base.headlineSmall, 24, FontWeight.w600, 1.2),
+      titleLarge: sans(base.titleLarge, 17, FontWeight.w600, 1.25),
+      titleMedium: sans(base.titleMedium, 15, FontWeight.w600, 1.25),
+      titleSmall: sans(base.titleSmall, 13, FontWeight.w600, 1.3),
+      bodyLarge: sans(base.bodyLarge, 17, FontWeight.w500, 1.5),
+      bodyMedium: sans(base.bodyMedium, 15, FontWeight.w500, 1.5),
       bodySmall: sans(base.bodySmall, 13, FontWeight.w500, 1.4),
-      labelLarge: sans(base.labelLarge, 14, FontWeight.w700, 1.3),
-      labelMedium: sans(base.labelMedium, 12, FontWeight.w700, 1.3),
-      labelSmall: sans(base.labelSmall, 11, FontWeight.w700, 1.25),
+      labelLarge: sans(base.labelLarge, 15, FontWeight.w600, 1.3),
+      labelMedium: sans(base.labelMedium, 13, FontWeight.w600, 1.3),
+      labelSmall: sans(base.labelSmall, 13, FontWeight.w600, 1.25),
     );
   }
 
@@ -126,7 +126,7 @@ abstract class AppTheme {
         minimumSize: const Size(0, 48),
         textStyle: const TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -317,8 +317,8 @@ abstract class AppTheme {
       checkmarkColor: c.onPrimary,
       labelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
         color: WidgetStateColor.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? c.onPrimary
@@ -327,8 +327,8 @@ abstract class AppTheme {
       ),
       secondaryLabelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
         color: c.onPrimary,
       ),
       side: BorderSide.none,
@@ -489,7 +489,7 @@ abstract class AppTheme {
         selectedIconTheme: const IconThemeData(color: AppColors.accent),
         selectedLabelTextStyle: const TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
           color: AppColors.accent,
         ),
@@ -503,14 +503,14 @@ abstract class AppTheme {
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 16,
+          fontSize: 17,
           fontWeight: FontWeight.w600,
           color: AppColors.foreground,
         ),
         subtitleTextStyle: TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
           color: AppColors.secondary,
         ),
       ),
@@ -632,14 +632,14 @@ abstract class AppTheme {
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 16,
+          fontSize: 17,
           fontWeight: FontWeight.w600,
           color: AppColors.darkForeground,
         ),
         subtitleTextStyle: TextStyle(
           fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
           color: AppColors.darkSecondary,
         ),
       ),

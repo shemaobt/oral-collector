@@ -105,7 +105,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - **Local storage**: **flutter_secure_storage** for tokens/credentials; **path_provider** for files; **shared_preferences** for simple key-value when appropriate
 - **Env / config**: compile-time `--dart-define` / `--dart-define-from-file=.env` read via `String.fromEnvironment` (see `core/config/env.dart`); never bundle `.env` as a Flutter asset; never ship secrets in the client
 - **Icons**: the kit's 47 brush signs, drawn by `BrushSign`; `lucide_icons` stays only until its last use is swapped; no new lucide icon
-- **Fonts**: bundled in `assets/fonts/` and declared in `pubspec.yaml` (no google_fonts): Caveat Brush for screen, section and dialog titles and big numbers, Montserrat for everything else; no italics
+- **Fonts**: bundled in `assets/fonts/` and declared in `pubspec.yaml` (no google_fonts): Caveat Brush for screen, section and dialog titles and big numbers, Geist (medium and semibold only) for everything else; no italics
 - **Linting**: **flutter_lints** + **custom_lint** / **riverpod_lint** in `dev_dependencies`; respect `analysis_options.yaml`. Strict rules are staged at `info` and analysis runs with `--no-fatal-infos` — see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md)
 
 Use only these stack choices unless the project already uses something else. Do not introduce GetX, Bloc, or a second state/navigation system.

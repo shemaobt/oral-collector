@@ -16,13 +16,14 @@ Future<Map<String, String>> _registeredByPackage() async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('registers the OFL text of Montserrat and Caveat Brush', () async {
+  test('registers the OFL text of Geist and Caveat Brush', () async {
     registerFontLicenses();
 
     final byPackage = await _registeredByPackage();
 
-    for (final family in ['Montserrat', 'Caveat Brush']) {
+    for (final family in ['Geist', 'Caveat Brush']) {
       expect(byPackage[family], contains('SIL OPEN FONT LICENSE Version 1.1'));
     }
+    expect(byPackage, isNot(contains('Montserrat')));
   });
 }
