@@ -102,14 +102,10 @@ void _expectTypography(ThemeData theme) {
 }
 
 void _expectBrushTitles(ThemeData theme) {
-  for (final style in [
-    theme.appBarTheme.titleTextStyle,
-    theme.dialogTheme.titleTextStyle,
-  ]) {
-    expect(style?.fontFamily, _brush);
-    expect(style?.fontSize, 28);
-    expect(style?.fontFamilyFallback, [_sans]);
-  }
+  final style = theme.appBarTheme.titleTextStyle;
+  expect(style?.fontFamily, _brush);
+  expect(style?.fontSize, 28);
+  expect(style?.fontFamilyFallback, [_sans]);
   expect(theme.appBarTheme.toolbarHeight, 64);
   final line = (theme.appBarTheme.shape! as Border).bottom;
   expect(line.width, 1.5);

@@ -75,6 +75,12 @@ class QuestionShadows {
       Theme.of(context).brightness == Brightness.dark ? dark : light;
 }
 
+class MenuShadow {
+  static const elevation = 8.0;
+  static const light = Color(0xFF463A1E);
+  static const dark = Color(0xFF000000);
+}
+
 class PrintedShadows {
   final Color ink;
   final Color paper;

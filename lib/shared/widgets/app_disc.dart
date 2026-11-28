@@ -11,7 +11,7 @@ enum DiscSize {
   medium(44),
   large(56),
   big(68),
-  empty(72),
+  empty(88),
   huge(96);
 
   const DiscSize(this.diameter);
