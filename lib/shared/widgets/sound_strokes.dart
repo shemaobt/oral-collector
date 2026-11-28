@@ -12,11 +12,13 @@ class SoundStrokes extends StatelessWidget {
     super.key,
     required this.diameter,
     required this.color,
+    required this.sounding,
     required this.child,
   });
 
   final double diameter;
   final Color color;
+  final bool sounding;
   final Widget child;
 
   @override
@@ -35,10 +37,12 @@ class SoundStrokes extends StatelessWidget {
                 maxWidth: box,
                 minHeight: box,
                 maxHeight: box,
-                child: CustomPaint(
-                  size: Size.square(box),
-                  painter: _StrokesPainter(color),
-                ),
+                child: sounding
+                    ? CustomPaint(
+                        size: Size.square(box),
+                        painter: _StrokesPainter(color),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
           ),

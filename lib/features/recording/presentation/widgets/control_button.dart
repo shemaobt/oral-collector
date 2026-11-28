@@ -36,37 +36,44 @@ class ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final size = stop ? RoundButtonSize.huge : RoundButtonSize.medium;
+    void press() {
+      stop ? HapticFeedback.heavyImpact() : HapticFeedback.lightImpact();
+      onTap();
+    }
+
     final button = RoundButton.sign(
       sign: sign,
       semanticLabel: semanticLabel ?? label,
       size: size,
       tone: stop ? RoundButtonTone.record : RoundButtonTone.resting,
       signSize: size.diameter * 0.46,
-      onPressed: () {
-        stop ? HapticFeedback.heavyImpact() : HapticFeedback.lightImpact();
-        onTap();
-      },
+      onPressed: press,
     );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        sounding
+        stop
             ? SoundStrokes(
                 diameter: size.diameter,
                 color: colors.mic,
+                sounding: sounding,
                 child: button,
               )
             : button,
         const SizedBox(height: 14),
         ExcludeSemantics(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: 13,
-              color: colors.secondary,
-              fontWeight: FontWeight.w500,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: press,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 13,
+                color: colors.secondary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
