@@ -66,6 +66,29 @@ void main() {
         label: 'Alpha',
         isButton: true,
         isFocusable: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+      ),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('the record button stays one node with its label and tap', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await pumpPiece(tester, RecordButton(onTap: () {}));
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Start recording')),
+      matchesSemantics(
+        label: 'Start recording',
+        isButton: true,
+        isFocusable: true,
+        hasEnabledState: true,
+        isEnabled: true,
         hasTapAction: true,
         hasFocusAction: true,
       ),

@@ -134,12 +134,14 @@ class Pressable extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.customBorder,
+    this.label,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final ShapeBorder? customBorder;
+  final String? label;
 
   @override
   State<Pressable> createState() => _PressableState();
@@ -153,7 +155,9 @@ class _PressableState extends State<Pressable> {
     return PointerPress(
       builder: (context, down) => MergeSemantics(
         child: Semantics(
+          label: widget.label,
           button: true,
+          enabled: _enabled,
           child: Stack(
             fit: StackFit.passthrough,
             children: [
@@ -168,7 +172,11 @@ class _PressableState extends State<Pressable> {
                     enableFeedback: false,
                     highlightColor: AppColors.transparent,
                     overlayColor: widget.customBorder == null
-                        ? const WidgetStatePropertyAll(AppColors.transparent)
+                        ? WidgetStateProperty.resolveWith(
+                            (states) => states.contains(WidgetState.focused)
+                                ? Theme.of(context).focusColor
+                                : AppColors.transparent,
+                          )
                         : null,
                     child: const SizedBox.expand(),
                   ),
