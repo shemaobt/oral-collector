@@ -10,6 +10,7 @@ import '../../../core/observability/error_reporter.dart';
 import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/invite_dialog.dart';
@@ -199,7 +200,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
   Future<void> _confirmRemoveMember(ProjectMember member) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.projectSettings_removeMember),
@@ -286,7 +287,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   }
 
   Future<void> _showInviteDialog() async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (_) => InviteDialog(projectId: widget.projectId),
     );

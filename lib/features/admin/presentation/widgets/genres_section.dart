@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/app_question.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../notifiers/admin_notifier.dart';
 import 'admin_genre_card.dart';
@@ -76,7 +77,7 @@ class GenresSection extends ConsumerWidget {
     final descController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.admin_addGenre),

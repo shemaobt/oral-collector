@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/app_question.dart';
 
 class ReplaceAudioDialog extends StatelessWidget {
   const ReplaceAudioDialog({super.key, required this.wasUploaded});
@@ -14,7 +15,7 @@ class ReplaceAudioDialog extends StatelessWidget {
     BuildContext context, {
     required bool wasUploaded,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => ReplaceAudioDialog(wasUploaded: wasUploaded),
     );

@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/app_question.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
 import '../notifiers/admin_notifier.dart';
@@ -156,7 +157,7 @@ class AdminGenreCard extends ConsumerWidget {
     final descController = TextEditingController(text: genre.description ?? '');
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.admin_editGenreTitle),
@@ -231,7 +232,7 @@ class AdminGenreCard extends ConsumerWidget {
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.admin_deleteGenreTitle),
@@ -270,7 +271,7 @@ class AdminGenreCard extends ConsumerWidget {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.admin_addSubcategoryTo(genre.name)),
@@ -328,7 +329,7 @@ class AdminGenreCard extends ConsumerWidget {
   ) async {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.admin_deleteSubcategory),

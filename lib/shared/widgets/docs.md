@@ -209,7 +209,9 @@ Path: @/lib/shared/widgets
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
-  `base` rising `rise`, leaves in `fast` in place, and scrolls if it overflows.
+  `base` rising `rise`, leaves in `fast` in place, and scrolls if it overflows. **`showAppDialog`** gives the
+  same ground and motion to a child the caller builds (an `AlertDialog`); every
+  question opens through one of the two.
 
 - **`ProgressBeads`** ([progress_beads.dart](progress_beads.dart)) shows an
   upload as ten hand-cut beads in a 140 × 10 strip, one every 14, whole beads

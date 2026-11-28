@@ -15,6 +15,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/sync_now.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/icon_box.dart';
@@ -83,7 +84,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final colors = AppColors.of(context);
 
     final l10n = AppLocalizations.of(context);
-    final newName = await showDialog<String>(
+    final newName = await showAppDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.profile_editName),
@@ -370,7 +371,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.profile_deleteAccount),
@@ -393,7 +394,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final router = GoRouter.of(context);
     final controller = TextEditingController();
-    final finalConfirm = await showDialog<bool>(
+    final finalConfirm = await showAppDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
@@ -443,7 +444,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final notice = quickNoticeOf(context);
     final l10n = AppLocalizations.of(context);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.profile_clearCacheTitle),

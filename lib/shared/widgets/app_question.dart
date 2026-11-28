@@ -16,13 +16,21 @@ Future<T?> showAppQuestion<T>({
   required String message,
   required List<Widget> Function(BuildContext) actionsBuilder,
   bool isDismissible = true,
+}) => showAppDialog<T>(
+  context: context,
+  isDismissible: isDismissible,
+  builder: (c) => _card(c, title, message, actionsBuilder),
+);
+
+Future<T?> showAppDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool isDismissible = true,
 }) {
   final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
   return navigator.push(
     _AppQuestionRoute<T>(
-      title: title,
-      message: message,
-      actionsBuilder: actionsBuilder,
+      builder: builder,
       motion: context.motion,
       themes: InheritedTheme.capture(from: context, to: navigator.context),
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
@@ -33,18 +41,14 @@ Future<T?> showAppQuestion<T>({
 
 class _AppQuestionRoute<T> extends PopupRoute<T> {
   _AppQuestionRoute({
-    required this.title,
-    required this.message,
-    required this.actionsBuilder,
+    required this.builder,
     required this.motion,
     required this.themes,
     required this.barrierLabel,
     required this.isDismissible,
   });
 
-  final String title;
-  final String message;
-  final List<Widget> Function(BuildContext) actionsBuilder;
+  final WidgetBuilder builder;
   final AppMotion motion;
   final CapturedThemes themes;
   final bool isDismissible;
@@ -71,6 +75,7 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
+    final Widget child = Builder(builder: builder);
     return themes.wrap(
       Semantics(
         scopesRoute: true,
@@ -82,7 +87,8 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
         explicitChildNodes: true,
         child: AnimatedBuilder(
           animation: animation,
-          builder: (context, _) {
+          child: child,
+          builder: (context, child) {
             _entering = animation.isAnimating
                 ? _entering ?? animation.status == AnimationStatus.forward
                 : null;
@@ -99,15 +105,12 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
                   ),
                 ),
                 SafeArea(
-                  minimum: const EdgeInsets.symmetric(
-                    horizontal: SpacingScale.s16,
-                  ),
                   child: Center(
                     child: Opacity(
                       opacity: v,
                       child: Transform.translate(
                         offset: Offset(0, entering ? motion.rise * (1 - v) : 0),
-                        child: _card(context),
+                        child: child,
                       ),
                     ),
                   ),
@@ -119,11 +122,19 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
       ),
     );
   }
+}
 
-  Widget _card(BuildContext context) {
-    final AppColorSet colors = AppColors.of(context);
-    final TextTheme text = Theme.of(context).textTheme;
-    return ConstrainedBox(
+Widget _card(
+  BuildContext context,
+  String title,
+  String message,
+  List<Widget> Function(BuildContext) actionsBuilder,
+) {
+  final AppColorSet colors = AppColors.of(context);
+  final TextTheme text = Theme.of(context).textTheme;
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s16),
+    child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: _width),
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -160,6 +171,6 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

@@ -97,4 +97,60 @@ void main() {
     await t.ensureVisible(find.text('Discard'));
     expect(t.getRect(find.text('Discard')).bottom, lessThan(640));
   });
+
+  testWidgets('the caller builder runs once per open', (t) async {
+    var builds = 0;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) => TextButton(
+            onPressed: () => showAppDialog<void>(
+              context: c,
+              builder: (ctx) {
+                builds++;
+                return TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('fechar'),
+                );
+              },
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('fechar'));
+    await t.pumpAndSettle();
+    expect(builds, 1);
+  });
+
+  testWidgets('the builder runs under the theme captured at the caller', (
+    t,
+  ) async {
+    Color? seen;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Theme(
+          data: ThemeData(primaryColor: const Color(0xFF123456)),
+          child: Builder(
+            builder: (c) => TextButton(
+              onPressed: () => showAppDialog<void>(
+                context: c,
+                builder: (ctx) {
+                  seen = Theme.of(ctx).primaryColor;
+                  return const SizedBox();
+                },
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    expect(seen, const Color(0xFF123456));
+  });
 }

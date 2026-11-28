@@ -7,6 +7,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
@@ -51,7 +52,7 @@ class _StorytellersListScreenState
 
   Future<void> _confirmDelete(Storyteller st) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.storyteller_deleteTitle),

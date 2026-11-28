@@ -17,6 +17,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/brush_sign.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/quick_notice.dart';
@@ -217,7 +218,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.recording_deleteTitle),
@@ -289,7 +290,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
-    final shouldDownload = await showDialog<bool>(
+    final shouldDownload = await showAppDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.recording_downloadAudio),
@@ -311,9 +312,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (shouldDownload != true || !mounted) return false;
 
     unawaited(
-      showDialog(
+      showAppDialog(
         context: context,
-        barrierDismissible: false,
+        isDismissible: false,
         builder: (context) => const PopScope(
           canPop: false,
           child: Center(child: CircularProgressIndicator()),
@@ -423,9 +424,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         return;
       }
       unawaited(
-        showDialog(
+        showAppDialog(
           context: context,
-          barrierDismissible: false,
+          isDismissible: false,
           builder: (_) => const PopScope(
             canPop: false,
             child: Center(child: CircularProgressIndicator()),
@@ -562,9 +563,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (!mounted) return;
     unawaited(
-      showDialog(
+      showAppDialog(
         context: context,
-        barrierDismissible: false,
+        isDismissible: false,
         builder: (_) => const PopScope(
           canPop: false,
           child: Center(child: CircularProgressIndicator()),
@@ -591,7 +592,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _state.recording;
     if (recording == null) return;
 
-    final result = await showDialog<MoveCategoryResult>(
+    final result = await showAppDialog<MoveCategoryResult>(
       context: context,
       builder: (context) => MoveCategoryDialog(
         currentGenreId: recording.genreId,
@@ -634,7 +635,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _state.recording;
     if (recording == null) return;
 
-    final result = await showDialog<ClassifyResult>(
+    final result = await showAppDialog<ClassifyResult>(
       context: context,
       builder: (context) => const ClassifyRecordingDialog(),
     );
@@ -683,7 +684,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           )
         : null;
 
-    final result = await showDialog<SecondaryValues?>(
+    final result = await showAppDialog<SecondaryValues?>(
       context: context,
       builder: (context) => _SecondaryEditDialog(
         primaryGenreId: recording.genreId,

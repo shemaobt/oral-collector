@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_question.dart';
 import '../trim_edit_decision.dart';
 
 Future<TrimSaveMode?> showTrimSaveChoiceDialog(BuildContext context) {
@@ -11,7 +12,7 @@ Future<TrimSaveMode?> showTrimSaveChoiceDialog(BuildContext context) {
     TrimSaveMode.saveAsNew: l10n.trim_saveAsNewRecording,
     TrimSaveMode.removeStretch: l10n.trim_removeStretch,
   };
-  return showDialog<TrimSaveMode>(
+  return showAppDialog<TrimSaveMode>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(l10n.trim_saveConfirmTitle),
