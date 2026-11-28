@@ -56,6 +56,11 @@ Path: @/lib/shared/widgets
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
+- [sound_strokes.dart](sound_strokes.dart) paints the kit's strokes of sound
+  in `color` behind its `child` (a disc of `diameter`) while `sounding`: a box
+  138% of the disc, centred, under the child, no taps, no semantics, still. Not
+  sounding, it paints nothing and the child stays mounted. The disc's own sign
+  size is `RoundButton.signSize` (default 18).
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
@@ -135,7 +140,8 @@ Path: @/lib/shared/widgets
   `pressScale` over `pressIn` and darkens by the same amount; let go, it springs
   back over `pressOut` with `pressBack`. With less motion it only darkens. `Pressable` keeps `InkWell`'s focus, Enter and
   Space, cursor and tap target, and shows nothing when it has nothing to do.
-  `RoundButton` and `RecordButton` use it; the theme turns the spreading ink
+  It follows the pointer, not Material's pressed state, so it answers at once in
+  scroll views. `RoundButton`, `RecordButton` and the button pieces use it; the theme turns the spreading ink
   off everywhere (`NoSplash`).
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or

@@ -9,7 +9,7 @@ Path: @/lib/core/theme
   Material 3 `ThemeData` builders that style every widget
   ([app_theme.dart](app_theme.dart)), and the spacing/radii/motion/opacity
   design-token system (`app_spacing.dart` / `app_radii.dart` /
-  `app_durations.dart` / [app_motion.dart](app_motion.dart) /
+  [app_motion.dart](app_motion.dart) /
   [app_opacity.dart](app_opacity.dart) /
   [context_tokens.dart](context_tokens.dart), re-exported by
   [tokens.dart](tokens.dart)).
@@ -21,12 +21,12 @@ Path: @/lib/core/theme
   rules forbid raw `Color(...)` everywhere outside this folder.
 - All token families follow one **hybrid** pattern: a source-of-truth scale
   (semantic color constants assembled into `AppColorSet`; `const` scales
-  `SpacingScale` / `RadiusScale` / `DurationScale` / `MotionScale` /
+  `SpacingScale` / `RadiusScale` / `MotionScale` /
   `OpacityScale`), a thin `ThemeExtension` that carries it and makes it
   theme-aware, and a resolver that reads the registered extension with a
   fallback.
 - `AppColorSet` is the first `ThemeExtension`; `AppSpacing` / `AppRadii` /
-  `AppDurations` / `AppMotion` / `AppOpacity` follow the same contract.
+  `AppMotion` / `AppOpacity` follow the same contract.
   Conventions, grid policy, and scope are governed by
   [ADR-0002](/docs/adr/ADR-0002-design-tokens.md).
 
@@ -81,15 +81,15 @@ Path: @/lib/core/theme
   light, cream in dark) and `onSoft` (the sign on `soft`, the same terracotta in
   both themes). `error` is the terracotta of what failed, not brick.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
-  (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
+  (e.g. `SpacingScale.s16`, `RadiusScale.r12`,
   `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` /
-  `.durations` / `.motion` / `.opacity` accessor. The spacing/radii call-site
+  `.motion` / `.opacity` accessor. The spacing/radii call-site
   migration is now app-wide
   across [/lib/features](/lib/features) and [/lib/shared/widgets](/lib/shared/widgets):
   ENG-106 seeded the on-grid swaps on the densest screens and app chrome, ENG-163
   finished the value-identical long tail, and ENG-162 then ran the
   behavior-changing pass that snapped the off-grid stragglers onto tokens (see
-  Grid policy and Migration in Things to Know). UI motion durations are migrated
+  Grid policy and Migration in Things to Know). UI motion times are migrated
   across many widgets too — those were value-identical swaps with no behavior
   change.
 - [app_theme.dart](app_theme.dart) is now itself a consumer of the `const`
@@ -112,7 +112,7 @@ Path: @/lib/core/theme
   accents live in `GenreColors` ([genre_colors.dart](genre_colors.dart)) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
-  spacing/radii/durations/opacity, the `context.*` accessor, the resolved
+  spacing/radii/opacity and motion, the `context.*` accessor, the resolved
   component radii/padding, and the `ThemeData` registration in the
   `app_*`/`context_tokens` tests).
 
@@ -122,13 +122,13 @@ Path: @/lib/core/theme
 source of truth                       ThemeExtension (const fallback)        resolver
 ─────────────────────────────────────────────────────────────────────────────────────
 AppColors raw consts ─► AppColorSet light/dark ─► ThemeData.extensions ─► AppColors.of(context)
-SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/AppDurations/AppMotion/AppOpacity ─► context.spacing/.radii/.durations/.motion/.opacity
+SpacingScale/RadiusScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/AppMotion/AppOpacity ─► context.spacing/.radii/.motion/.opacity
                                                 = Theme.of(context).extension<T>() ?? T.fallback
 ```
 
 - **Registration.** `lightTheme` registers `AppColors.light`; `darkTheme`
   registers `AppColors.dark`; both register `AppSpacing.fallback`,
-  `AppRadii.fallback`, `AppDurations.fallback`, `AppMotion.fallback`,
+  `AppRadii.fallback`, `AppMotion.fallback`,
   `AppOpacity.fallback` — in a
   single `const <ThemeExtension<dynamic>>[...]` list per theme.
 - **`AppColors.of(context)`** reads `Theme.of(context)`, prefers
@@ -137,11 +137,11 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
 - **`context.motion`** reads `extension<AppMotion>() ?? AppMotion.fallback`;
   under `MediaQuery.maybeDisableAnimationsOf` it zeroes the six times and sets
   `still`. Curves, distances and `pressScale` do not change.
-- **`context.spacing/radii/durations/opacity`** ([context_tokens.dart](context_tokens.dart))
+- **`context.spacing/radii/opacity`** ([context_tokens.dart](context_tokens.dart))
   read `Theme.of(context).extension<T>() ?? T.fallback`, so tokens still resolve
   under a bare `MaterialApp`.
 - The `const` scales ([app_spacing.dart](app_spacing.dart),
-  [app_radii.dart](app_radii.dart), [app_durations.dart](app_durations.dart),
+  [app_radii.dart](app_radii.dart),
   [app_motion.dart](app_motion.dart),
   [app_opacity.dart](app_opacity.dart)) are `abstract final class`es of `static
   const` values; being `const` they let migrated sites keep their const-ness
@@ -244,8 +244,9 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
   primary surface — `copyWith(color: colorScheme.onPrimary)`; `onPrimary` is the
   page tone in light and `darkBackground` in dark, the same pair as the
   `AppColorSet.onPrimary` semantic token added in ENG-374 — see above.)
-- **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
-  snackbar/feedback display durations are excluded and remain raw `Duration`s.
+- **`MotionScale` is motion-only.** I/O timeouts and logic timers are excluded
+  and remain raw `Duration`s. Notice motion and display times (`noticeJump`,
+  `noticeDrop`, `noticeStay`, `noticeStayAction`) are constants of `MotionScale`.
 - **Two migration passes, two contracts.** The *value-identical* passes
   (ENG-106/ENG-163, motion durations) swapped only literals already equal to a
   token value AND the direct argument of an `EdgeInsets` / `SizedBox` /
@@ -274,8 +275,8 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
   guarantee that no in-policy off-grid literal survives is the codemod's
   `--verify`, not a unit test.
 - **Naming.** Colors and motion are semantic (motion is named by meaning:
-  `fast` / `base` / `slow`, `enter` / `leave`); spacing/radii/durations/opacity are
-  value-encoded (`sN` / `rN` / `msN` = the literal px or ms; `oNN` = the alpha's
+  `fast` / `base` / `slow`, `enter` / `leave`); spacing/radii/opacity are
+  value-encoded (`sN` / `rN` = the literal px; `oNN` = the alpha's
   two decimal digits, e.g. `o40` = 0.4, `o06` = 0.06); no `md`/`lg` aliases
   (YAGNI).
 - **`lerp` is effectively dormant in production** — [../../main.dart](../../main.dart)
