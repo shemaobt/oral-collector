@@ -8,6 +8,13 @@ void opensRaw(BuildContext context) {
     context: context,
     pageBuilder: (_, _, _) => const SizedBox(),
   );
+  // expect_lint: avoid_raw_dialog
+  showModalBottomSheet<void>(
+    context: context,
+    builder: (_) => const SizedBox(),
+  );
+  // expect_lint: avoid_raw_dialog
+  showBottomSheet(context: context, builder: (_) => const SizedBox());
 }
 
 void showDialog2(BuildContext context) {}

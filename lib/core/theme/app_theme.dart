@@ -223,22 +223,6 @@ abstract class AppTheme {
     );
   }
 
-  static BottomSheetThemeData _bottomSheetTheme(AppColorSet c) {
-    return BottomSheetThemeData(
-      backgroundColor: c.card,
-      modalBackgroundColor: c.card,
-      surfaceTintColor: _noTint,
-      showDragHandle: true,
-      dragHandleColor: c.border,
-      dragHandleSize: const Size(40, 4),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r28),
-        ),
-      ),
-    );
-  }
-
   static SnackBarThemeData _snackBarTheme(AppColorSet c) {
     return SnackBarThemeData(
       backgroundColor: c.primary,
@@ -524,7 +508,6 @@ abstract class AppTheme {
       ),
       chipTheme: _chipTheme(AppColors.light),
       dialogTheme: _dialogTheme(AppColors.light, textTheme),
-      bottomSheetTheme: _bottomSheetTheme(AppColors.light),
       menuTheme: _menuTheme(AppColors.light, MenuShadow.light),
       menuButtonTheme: _menuButtonTheme(AppColors.light),
       popupMenuTheme: _popupMenuTheme(AppColors.light, MenuShadow.light),
@@ -655,7 +638,6 @@ abstract class AppTheme {
       ),
       chipTheme: _chipTheme(AppColors.dark),
       dialogTheme: _dialogTheme(AppColors.dark, textTheme),
-      bottomSheetTheme: _bottomSheetTheme(AppColors.dark),
       menuTheme: _menuTheme(AppColors.dark, MenuShadow.dark),
       menuButtonTheme: _menuButtonTheme(AppColors.dark),
       popupMenuTheme: _popupMenuTheme(AppColors.dark, MenuShadow.dark),

@@ -10,6 +10,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
 import '../../../shared/widgets/status_banner.dart';
@@ -67,14 +68,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!hasPreference) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        showModalBottomSheet(
+        showAppSheet(
           context: context,
           isDismissible: false,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(RadiusScale.r24),
-            ),
-          ),
           constraints: const BoxConstraints(maxWidth: 600),
           builder: (_) => const LocalePickerSheet(),
         );
@@ -110,13 +106,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final projects = projectState.projects;
     final activeId = projectState.activeProject?.id;
 
-    showModalBottomSheet(
+    showAppSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r24),
-        ),
-      ),
       constraints: const BoxConstraints(maxWidth: 600),
       builder: (ctx) {
         return ProjectSwitcherSheet(

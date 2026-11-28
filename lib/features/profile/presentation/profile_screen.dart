@@ -16,6 +16,7 @@ import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/sync_now.dart';
 import '../../../shared/widgets/app_question.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/icon_box.dart';
@@ -501,13 +502,8 @@ class _LanguageSection extends StatelessWidget {
               color: colors.secondary,
             ),
             onTap: () {
-              showModalBottomSheet(
+              showAppSheet(
                 context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(RadiusScale.r24),
-                  ),
-                ),
                 constraints: const BoxConstraints(maxWidth: 600),
                 builder: (_) => const LocalePickerSheet(),
               );

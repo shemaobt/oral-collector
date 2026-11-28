@@ -10,12 +10,18 @@ class AvoidRawDialog extends DartLintRule {
   static const _code = LintCode(
     name: 'avoid_raw_dialog',
     problemMessage:
-        'Raw showDialog/showGeneralDialog. Open questions through '
-        'showAppQuestion or showAppDialog (lib/shared/widgets/app_question.dart).',
+        'Raw dialog or bottom sheet. Open questions through showAppQuestion or '
+        'showAppDialog (lib/shared/widgets/app_question.dart) and sheets '
+        'through showAppSheet (lib/shared/widgets/app_sheet.dart).',
     errorSeverity: ErrorSeverity.WARNING,
   );
 
-  static const _banned = {'showDialog', 'showGeneralDialog'};
+  static const _banned = {
+    'showDialog',
+    'showGeneralDialog',
+    'showModalBottomSheet',
+    'showBottomSheet',
+  };
 
   @override
   void run(
