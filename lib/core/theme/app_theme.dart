@@ -166,16 +166,11 @@ abstract class AppTheme {
       filled: true,
       fillColor: halfWhenOff(fill),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
-      border: WidgetStateInputBorder.resolveWith((states) {
-        if (states.contains(WidgetState.disabled)) {
-          return FieldBorder(edge: dimmedEdge);
-        }
-        if (states.contains(WidgetState.error)) return line(c.error);
-        return FieldBorder(edge: edge);
-      }),
+      border: FieldBorder(edge: edge),
       enabledBorder: FieldBorder(edge: edge),
       disabledBorder: FieldBorder(edge: dimmedEdge),
       focusedBorder: line(c.primary),
+      errorBorder: line(c.error),
       focusedErrorBorder: line(c.error),
       hintStyle: label,
       labelStyle: label,
