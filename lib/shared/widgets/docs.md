@@ -109,14 +109,6 @@ Path: @/lib/shared/widgets
   - `screen_header.dart` needed no change — its title/subtitle already ellipsize
     and fit the toolbar within the 2.0× ceiling; only regression guards were
     added.
-- **`UploadStatusBadge` draws a send state as a word or a sign, never a pill.**
-  `status` maps `uploaded`/`verified` to sent, `uploading`/`web_uploading` to
-  sending, any `failed…` to needs you, everything else (and unknown strings) to
-  on the device. `compact` is the row form: sent is the check alone (read as
-  «Enviada»), sending and on-device are a 13/600 word («Enviando 42%» when
-  `percent` is known), needs you is a 32 disc without shadow holding the info
-  sign (read as «Precisa de você»). The page form is the sign at 18 then the
-  word at 15/600. No retry lives here.
 - **The status badge is currently unused in the app.**
   `UploadStatusBadge` has no call sites yet; it was hardened as shared-library
   hygiene so it is safe when wired up.
