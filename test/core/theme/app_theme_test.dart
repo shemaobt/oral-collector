@@ -131,11 +131,6 @@ void _expectOverlays(ThemeData theme) {
   expect(dialog.backgroundColor, c.card);
   expect(_radiusOf(dialog.shape), BorderRadius.circular(RadiusScale.r24));
 
-  final snack = theme.snackBarTheme;
-  expect(snack.backgroundColor, c.primary);
-  expect(snack.actionTextColor, c.wood);
-  expect(_radiusOf(snack.shape), BorderRadius.circular(RadiusScale.r16));
-
   expect(theme.popupMenuTheme.color, c.card);
   expect(_on(theme.menuTheme.style!.backgroundColor), c.card);
 
@@ -200,7 +195,7 @@ void main() {
       });
     });
 
-    test('$name dialogs, notices and menus read as the design', () {
+    test('$name dialogs and menus read as the design', () {
       _expectOverlays(theme);
     });
 

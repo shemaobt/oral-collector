@@ -223,23 +223,6 @@ abstract class AppTheme {
     );
   }
 
-  static SnackBarThemeData _snackBarTheme(AppColorSet c) {
-    return SnackBarThemeData(
-      backgroundColor: c.primary,
-      actionTextColor: c.wood,
-      contentTextStyle: TextStyle(
-        fontFamily: _fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: c.onPrimary,
-      ),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r16),
-      ),
-    );
-  }
-
   static const _questionTitleSize = 30.0;
   static const _menuTextSize = 15.0;
   static const _menuRadius = 18.0;
@@ -514,7 +497,6 @@ abstract class AppTheme {
       menuTheme: _menuTheme(AppColors.light, MenuShadow.light),
       menuButtonTheme: _menuButtonTheme(AppColors.light),
       popupMenuTheme: _popupMenuTheme(AppColors.light, MenuShadow.light),
-      snackBarTheme: _snackBarTheme(AppColors.light),
       tabBarTheme: _tabBarTheme(AppColors.light),
       sliderTheme: _sliderTheme(AppColors.light),
       switchTheme: _switchTheme(AppColors.light),
@@ -643,7 +625,6 @@ abstract class AppTheme {
       menuTheme: _menuTheme(AppColors.dark, MenuShadow.dark),
       menuButtonTheme: _menuButtonTheme(AppColors.dark),
       popupMenuTheme: _popupMenuTheme(AppColors.dark, MenuShadow.dark),
-      snackBarTheme: _snackBarTheme(AppColors.dark),
       tabBarTheme: _tabBarTheme(AppColors.dark),
       sliderTheme: _sliderTheme(AppColors.dark),
       switchTheme: _switchTheme(AppColors.dark),
