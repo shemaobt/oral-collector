@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'hand_cut_disc.dart';
 
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
@@ -37,40 +38,43 @@ class UserAvatar extends StatelessWidget {
     return true;
   }
 
+  static double _initialsSize(double diameter) {
+    if (diameter <= 32) return 13;
+    if (diameter <= 44) return 15;
+    if (diameter <= 56) return 17;
+    return 24;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final diameter = radius * 2;
 
-    return Container(
-      width: diameter,
-      height: diameter,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: colors.wood,
-        image: _isRasterUrl
-            ? DecorationImage(
-                image: NetworkImage(avatarUrl!),
-                fit: BoxFit.cover,
-                onError: (_, _) {},
+    return SizedBox.square(
+      dimension: diameter,
+      child: CustomPaint(
+        painter: HandCutDiscPainter(fill: colors.pale),
+        child: _isRasterUrl
+            ? ClipPath(
+                clipper: const HandCutDiscClipper(),
+                child: Image.network(
+                  avatarUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
               )
-            : null,
-        boxShadow: [
-          BoxShadow(color: colors.wood, spreadRadius: 4.5),
-          BoxShadow(color: colors.background, spreadRadius: 3),
-        ],
-      ),
-      child: _isRasterUrl
-          ? null
-          : Text(
-              _initials,
-              style: TextStyle(
-                fontFamily: 'CaveatBrush',
-                fontSize: diameter * 0.41,
-                color: colors.primary,
+            : Center(
+                child: Text(
+                  _initials,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.02 * _initialsSize(diameter),
+                    fontSize: _initialsSize(diameter),
+                    color: colors.foreground,
+                  ),
+                ),
               ),
-            ),
+      ),
     );
   }
 }

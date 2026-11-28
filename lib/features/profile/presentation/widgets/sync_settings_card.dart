@@ -48,7 +48,6 @@ class SyncSettingsCard extends ConsumerWidget {
           ListTile(
             leading: IconBox(
               icon: syncState.isOnline ? LucideIcons.wifi : LucideIcons.wifiOff,
-              color: syncState.isOnline ? colors.success : colors.error,
             ),
             title: Text(
               syncState.isOnline ? l10n.profile_online : l10n.profile_offline,
@@ -102,7 +101,7 @@ class SyncSettingsCard extends ConsumerWidget {
                       ),
                     ),
                   )
-                : IconBox(icon: LucideIcons.refreshCw, color: colors.accent),
+                : const IconBox(icon: LucideIcons.refreshCw),
             title: Text(
               syncState.uploadingId != null
                   ? l10n.profile_syncingProgress(syncState.syncProgress)
@@ -131,11 +130,7 @@ class SyncSettingsCard extends ConsumerWidget {
           const Divider(height: 1),
 
           SwitchListTile(
-            secondary: IconBox(
-              icon: LucideIcons.signal,
-              color: colors.secondary,
-              alpha: 0.1,
-            ),
+            secondary: const IconBox(icon: LucideIcons.signal),
             title: Text(l10n.profile_wifiOnly),
             subtitle: Text(l10n.profile_wifiOnlySubtitle),
             value: syncState.autoUploadWifiOnly,
@@ -144,11 +139,7 @@ class SyncSettingsCard extends ConsumerWidget {
           const Divider(height: 1),
 
           SwitchListTile(
-            secondary: IconBox(
-              icon: LucideIcons.trash2,
-              color: colors.secondary,
-              alpha: 0.1,
-            ),
+            secondary: const IconBox(icon: LucideIcons.trash2),
             title: Text(l10n.profile_autoRemove),
             subtitle: Text(l10n.profile_autoRemoveSubtitle),
             value: syncState.autoRemoveAfterUpload,
@@ -162,11 +153,7 @@ class SyncSettingsCard extends ConsumerWidget {
           if (!kIsWeb) ...[
             const Divider(height: 1),
             ListTile(
-              leading: IconBox(
-                icon: LucideIcons.eraser,
-                color: colors.error,
-                alpha: 0.1,
-              ),
+              leading: IconBox(icon: LucideIcons.eraser, color: colors.error),
               title: Text(
                 l10n.profile_clearCache,
                 style: theme.textTheme.bodyLarge?.copyWith(color: colors.error),
@@ -194,11 +181,7 @@ class _DeviceStorageTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final snapshot = ref.watch(_storageSnapshotProvider);
     return ListTile(
-      leading: IconBox(
-        icon: LucideIcons.hardDrive,
-        color: colors.secondary,
-        alpha: 0.1,
-      ),
+      leading: const IconBox(icon: LucideIcons.hardDrive),
       title: Text(l10n.settings_deviceStorageTitle),
       subtitle: snapshot.when(
         data: (data) {
