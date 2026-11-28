@@ -32,8 +32,27 @@ class _UnreadableStorage extends FlutterSecureStorage {
   }) async => throw PlatformException(code: 'errSecInteractionNotAllowed');
 }
 
-class _LateRefreshTokenRead extends FlutterSecureStorage {
-  Completer<void>? held;
+class _HeldStorage extends FlutterSecureStorage {
+  String? _op;
+  late Future<void> Function() _then;
+
+  Completer<void> hold(String op) {
+    final gate = Completer<void>();
+    _op = op;
+    _then = () => gate.future;
+    return gate;
+  }
+
+  void failOnce(String op) {
+    _op = op;
+    _then = () async => throw PlatformException(code: 'errSecIO');
+  }
+
+  Future<void> _at(String op) async {
+    if (op != _op) return;
+    _op = null;
+    await _then();
+  }
 
   @override
   Future<String?> read({
@@ -45,11 +64,38 @@ class _LateRefreshTokenRead extends FlutterSecureStorage {
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
   }) async {
-    final gate = key == 'refresh_token' ? held : null;
-    if (gate != null) held = null;
     final value = await super.read(key: key);
-    await gate?.future;
+    await _at('read $key');
     return value;
+  }
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    await _at('write $key');
+    return super.write(key: key, value: value);
+  }
+
+  @override
+  Future<void> delete({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    await _at('delete $key');
+    return super.delete(key: key);
   }
 }
 
@@ -259,16 +305,113 @@ void main() {
       });
     }
 
-    test('a 401 whose token read answers after «Sair»', () async {
-      final storage = _LateRefreshTokenRead();
+    final lateReads = <String, (String, Future<void> Function())>{
+      'a 401': ('refresh_token', () => notifier().handleUnauthorized()),
+      'start-up': (
+        'access_token',
+        () {
+          when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+          return notifier().refreshSessionIfOnline();
+        },
+      ),
+      'a profile update': (
+        'access_token',
+        () {
+          when(
+            () => repo.updateMe('a1', displayName: 'Ana'),
+          ).thenAnswer((_) async => user);
+          return notifier().updateProfile(displayName: 'Ana');
+        },
+      ),
+      'an avatar upload': (
+        'access_token',
+        () {
+          when(() => repo.uploadImage('a1', 'f')).thenAnswer((_) async => 'u');
+          when(
+            () => repo.updateMe('a1', avatarUrl: 'u'),
+          ).thenAnswer((_) async => user);
+          return notifier().uploadAvatar('f');
+        },
+      ),
+    };
+    for (final MapEntry(key: name, value: (key, start)) in lateReads.entries) {
+      test('$name whose $key read answers after «Sair»', () async {
+        final storage = _HeldStorage();
+        await signIn(storage);
+        final gate = storage.hold('read $key');
+        final pending = start();
+        await notifier().logout();
+        gate.complete();
+        await pending;
+
+        expectSignedOutOnDevice();
+      });
+
+      test('$name whose user write lands after «Sair» begins', () async {
+        final storage = _HeldStorage();
+        await signIn(storage);
+        final gate = storage.hold('write cached_user');
+        final pending = start();
+        await pumpEventQueue();
+        final signOut = notifier().logout();
+        await pumpEventQueue();
+        gate.complete();
+        await Future.wait([pending, signOut]);
+
+        expectSignedOutOnDevice();
+      });
+    }
+
+    test('a refresh whose token write lands after «Sair» begins', () async {
+      final storage = _HeldStorage();
       await signIn(storage);
-      final gate = storage.held = Completer<void>();
+      final gate = storage.hold('write access_token');
       final refresh = notifier().handleUnauthorized();
-      await notifier().logout();
+      await pumpEventQueue();
+      final signOut = notifier().logout();
+      await pumpEventQueue();
       gate.complete();
+      await Future.wait([refresh, signOut]);
+
+      expectSignedOutOnDevice();
+    });
+
+    test('a 401 begun while «Sair» clears and answered after', () async {
+      final storage = _HeldStorage();
+      await signIn(storage);
+      final clearing = storage.hold('delete access_token');
+      final answer = Completer<void>();
+      when(() => repo.refreshToken('r1')).thenAnswer(
+        (_) =>
+            answer.future.then((_) => (accessToken: 'a2', refreshToken: 'r1')),
+      );
+      final signOut = notifier().logout();
+      await pumpEventQueue();
+      final refresh = notifier().handleUnauthorized();
+      await pumpEventQueue();
+      clearing.complete();
+      await signOut;
+      answer.complete();
       await refresh;
 
       expectSignedOutOnDevice();
+    });
+
+    test('a «Sair» that fails to clear signs out, asks the server, does not '
+        'throw and lets the next session refresh', () async {
+      final storage = _HeldStorage();
+      await signIn(storage);
+      storage.failOnce('delete access_token');
+      await notifier().logout();
+
+      expect(container.read(authNotifierProvider).isAuthenticated, isFalse);
+      verify(() => repo.logout('r1')).called(1);
+      verify(
+        () => reporter.reportError(isA<PlatformException>(), any()),
+      ).called(1);
+      await notifier().login('a@b.com', 'pw');
+
+      expect(await notifier().handleUnauthorized(), isTrue);
     });
   });
 
