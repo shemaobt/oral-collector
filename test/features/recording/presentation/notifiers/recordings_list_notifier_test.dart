@@ -170,12 +170,17 @@ void main() {
     languageId: 'en',
   );
 
-  ProviderContainer makeContainer({required bool online}) => ProviderContainer(
+  ProviderContainer makeContainer({
+    required bool online,
+    ProjectNotifier? projects,
+  }) => ProviderContainer(
     overrides: [
       recordingApiRepositoryProvider.overrideWithValue(api),
       localRecordingRepositoryProvider.overrideWithValue(local),
       projectNotifierProvider.overrideWith(
-        () => _FakeProjectNotifier(ProjectState(activeProject: activeProject)),
+        () =>
+            projects ??
+            _FakeProjectNotifier(ProjectState(activeProject: activeProject)),
       ),
       syncNotifierProvider.overrideWith(
         () => _FakeSyncNotifier(initialOnline: online),
@@ -482,6 +487,192 @@ void main() {
         expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
       },
     );
+
+    test('nothing in memory: the device rows show before the server '
+        'answers', () async {
+      when(() => local.getAllRecordings('proj-1')).thenAnswer(
+        (_) async => [_makeRecording('local-1'), _makeRecording('local-2')],
+      );
+      final gate = hold();
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+
+      final fetch = container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+      await pumpUntil(() => read(container).recordings.isNotEmpty);
+
+      expect(read(container).recordings.map((r) => r.id), [
+        'local-1',
+        'local-2',
+      ]);
+      expect(read(container).isLoading, isFalse);
+      expect(read(container).isRefreshing, isTrue);
+
+      gate.complete(const []);
+      await fetch;
+      expect(read(container).isRefreshing, isFalse);
+    });
+
+    test('a reload while the device rows show keeps them', () async {
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => [_makeRecording('local-1')]);
+      final gate = hold();
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      final first = notifier.fetchRecordings();
+      await pumpUntil(() => read(container).recordings.isNotEmpty);
+      final seen = <RecordingsListState>[];
+      container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
+
+      final second = notifier.fetchRecordings();
+      gate.complete(const []);
+      await Future.wait([first, second]);
+
+      expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
+      expect(read(container).isRefreshing, isFalse);
+    });
+
+    test('a device read slower than the server is dropped', () async {
+      final slow = Completer<List<LocalRecording>>();
+      var reads = 0;
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) => ++reads == 1 ? slow.future : Future.value(const []));
+      serve(() async => [_makeServerRecording('srv-1')]);
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      slow.complete([_makeRecording('stale')]);
+      await pumpEventQueue();
+
+      expect(read(container).recordings.map((r) => r.id), ['srv-1']);
+      expect(read(container).isRefreshing, isFalse);
+    });
+
+    test('a device read of the old project never reaches the new', () async {
+      final slowA = Completer<List<LocalRecording>>();
+      final projects = _SwitchableProjectNotifier(
+        ProjectState(activeProject: activeProject),
+      );
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) => slowA.future);
+      when(
+        () => local.getAllRecordings('proj-2'),
+      ).thenAnswer((_) async => const []);
+      final gate = hold();
+      final container = makeContainer(online: true, projects: projects);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      final first = notifier.fetchRecordings();
+      projects.switchTo(
+        const Project(id: 'proj-2', name: 'Other', languageId: 'en'),
+      );
+      final second = notifier.fetchRecordings();
+
+      slowA.complete([_makeRecording('a-row')]);
+      await pumpEventQueue();
+
+      expect(read(container).recordings, isEmpty);
+      gate.complete(const []);
+      await Future.wait([first, second]);
+    });
+
+    final noDeviceRows =
+        <String, Future<void> Function(RecordingsListNotifier)>{
+          'a filter change after the first answer': (n) async {
+            serve(() async => const []);
+            await n.fetchRecordings();
+            hold();
+            unawaited(n.setStorytellerFilter('s-1'));
+          },
+          'a cold start under a pendency filter': (n) async {
+            hold();
+            unawaited(n.setReviewFlagFilter(PendencyKind.storyteller));
+          },
+        };
+    for (final entry in noDeviceRows.entries) {
+      test('${entry.key} shows no device rows', () async {
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => [_makeRecording('local-1')]);
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+
+        await entry.value(
+          container.read(recordingsListNotifierProvider.notifier),
+        );
+        await pumpUntil(() => asked);
+        await pumpEventQueue();
+
+        expect(read(container).recordings, isEmpty);
+        expect(read(container).isLoading, isTrue);
+      });
+    }
+
+    group('another project', () {
+      late _SwitchableProjectNotifier projects;
+      late ProviderContainer container;
+      final seen = <RecordingsListState>[];
+
+      setUp(() async {
+        seen.clear();
+        projects = _SwitchableProjectNotifier(
+          ProjectState(activeProject: activeProject),
+        );
+        serve(() async => [_makeServerRecording('srv-a')]);
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => const []);
+        container = makeContainer(online: true, projects: projects);
+        addTearDown(container.dispose);
+        await container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+        container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
+      });
+
+      Future<void> switchAndHold(List<LocalRecording> device) async {
+        when(
+          () => local.getAllRecordings('proj-2'),
+        ).thenAnswer((_) async => device);
+        final gate = hold();
+        projects.switchTo(
+          const Project(id: 'proj-2', name: 'Other', languageId: 'en'),
+        );
+        final fetch = container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+        await pumpUntil(() => asked);
+        gate.complete(const []);
+        await fetch;
+      }
+
+      test('shows its own device rows, never the old project\'s', () async {
+        await switchAndHold([
+          _makeRecording('local-b').copyWith(projectId: 'proj-2'),
+        ]);
+
+        expect(seen.expand((s) => s.recordings).map((r) => r.id), [
+          'local-b',
+          'local-b',
+        ]);
+        expect(seen.any((s) => s.isRefreshing && !s.isLoading), isTrue);
+      });
+
+      test('with nothing on the device it loads empty', () async {
+        await switchAndHold(const []);
+
+        expect(seen.expand((s) => s.recordings), isEmpty);
+        expect(seen.first.isLoading, isTrue);
+      });
+    });
 
     test('nothing in memory: loading, not refreshing', () async {
       when(
@@ -1874,8 +2065,9 @@ void main() {
       final sweepRead = Completer<List<LocalRecording>>();
       when(() => local.getAllRecordings('proj-1')).thenAnswer((_) {
         localReads++;
-        // The second read is the sweep's own, the one the refresh interrupts.
-        return localReads == 2 ? sweepRead.future : Future.value([row]);
+        // Reads: device-first, merge, then the sweep's own, which the refresh
+        // interrupts.
+        return localReads == 3 ? sweepRead.future : Future.value([row]);
       });
       when(() => local.deleteRecording(any())).thenAnswer((_) async => true);
       stubPage(0, () async => fullPage('s'));
@@ -1888,7 +2080,7 @@ void main() {
 
       await notifier.fetchRecordings();
       final paging = notifier.loadMore();
-      await pumpUntil(() => localReads >= 2);
+      await pumpUntil(() => localReads >= 3);
       final refresh = notifier.fetchRecordings();
       sweepRead.complete([row]);
       await paging;

@@ -250,6 +250,14 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         isRefreshing: false,
         isLoadingMore: false,
       );
+      final sameFilters =
+          answered == null ||
+          (answered.userId == question.userId &&
+              answered.storytellerId == question.storytellerId &&
+              answered.reviewFlag == question.reviewFlag);
+      if (online && question.reviewFlag == null && sameFilters) {
+        unawaited(_showDevice(question, gen));
+      }
     }
 
     if (!online) {
@@ -296,6 +304,18 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         fetchFailed: true,
       );
     }
+  }
+
+  Future<void> _showDevice(_Question question, int gen) async {
+    final device = await _loadLocal(question.projectId);
+    if (gen != _fetchGeneration || !state.isLoading) return;
+    if (device == null || device.isEmpty) return;
+    _answered = question;
+    state = state.copyWith(
+      recordings: device,
+      isLoading: false,
+      isRefreshing: true,
+    );
   }
 
   Future<void> loadMore() async {
