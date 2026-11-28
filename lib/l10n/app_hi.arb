@@ -250,7 +250,6 @@
   "sendState_sending": "भेजा जा रहा है",
   "sendState_sent": "भेजी गई",
   "sendState_needsYou": "आपकी ज़रूरत है",
-  "sendState_sendingPercent": "भेजा जा रहा है {percent}%",
   "recording_statusNameConflict": "नाम विरोध",
   "recording_statusDescriptionTooShort": "विवरण बहुत छोटा है",
   "recording_descriptionGapMessage": "इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।",

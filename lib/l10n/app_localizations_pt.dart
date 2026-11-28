@@ -736,11 +736,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sendState_needsYou => 'Precisa de você';
 
   @override
-  String sendState_sendingPercent(int percent) {
-    return 'Enviando $percent%';
-  }
-
-  @override
   String get recording_statusNameConflict => 'Conflito de nome';
 
   @override

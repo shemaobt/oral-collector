@@ -250,7 +250,6 @@
   "sendState_sending": "جارٍ الإرسال",
   "sendState_sent": "تم الإرسال",
   "sendState_needsYou": "يحتاج إليك",
-  "sendState_sendingPercent": "جارٍ الإرسال {percent}٪",
   "recording_statusNameConflict": "تعارض في الاسم",
   "recording_statusDescriptionTooShort": "الوصف قصير جدًا",
   "recording_descriptionGapMessage": "لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.",

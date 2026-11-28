@@ -250,7 +250,6 @@
   "sendState_sending": "Mengirim",
   "sendState_sent": "Terkirim",
   "sendState_needsYou": "Perlu Anda",
-  "sendState_sendingPercent": "Mengirim {percent}%",
   "recording_statusNameConflict": "Konflik nama",
   "recording_statusDescriptionTooShort": "Deskripsi terlalu pendek",
   "recording_descriptionGapMessage": "Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.",

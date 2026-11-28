@@ -250,7 +250,6 @@
   "sendState_sending": "I salim nau",
   "sendState_sent": "Salim pinis",
   "sendState_needsYou": "Yu mas mekim",
-  "sendState_sendingPercent": "I salim nau {percent}%",
   "recording_statusNameConflict": "Nem i pait",
   "recording_statusDescriptionTooShort": "Stori i sotpela tumas",
   "recording_descriptionGapMessage": "Yu no inap salim dispela rekod inap yu putim wanpela longpela stori.",

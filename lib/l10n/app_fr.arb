@@ -250,7 +250,6 @@
   "sendState_sending": "Envoi en cours",
   "sendState_sent": "Envoyée",
   "sendState_needsYou": "Besoin de vous",
-  "sendState_sendingPercent": "Envoi en cours {percent}%",
   "recording_statusNameConflict": "Conflit de nom",
   "recording_statusDescriptionTooShort": "Description trop courte",
   "recording_descriptionGapMessage": "Cet enregistrement ne peut pas être envoyé tant que vous n'ajoutez pas une description plus longue.",

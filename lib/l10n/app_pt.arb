@@ -255,7 +255,6 @@
   "sendState_sending": "Enviando",
   "sendState_sent": "Enviada",
   "sendState_needsYou": "Precisa de você",
-  "sendState_sendingPercent": "Enviando {percent}%",
   "recording_statusNameConflict": "Conflito de nome",
   "recording_statusDescriptionTooShort": "Descrição muito curta",
   "recording_descriptionGapMessage": "Esta gravação não pode ser enviada até você adicionar uma descrição mais longa.",

@@ -17,10 +17,9 @@ _SendState _stateOf(String status) => switch (status) {
 };
 
 class UploadStatusBadge extends StatelessWidget {
-  const UploadStatusBadge({super.key, required this.status, this.percent});
+  const UploadStatusBadge({super.key, required this.status});
 
   final String status;
-  final int? percent;
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +32,7 @@ class UploadStatusBadge extends StatelessWidget {
         color: colors.info,
         label: l10n.sendState_sent,
       ),
-      _SendState.sending => _word(
-        context,
-        percent == null
-            ? l10n.sendState_sending
-            : l10n.sendState_sendingPercent(percent!),
-        colors.deep,
-      ),
+      _SendState.sending => _word(context, l10n.sendState_sending, colors.deep),
       _SendState.onDevice => _word(
         context,
         l10n.sendState_onDevice,

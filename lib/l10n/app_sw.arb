@@ -250,7 +250,6 @@
   "sendState_sending": "Inatumwa",
   "sendState_sent": "Imetumwa",
   "sendState_needsYou": "Inakuhitaji",
-  "sendState_sendingPercent": "Inatumwa {percent}%",
   "recording_statusNameConflict": "Mgongano wa jina",
   "recording_statusDescriptionTooShort": "Maelezo ni mafupi sana",
   "recording_descriptionGapMessage": "Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.",

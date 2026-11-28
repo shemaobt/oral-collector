@@ -10,7 +10,7 @@ Path: @/lib/shared/widgets
   [app_shell/](app_shell), and
   [screen_header.dart](screen_header.dart)'s flat `AppBar`/`SliverAppBar`),
   list/section affordances ([empty_state.dart](empty_state.dart),
-  `section_header.dart`, `status_banner.dart`), send-state signs and words
+  `section_header.dart`, `status_banner.dart`), status chips
   ([upload_status_badge.dart](upload_status_badge.dart),
   `sync_status_indicator.dart`), and dialogs/sheets/inputs.
 - A screen is built only from these pieces and the tokens, and a new piece
@@ -59,8 +59,7 @@ Path: @/lib/shared/widgets
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
-  animation (`LeavingRow`'s fade and height). Nothing spins: the upload state
-  is a sign or a word.
+  animation (`LeavingRow`'s fade and height). Nothing spins.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.

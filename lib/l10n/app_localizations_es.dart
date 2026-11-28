@@ -740,11 +740,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sendState_needsYou => 'Te necesita';
 
   @override
-  String sendState_sendingPercent(int percent) {
-    return 'Enviando $percent%';
-  }
-
-  @override
   String get recording_statusNameConflict => 'Conflicto de nombre';
 
   @override
