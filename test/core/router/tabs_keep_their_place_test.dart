@@ -160,6 +160,19 @@ void main() {
     expect(refreshes, 2);
   });
 
+  testWidgets('coming back to Home keeps its genres on screen', (tester) async {
+    await _pump(
+      tester,
+      at: '/home',
+      overrides: [genreNotifierProvider.overrideWith(_OneGenre.new)],
+    );
+    await _tapTab(tester, 'Recordings');
+    await _tapTab(tester, 'Home');
+
+    expect(find.text('Folk Tale'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
   testWidgets('coming back to Projects shows the projects it gained', (
     tester,
   ) async {
