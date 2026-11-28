@@ -28,21 +28,17 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
   static const double _mainButtonSize = 62;
 
   late final AnimationController _controller;
-  late final Animation<double> _expandAnimation;
+  late final CurvedAnimation _expandAnimation;
   late final Animation<Offset> _slideAnimation;
   bool _isOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: DurationScale.ms200,
-    );
+    _controller = AnimationController(vsync: this);
     _expandAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOut,
-      reverseCurve: Curves.easeIn,
+      curve: MotionScale.enter,
     );
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.25),
@@ -51,7 +47,18 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final motion = context.motion;
+    _controller.duration = motion.fast;
+    _expandAnimation
+      ..curve = motion.enter
+      ..reverseCurve = motion.leave;
+  }
+
+  @override
   void dispose() {
+    _expandAnimation.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -146,7 +153,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
               ],
             ),
             child: AnimatedSwitcher(
-              duration: DurationScale.ms200,
+              duration: context.motion.fast,
               child: Icon(
                 _isOpen ? LucideIcons.x : LucideIcons.mic,
                 key: ValueKey(_isOpen),
