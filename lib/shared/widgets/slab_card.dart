@@ -117,8 +117,11 @@ class _Row extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    Visibility.maintain(
+                    Visibility(
                       visible: false,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
                       child: BrushNumber(
                         widest,
                         height: _countHeight,
