@@ -206,6 +206,18 @@ Path: @/lib/shared/widgets
   has no style of its own. `onCard` gives the on-a-card field.
   `enabled: false` switches it off.
 
+- **`AppTick`, `AppChoice` and `AppSwitch`** ([app_tick.dart](app_tick.dart),
+  [app_choice.dart](app_choice.dart), [app_switch.dart](app_switch.dart)) are the
+  kit's hand-cut tick (26 square, `check` sign when marked), choose-one (a
+  hand-drawn ring with a disc inside when chosen, no printed shadow) and switch
+  (52 × 30, knob at the start edge off, the end edge on). The tick and the
+  switch paint the printed shadow unless switched off (`onChanged` null, then
+  40%) or inside a piece that paints one. The tick and choose-one take an
+  optional `label` that is tappable and read once; the knob and the label follow
+  the reading direction. The state changes at once, with no slide. No screen
+  uses them yet; the theme's Material switch and tick take the kit's colours
+  until each screen moves.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
