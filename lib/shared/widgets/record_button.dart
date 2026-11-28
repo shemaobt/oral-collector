@@ -36,11 +36,16 @@ class _RecordButtonState extends State<RecordButton>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: DurationScale.ms1200,
+      duration: MotionScale.recordPulse,
     );
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _pulseController, curve: MotionScale.loop),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _syncAnimation();
   }
 
@@ -53,12 +58,11 @@ class _RecordButtonState extends State<RecordButton>
   }
 
   void _syncAnimation() {
-    if (widget.state == RecordButtonState.recording) {
-      _pulseController.repeat(reverse: true);
-    } else {
-      _pulseController.stop();
-      _pulseController.reset();
-    }
+    _pulseController.loopUnless(
+      still:
+          widget.state != RecordButtonState.recording || context.motion.still,
+      reverse: true,
+    );
   }
 
   @override

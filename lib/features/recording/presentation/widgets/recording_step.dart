@@ -613,7 +613,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ref.read(noiseSensitivityProvider.notifier).state = value;
       },
       child: AnimatedContainer(
-        duration: DurationScale.ms200,
+        duration: context.motion.fast,
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s12,
           vertical: SpacingScale.s8,
@@ -658,7 +658,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             bottom: 16,
             child: AnimatedOpacity(
               opacity: recState.showCheckpointToast ? 1.0 : 0.0,
-              duration: DurationScale.ms250,
+              duration: context.motion.fast,
+              curve: context.motion.enter,
               child: _CheckpointChip(
                 label: l10n.recording_savedAt(formatElapsed(checkpoint)),
               ),
@@ -909,10 +910,13 @@ class _PulsingDotState extends State<_PulsingDot>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: DurationScale.ms900,
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: MotionScale.blink);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _controller.loopUnless(still: context.motion.still, reverse: true, rest: 1);
   }
 
   @override

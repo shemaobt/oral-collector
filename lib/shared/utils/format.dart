@@ -82,14 +82,13 @@ String formatElapsed(Duration d) {
   return '$hours:$minutes:$seconds';
 }
 
-String formatDurationFromDuration(Duration duration) {
-  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+String formatClock(Duration duration) {
   final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
   if (duration.inHours > 0) {
-    final hours = duration.inHours.toString();
-    return '$hours:$minutes:$seconds';
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    return '${duration.inHours}:$minutes:$seconds';
   }
-  return '$minutes:$seconds';
+  return '${duration.inMinutes}:$seconds';
 }
 
 String formatFileSize(int bytes) {

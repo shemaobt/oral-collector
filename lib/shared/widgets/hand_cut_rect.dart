@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
+const Offset markShadowOffset = Offset(2, 3);
+
 Path handCutRectOutline(Size size, double radius) {
   final w = size.width;
   final h = size.height;

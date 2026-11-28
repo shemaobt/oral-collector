@@ -5,7 +5,7 @@ import '../../core/theme/app_shadows.dart';
 import 'brush_sign.dart';
 import 'hand_cut_button_style.dart';
 
-export 'hand_cut_button_style.dart' show HandCutButtonTone;
+export 'hand_cut_button_style.dart' show HandCutButtonSize, HandCutButtonTone;
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -14,16 +14,19 @@ class AppButton extends StatelessWidget {
     required this.onPressed,
     this.sign,
     this.tone = HandCutButtonTone.ink,
+    this.size = HandCutButtonSize.regular,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final Sign? sign;
   final HandCutButtonTone tone;
+  final HandCutButtonSize size;
 
   @override
   Widget build(BuildContext context) {
     final sign = this.sign;
+    final small = size == HandCutButtonSize.small;
     return FilledButton(
       onPressed: onPressed,
       style: handCutButtonStyle(
@@ -31,13 +34,15 @@ class AppButton extends StatelessWidget {
         PrintedShadows.of(context),
         tone,
         Theme.of(context).textTheme.labelLarge,
+        size: size,
+        dark: Theme.of(context).brightness == Brightness.dark,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (sign != null) ...[
-            BrushSign(sign, size: 18),
-            const SizedBox(width: 10),
+            BrushSign(sign, size: small ? 14 : 18),
+            SizedBox(width: small ? 7 : 10),
           ],
           Flexible(child: Text(label)),
         ],
