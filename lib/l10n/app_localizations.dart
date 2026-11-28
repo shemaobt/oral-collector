@@ -1460,6 +1460,12 @@ abstract class AppLocalizations {
   /// **'Needs you'**
   String get sendState_needsYou;
 
+  /// No description provided for @sendState_sendingPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending {percent}%'**
+  String sendState_sendingPercent(int percent);
+
   /// No description provided for @recording_statusNameConflict.
   ///
   /// In en, this message translates to:

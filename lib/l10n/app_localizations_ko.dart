@@ -715,6 +715,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sendState_needsYou => '확인 필요';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return '보내는 중 $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => '이름 충돌';
 
   @override
