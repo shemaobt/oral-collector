@@ -31,6 +31,8 @@ import 'package:oral_collector/features/storyteller/domain/entities/storyteller.
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_state.dart';
 import 'package:oral_collector/features/storyteller/presentation/storyteller_form_screen.dart';
+import 'package:oral_collector/shared/widgets/app_shell/floating_nav_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/router_app.dart';
 
@@ -199,6 +201,28 @@ void main() {
 
     expect(addressOf(app), '/recordings');
     expect(find.byType(RecordingCard), findsNothing);
+  });
+
+  testWidgets('Recordings returns to the open recording after a visit to Home, '
+      'and its own tab goes back to the list', (tester) async {
+    SharedPreferences.setMockInitialValues({'app_locale': 'en'});
+    final app = await _pumpWeb(tester, at: '/recording/r1');
+    Future<void> tapTab(IconData icon) async {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(FloatingNavBar),
+          matching: find.byIcon(icon),
+        ),
+      );
+      await settle(tester);
+    }
+
+    await tapTab(LucideIcons.layoutGrid);
+    await tapTab(LucideIcons.listMusic);
+    expect(addressOf(app), '/recording/r1');
+
+    await tapTab(LucideIcons.listMusic);
+    expect(addressOf(app), '/recordings');
   });
 
   testWidgets('back from the editor returns to its recording', (tester) async {

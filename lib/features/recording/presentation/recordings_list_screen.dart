@@ -70,15 +70,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll);
-    final gid = widget.initialGenreId;
-    final sid = widget.initialSubcategoryId;
     final flag = widget.initialReviewFlag;
     Future.microtask(() {
       if (!mounted) return;
       final notifier = ref.read(recordingsListNotifierProvider.notifier);
-      if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
-      if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
-      // Applied only when the route names one, exactly like the two above: a
+      _applyGenreFromAddress();
+      // Applied only when the route names one, exactly like the genre: a
       // pendency the user picked in the sheet is not in the URL, and clearing
       // it here would make it the one filter that cannot survive leaving this
       // screen and coming back. Route changes are `didUpdateWidget`'s job,
@@ -105,10 +102,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     // filter the user picked from the sheet or a chip is not in the URL, and
     // keying this on the route alone would wipe it on any rebuild.
     //
-    // Only the pendency: `initialGenreId`/`initialSubcategoryId` diverge the
-    // same way in principle, but no live path produces one — the only route
-    // that names a genre comes from a screen this one is never rebuilt from —
-    // so following them here would be untestable code for a hypothetical.
+    if (widget.initialGenreId != oldWidget.initialGenreId ||
+        widget.initialSubcategoryId != oldWidget.initialSubcategoryId) {
+      Future.microtask(() {
+        if (mounted) _applyGenreFromAddress();
+      });
+    }
     if (widget.initialReviewFlag == oldWidget.initialReviewFlag) return;
     final flag = widget.initialReviewFlag;
     Future.microtask(() {
@@ -119,6 +118,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
             .setReviewFlagFilter(flag),
       );
     });
+  }
+
+  void _applyGenreFromAddress() {
+    final notifier = ref.read(recordingsListNotifierProvider.notifier);
+    final gid = widget.initialGenreId;
+    final sid = widget.initialSubcategoryId;
+    if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
+    if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
   }
 
   @override

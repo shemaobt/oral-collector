@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/router/app_router.dart';
 import 'package:oral_collector/features/genre/domain/entities/genre.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_state.dart';
@@ -124,6 +125,41 @@ void main() {
     await _tapTab(tester, 'Home');
 
     expect(refreshes, 2);
+  });
+
+  testWidgets('a genre opens its recordings filtered on a list kept alive', (
+    tester,
+  ) async {
+    final server = _GrowingServer()
+      ..recordings.addAll([
+        serverRecording,
+        ServerRecording(
+          id: 'r2',
+          projectId: 'p1',
+          genreId: 'g1',
+          subcategoryId: 's1',
+          title: 'The drum that spoke',
+          durationSeconds: 30,
+          fileSizeBytes: 1024,
+          format: 'm4a',
+          uploadStatus: 'uploaded',
+          cleaningStatus: 'none',
+          recordedAt: DateTime(2026, 1, 2),
+        ),
+      ]);
+    final app = await _pump(
+      tester,
+      at: '/recordings',
+      overrides: [recordingApiRepositoryProvider.overrideWithValue(server)],
+    );
+    expect(find.byType(RecordingCard), findsNWidgets(2));
+    await _tapTab(tester, 'Home');
+
+    app.read(routerProvider).go('/recordings?genreId=g1&subcategoryId=s1');
+    await settle(tester);
+
+    expect(find.byType(RecordingCard), findsOneWidget);
+    expect(find.text('The drum that spoke'), findsOneWidget);
   });
 
   testWidgets('Record starts at its first step after a visit to Home', (
