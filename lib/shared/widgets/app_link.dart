@@ -11,19 +11,28 @@ class AppLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    final base = Theme.of(context).textTheme.labelLarge?.copyWith(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      decoration: TextDecoration.underline,
+      decorationThickness: 1.5,
+    );
     return TextButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        foregroundColor: c.foreground,
-        disabledForegroundColor: c.secondary,
-        minimumSize: const Size(0, 44),
-        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          decoration: TextDecoration.underline,
-          decorationThickness: 1.5,
-        ),
-      ),
+      style:
+          TextButton.styleFrom(
+            foregroundColor: c.foreground,
+            disabledForegroundColor: c.secondary,
+            minimumSize: const Size(0, 44),
+          ).copyWith(
+            textStyle: WidgetStateProperty.resolveWith(
+              (states) => base?.copyWith(
+                decorationColor: states.contains(WidgetState.disabled)
+                    ? c.secondary
+                    : c.foreground,
+              ),
+            ),
+          ),
       child: Text(label),
     );
   }
