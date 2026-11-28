@@ -80,7 +80,9 @@ Widget pressLookBackground(
   Widget? child,
 ) => PointerPress(
   builder: (context, down) => PressLook(
-    down: down && !states.contains(WidgetState.disabled),
+    down:
+        (down || states.contains(WidgetState.pressed)) &&
+        !states.contains(WidgetState.disabled),
     child: child!,
   ),
 );
