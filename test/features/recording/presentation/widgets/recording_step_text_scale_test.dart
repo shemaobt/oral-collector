@@ -86,7 +86,7 @@ void main() {
 
   testWidgets('timer stays present at 2.0x', (tester) async {
     await _pumpReady(tester, 2.0);
-    expect(find.text('00:00:00'), findsOneWidget);
+    expect(find.bySemanticsLabel('0:00'), findsOneWidget);
     await _unmount(tester);
   });
 }

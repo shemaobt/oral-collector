@@ -12,6 +12,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
 import '../../../../shared/widgets/brush_sign.dart';
 import '../../../../shared/widgets/record_button.dart';
+import '../../../../shared/widgets/recording_clock.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
 import '../notifiers/input_device_notifier.dart';
@@ -298,18 +299,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.center,
-                              child: Text(
-                                formatElapsed(recState.elapsed),
-                                maxLines: 1,
-                                softWrap: false,
-                                style: theme.textTheme.displayLarge?.copyWith(
-                                  color: colors.foreground,
-                                  fontWeight: FontWeight.w200,
-                                  fontSize: 56,
-                                  fontFeatures: [
-                                    const FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                              child: RecordingClock(
+                                elapsed: recState.elapsed,
+                                paused: recState.isPaused,
                               ),
                             ),
                           ),
@@ -650,8 +642,6 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             amplitudeStream: recState.amplitudeStream,
             isPaused: recState.isPaused,
             height: 200,
-            barColor: colors.foreground,
-            cursorColor: colors.accent,
           ),
         ),
         if (checkpoint != null)

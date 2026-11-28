@@ -56,6 +56,10 @@ Path: @/lib/shared/widgets
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
+- [recording_clock.dart](recording_clock.dart) is the recording time in brush
+  numbers (`formatClock`, hours only from one hour on), `count` colour, `secondary`
+  when `paused`, `height` 72 unless asked. Tabular: every digit has the widest
+  digit's slot, so the width holds from one second to the next.
 - [sound_strokes.dart](sound_strokes.dart) paints the kit's strokes of sound
   in `color` behind its `child` (a disc of `diameter`) while `sounding`: a box
   138% of the disc, centred, under the child, no taps, no semantics, still. Not

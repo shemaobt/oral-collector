@@ -11,14 +11,12 @@ class ScrollingWaveform extends StatefulWidget {
     this.amplitudeStream,
     this.height = 200,
     this.barColor,
-    this.cursorColor,
     this.isPaused = false,
   });
 
   final Stream<double>? amplitudeStream;
   final double height;
   final Color? barColor;
-  final Color? cursorColor;
   final bool isPaused;
 
   @override
@@ -81,8 +79,8 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
             painter: _ScrollingWaveformPainter(
               amplitudes: _amplitudes,
               revision: _revision,
-              barColor: widget.barColor ?? AppColors.black,
-              cursorColor: widget.cursorColor ?? AppColors.of(context).accent,
+              barColor: widget.barColor ?? AppColors.of(context).mic,
+              isPaused: widget.isPaused,
             ),
           );
         },
@@ -123,16 +121,16 @@ class _ScrollingWaveformPainter extends CustomPainter {
     required this.amplitudes,
     required this.revision,
     required this.barColor,
-    required this.cursorColor,
+    required this.isPaused,
   });
 
   final _AmplitudeRingBuffer amplitudes;
   final int revision;
   final Color barColor;
-  final Color cursorColor;
+  final bool isPaused;
 
-  static const double barWidth = 2.5;
-  static const double barGap = 1.5;
+  static const double barWidth = 4;
+  static const double barGap = 3;
   static const double slotWidth = barWidth + barGap;
 
   @override
@@ -140,54 +138,23 @@ class _ScrollingWaveformPainter extends CustomPainter {
     final centerX = size.width * 0.55;
     final centerY = size.height / 2;
 
-    final guidePaint = Paint()
-      ..color = barColor.withValues(alpha: 0.04)
-      ..strokeWidth = 0.5;
-    canvas.drawLine(
-      Offset(0, size.height * 0.25),
-      Offset(size.width, size.height * 0.25),
-      guidePaint,
-    );
-    canvas.drawLine(
-      Offset(0, size.height * 0.75),
-      Offset(size.width, size.height * 0.75),
-      guidePaint,
-    );
-
-    final baselinePaint = Paint()
-      ..color = barColor.withValues(alpha: 0.08)
-      ..strokeWidth = 1;
-    canvas.drawLine(
-      Offset(0, centerY),
-      Offset(size.width, centerY),
-      baselinePaint,
-    );
-
     final maxBars = (centerX / slotWidth).floor();
     final startIdx = amplitudes.length > maxBars
         ? amplitudes.length - maxBars
         : 0;
     final visibleCount = amplitudes.length - startIdx;
-    final fadeZone = size.width * 0.12;
+    final paint = Paint()
+      ..color = isPaused ? barColor.withValues(alpha: 0.35) : barColor;
 
     for (var i = 0; i < visibleCount; i++) {
       final amp = amplitudes[startIdx + i];
       final x = centerX - (visibleCount - i) * slotWidth;
       if (x < -barWidth) continue;
 
-      final recency = visibleCount > 1 ? i / (visibleCount - 1) : 1.0;
-      double fade = 1.0;
-      if (x < fadeZone) fade = (x / fadeZone).clamp(0.0, 1.0);
-      final alpha = ((0.35 + 0.65 * recency) * fade).clamp(0.0, 1.0);
-
       final barHeight = (amp * size.height * 0.85).clamp(
         2.0,
         size.height * 0.85,
       );
-      final paint = Paint()
-        ..color = barColor.withValues(alpha: alpha)
-        ..style = PaintingStyle.fill;
-
       final rect = RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(x + barWidth / 2, centerY),
@@ -198,42 +165,12 @@ class _ScrollingWaveformPainter extends CustomPainter {
       );
       canvas.drawRRect(rect, paint);
     }
-
-    final cursorGradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        cursorColor.withValues(alpha: 0),
-        cursorColor,
-        cursorColor,
-        cursorColor.withValues(alpha: 0),
-      ],
-      stops: const [0, 0.12, 0.88, 1.0],
-    );
-    final cursorRect = Rect.fromLTWH(centerX - 1, 0, 2, size.height);
-    canvas.drawRect(
-      cursorRect,
-      Paint()..shader = cursorGradient.createShader(cursorRect),
-    );
-
-    final indicatorPath = Path()
-      ..moveTo(centerX - 5, 0)
-      ..lineTo(centerX + 5, 0)
-      ..lineTo(centerX, 7)
-      ..close();
-    canvas.drawPath(indicatorPath, Paint()..color = cursorColor);
-
-    canvas.drawCircle(
-      Offset(centerX, 4),
-      6,
-      Paint()..color = cursorColor.withValues(alpha: 0.12),
-    );
   }
 
   @override
   bool shouldRepaint(covariant _ScrollingWaveformPainter old) {
     return old.revision != revision ||
         old.barColor != barColor ||
-        old.cursorColor != cursorColor;
+        old.isPaused != isPaused;
   }
 }
