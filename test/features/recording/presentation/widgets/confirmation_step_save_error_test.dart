@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
@@ -28,6 +29,8 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifie
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../support/notice_fill.dart';
 
 class _ThrowingRecordingRepository implements LocalRecordingRepository {
   @override
@@ -188,6 +191,13 @@ void main() {
 
       expect(find.byType(SnackBar), findsNothing);
       expect(find.textContaining('Upload failed'), findsOneWidget);
+      expect(
+        noticeFill(
+          tester,
+          tester.widget<Text>(find.textContaining('Upload failed')).data!,
+        ),
+        AppColors.light.error,
+      );
 
       final saveButton = tester.widget<ElevatedButton>(
         find.byType(ElevatedButton),

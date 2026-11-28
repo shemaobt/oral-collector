@@ -19,6 +19,9 @@ import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/widgets/app_shell.dart';
 import 'package:oral_collector/shared/widgets/app_shell/floating_nav_bar.dart';
 import 'package:oral_collector/shared/widgets/app_shell/web_sidebar.dart';
+import 'package:oral_collector/shared/widgets/brush_sign.dart';
+
+import '../../support/notice_fill.dart';
 
 class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
@@ -363,7 +366,14 @@ void main() {
         find.text('Saving your recording — please wait a moment.'),
         findsOneWidget,
       );
-      expect(find.byType(SnackBar), findsNothing);
+      expect(
+        noticeFill(tester, 'Saving your recording — please wait a moment.'),
+        AppColors.light.primary,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is BrushSign && w.sign == Sign.info),
+        findsOneWidget,
+      );
       // Did NOT navigate
       expect(find.text('record page'), findsNothing);
       expect(find.text('home page'), findsOneWidget);
@@ -396,7 +406,14 @@ void main() {
         find.text('Saving your recording — please wait a moment.'),
         findsOneWidget,
       );
-      expect(find.byType(SnackBar), findsNothing);
+      expect(
+        noticeFill(tester, 'Saving your recording — please wait a moment.'),
+        AppColors.light.primary,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is BrushSign && w.sign == Sign.info),
+        findsOneWidget,
+      );
       expect(find.text('record page'), findsNothing);
     },
   );

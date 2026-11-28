@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/widgets/brush_sign.dart';
 import 'package:oral_collector/shared/widgets/sync_status_indicator.dart';
+
+import '../../support/notice_fill.dart';
 
 class _FakeSyncNotifier extends SyncNotifier {
   _FakeSyncNotifier(this._initial);
@@ -115,7 +119,14 @@ void main() {
       await tapChip(tester);
 
       expect(find.text(l10n.sync_waitingForWifi), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
+      expect(
+        noticeFill(tester, l10n.sync_waitingForWifi),
+        AppColors.light.primary,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is BrushSign && w.sign == Sign.info),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a queue that runs says nothing', (tester) async {
