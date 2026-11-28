@@ -19,6 +19,7 @@ import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
+import '../../../shared/widgets/updating_line.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
@@ -264,267 +265,277 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
     final fabOffset = AppShell.fabBottomOffset(context);
 
-    return Scaffold(
-      floatingActionButton: activeProject != null
-          ? Padding(
-              padding: EdgeInsets.only(bottom: fabOffset - 70),
-              child: const _ImportFab(),
-            )
-          : null,
-      body: activeProject == null
-          ? EmptyState(
-              icon: LucideIcons.folderOpen,
-              title: l10n.recordings_selectProject,
-              description: l10n.recordings_selectProjectSubtitle,
-              action: FilledButton.icon(
-                onPressed: () => context.go('/projects'),
-                icon: const Icon(LucideIcons.folderOpen, size: 18),
-                label: Text(l10n.home_browseProjects),
-              ),
-            )
-          : CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                ScreenHeaderSliver(
-                  title: l10n.recordings_title,
-                  subtitle: l10n.recordings_subtitle,
-                  actions: [
-                    const SyncStatusIndicator(),
-                    FiltersIconButton(
-                      count: listState.activeFilterCount,
-                      onTap: () => showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        useRootNavigator: true,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(RadiusScale.r20),
+    return UpdatingLine(
+      checking: listState.isRefreshing,
+      child: Scaffold(
+        floatingActionButton: activeProject != null
+            ? Padding(
+                padding: EdgeInsets.only(bottom: fabOffset - 70),
+                child: const _ImportFab(),
+              )
+            : null,
+        body: activeProject == null
+            ? EmptyState(
+                icon: LucideIcons.folderOpen,
+                title: l10n.recordings_selectProject,
+                description: l10n.recordings_selectProjectSubtitle,
+                action: FilledButton.icon(
+                  onPressed: () => context.go('/projects'),
+                  icon: const Icon(LucideIcons.folderOpen, size: 18),
+                  label: Text(l10n.home_browseProjects),
+                ),
+              )
+            : CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  ScreenHeaderSliver(
+                    title: l10n.recordings_title,
+                    subtitle: l10n.recordings_subtitle,
+                    actions: [
+                      const SyncStatusIndicator(),
+                      FiltersIconButton(
+                        count: listState.activeFilterCount,
+                        onTap: () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          useSafeArea: true,
+                          useRootNavigator: true,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(RadiusScale.r20),
+                            ),
+                          ),
+                          builder: (_) => RecordingsFilterSheet(
+                            projectId: activeProject.id,
                           ),
                         ),
-                        builder: (_) =>
-                            RecordingsFilterSheet(projectId: activeProject.id),
+                      ),
+                    ],
+                  ),
+
+                  if (isOffline)
+                    SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
+
+                  const SliverToBoxAdapter(child: PendingWebUploadsBanner()),
+
+                  SliverToBoxAdapter(
+                    child: _SearchField(
+                      controller: _searchController,
+                      hasQuery: listState.searchQuery.isNotEmpty,
+                      onChanged: (value) => ref
+                          .read(recordingsListNotifierProvider.notifier)
+                          .setSearchQuery(value),
+                      onClear: () {
+                        _searchController.clear();
+                        ref
+                            .read(recordingsListNotifierProvider.notifier)
+                            .setSearchQuery('');
+                      },
+                    ),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: PendencyFilterChips(projectId: activeProject.id),
+                  ),
+
+                  const SliverToBoxAdapter(child: ActiveFilterChips()),
+
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      // Tighter than it was, to the design package's 14/16/6 —
+                      // snapped to the 4px scale, which is what closes the gap
+                      // the chip row opened above it.
+                      padding: const EdgeInsets.fromLTRB(
+                        SpacingScale.s16,
+                        SpacingScale.s12,
+                        SpacingScale.s16,
+                        SpacingScale.s4,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            listState.hasMore
+                                ? '${filtered.length}+'
+                                : l10n.recordings_count(filtered.length),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.secondary,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const Spacer(),
+                          if ((listState.selectedFilter ==
+                                      StatusFilter.pending ||
+                                  listState.selectedFilter ==
+                                      StatusFilter.all) &&
+                              hasRetryableFailedUploads(filtered) &&
+                              ref
+                                  .watch(roleNotifierProvider.notifier)
+                                  .canManageProject(activeProject.id))
+                            TextButton.icon(
+                              onPressed: _retryFailedUploads,
+                              icon: Icon(
+                                LucideIcons.refreshCw,
+                                size: 14,
+                                color: colors.primary,
+                              ),
+                              label: Text(
+                                l10n.recordings_retryFailedUploads,
+                                style: TextStyle(
+                                  color: colors.primary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s8,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-
-                if (isOffline)
-                  SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
-
-                const SliverToBoxAdapter(child: PendingWebUploadsBanner()),
-
-                SliverToBoxAdapter(
-                  child: _SearchField(
-                    controller: _searchController,
-                    hasQuery: listState.searchQuery.isNotEmpty,
-                    onChanged: (value) => ref
-                        .read(recordingsListNotifierProvider.notifier)
-                        .setSearchQuery(value),
-                    onClear: () {
-                      _searchController.clear();
-                      ref
-                          .read(recordingsListNotifierProvider.notifier)
-                          .setSearchQuery('');
-                    },
                   ),
-                ),
 
-                SliverToBoxAdapter(
-                  child: PendencyFilterChips(projectId: activeProject.id),
-                ),
-
-                const SliverToBoxAdapter(child: ActiveFilterChips()),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    // Tighter than it was, to the design package's 14/16/6 —
-                    // snapped to the 4px scale, which is what closes the gap
-                    // the chip row opened above it.
-                    padding: const EdgeInsets.fromLTRB(
-                      SpacingScale.s16,
-                      SpacingScale.s12,
-                      SpacingScale.s16,
-                      SpacingScale.s4,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          listState.hasMore
-                              ? '${filtered.length}+'
-                              : l10n.recordings_count(filtered.length),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.secondary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const Spacer(),
-                        if ((listState.selectedFilter == StatusFilter.pending ||
-                                listState.selectedFilter == StatusFilter.all) &&
-                            hasRetryableFailedUploads(filtered) &&
-                            ref
-                                .watch(roleNotifierProvider.notifier)
-                                .canManageProject(activeProject.id))
-                          TextButton.icon(
-                            onPressed: _retryFailedUploads,
-                            icon: Icon(
-                              LucideIcons.refreshCw,
-                              size: 14,
-                              color: colors.primary,
-                            ),
-                            label: Text(
-                              l10n.recordings_retryFailedUploads,
-                              style: TextStyle(
-                                color: colors.primary,
-                                fontSize: 12,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: SpacingScale.s8,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                listState.isLoading
-                    ? const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    : filtered.isEmpty
-                    ? SliverFillRemaining(
-                        child: pendencyUnanswered
-                            ? _PendencyFilterUnanswered(offline: isOffline)
-                            : ImportDropZone(
-                                onFilesDropped: (files) {
-                                  if (!mounted) return;
-                                  context.push<void>(
-                                    '/import-file',
-                                    extra: files,
-                                  );
-                                },
-                                hoverLabel: l10n.import_dropHint,
-                                child: EmptyState(
-                                  icon: LucideIcons.mic,
-                                  title: l10n.recordings_noRecordings,
-                                  description:
-                                      ImportDropZone.isSupportedPlatform
-                                      ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
-                                      : l10n.recordings_noRecordingsSubtitle,
-                                ),
-                              ),
-                      )
-                    : SliverPadding(
-                        padding: EdgeInsets.fromLTRB(
-                          SpacingScale.s16,
-                          0,
-                          SpacingScale.s16,
-                          AppShell.scrollPaddingFor(context),
-                        ),
-                        sliver: SliverList.separated(
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: SpacingScale.s8),
-                          itemBuilder: (context, index) {
-                            final recording = filtered[index];
-                            final rawGenre = ref
-                                .read(genreNotifierProvider.notifier)
-                                .getGenreName(recording.genreId);
-                            final rawSubcat = recording.subcategoryId != null
-                                ? ref
-                                      .read(genreNotifierProvider.notifier)
-                                      .getSubcategoryName(
-                                        recording.subcategoryId!,
-                                      )
-                                : null;
-                            final rawReg = getRegisterName(
-                              recording.registerId,
-                            );
-                            return Dismissible(
-                              key: ValueKey(recording.id),
-                              direction: DismissDirection.endToStart,
-                              confirmDismiss: (_) async {
-                                await _deleteRecording(recording);
-                                return false;
-                              },
-                              background: Container(
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(
-                                  right: SpacingScale.s24,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.error.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r16,
+                  listState.isLoading
+                      ? const SliverFillRemaining(
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : filtered.isEmpty
+                      ? SliverFillRemaining(
+                          child: pendencyUnanswered
+                              ? _PendencyFilterUnanswered(offline: isOffline)
+                              : ImportDropZone(
+                                  onFilesDropped: (files) {
+                                    if (!mounted) return;
+                                    context.push<void>(
+                                      '/import-file',
+                                      extra: files,
+                                    );
+                                  },
+                                  hoverLabel: l10n.import_dropHint,
+                                  child: EmptyState(
+                                    icon: LucideIcons.mic,
+                                    title: l10n.recordings_noRecordings,
+                                    description:
+                                        ImportDropZone.isSupportedPlatform
+                                        ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
+                                        : l10n.recordings_noRecordingsSubtitle,
                                   ),
                                 ),
-                                child: Icon(
-                                  LucideIcons.trash2,
-                                  color: colors.error,
-                                ),
-                              ),
-                              child: RecordingCard(
-                                recording: recording,
-                                genreName: rawGenre != null
-                                    ? localizedGenreName(
-                                        l10n,
-                                        rawGenre,
-                                        id: recording.genreId,
-                                      )
-                                    : null,
-                                subcategoryName: rawSubcat != null
-                                    ? localizedSubcategoryName(
-                                        l10n,
-                                        rawSubcat,
-                                        id: recording.subcategoryId!,
-                                      )
-                                    : null,
-                                registerName: rawReg != null
-                                    ? localizedRegisterName(l10n, rawReg)
-                                    : null,
-                                onDelete: () => _deleteRecording(recording),
-                                onTap: () async {
-                                  await openScreen<void>(
-                                    context,
-                                    ref,
-                                    '/recording/${recording.id}',
-                                  );
-                                  unawaited(
-                                    ref
-                                        .read(
-                                          recordingsListNotifierProvider
-                                              .notifier,
+                        )
+                      : SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            SpacingScale.s16,
+                            0,
+                            SpacingScale.s16,
+                            AppShell.scrollPaddingFor(context),
+                          ),
+                          sliver: SliverList.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: SpacingScale.s8),
+                            itemBuilder: (context, index) {
+                              final recording = filtered[index];
+                              final rawGenre = ref
+                                  .read(genreNotifierProvider.notifier)
+                                  .getGenreName(recording.genreId);
+                              final rawSubcat = recording.subcategoryId != null
+                                  ? ref
+                                        .read(genreNotifierProvider.notifier)
+                                        .getSubcategoryName(
+                                          recording.subcategoryId!,
                                         )
-                                        .fetchRecordings(),
-                                  );
+                                  : null;
+                              final rawReg = getRegisterName(
+                                recording.registerId,
+                              );
+                              return Dismissible(
+                                key: ValueKey(recording.id),
+                                direction: DismissDirection.endToStart,
+                                confirmDismiss: (_) async {
+                                  await _deleteRecording(recording);
+                                  return false;
                                 },
-                              ),
-                            );
-                          },
+                                background: Container(
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(
+                                    right: SpacingScale.s24,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.error.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(
+                                      RadiusScale.r16,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    LucideIcons.trash2,
+                                    color: colors.error,
+                                  ),
+                                ),
+                                child: RecordingCard(
+                                  recording: recording,
+                                  genreName: rawGenre != null
+                                      ? localizedGenreName(
+                                          l10n,
+                                          rawGenre,
+                                          id: recording.genreId,
+                                        )
+                                      : null,
+                                  subcategoryName: rawSubcat != null
+                                      ? localizedSubcategoryName(
+                                          l10n,
+                                          rawSubcat,
+                                          id: recording.subcategoryId!,
+                                        )
+                                      : null,
+                                  registerName: rawReg != null
+                                      ? localizedRegisterName(l10n, rawReg)
+                                      : null,
+                                  onDelete: () => _deleteRecording(recording),
+                                  onTap: () async {
+                                    await openScreen<void>(
+                                      context,
+                                      ref,
+                                      '/recording/${recording.id}',
+                                    );
+                                    unawaited(
+                                      ref
+                                          .read(
+                                            recordingsListNotifierProvider
+                                                .notifier,
+                                          )
+                                          .fetchRecordings(),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
 
-                if (!listState.isLoading && listState.isLoadingMore)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: SpacingScale.s24),
-                      child: Center(
-                        child: SizedBox(
-                          width: SpacingScale.s24,
-                          height: SpacingScale.s24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                  if (!listState.isLoading && listState.isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: SpacingScale.s24,
+                        ),
+                        child: Center(
+                          child: SizedBox(
+                            width: SpacingScale.s24,
+                            height: SpacingScale.s24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 }

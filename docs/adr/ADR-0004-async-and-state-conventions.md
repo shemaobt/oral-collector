@@ -85,6 +85,23 @@ hits an external resource (network/server), cap concurrency with `mapBounded`
 requests. Local, fast operations (file stat/delete) may use an unbounded
 `Future.wait`.
 
+### A reload never empties the screen
+
+A screen's state tells «loading» from «refreshing»:
+
+- «Loading» means there is nothing to show yet. A reload of something already
+  shown is «refreshing»: the content stays and only the thin line of the
+  `UpdatingLine` shows.
+- With nothing in memory, the state reads the device first and shows that, then
+  asks the server.
+- A new question holds nothing: another project, or another filter that the
+  server applies. It starts as a first load.
+- What the state holds after the answer, after a failure or without internet
+  does not change.
+
+The recordings list is the first screen to follow this rule; the others take it
+in their own stages.
+
 ## Consequences
 
 - The app gains its first background-isolate usage; `compute` is the sanctioned
