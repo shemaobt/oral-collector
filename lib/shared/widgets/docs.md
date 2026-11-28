@@ -230,10 +230,13 @@ Path: @/lib/shared/widgets
   either. The focus tint shows only under keyboard navigation. `small` makes
   it 44 high; `danger` is the terracotta button, for inside the question that
   confirms and nowhere else.
-- **`AppWordButton`, `AppLink`, `AppSignButton`**
-  ([app_plain_buttons.dart](app_plain_buttons.dart)) are what is pressed with
-  no fill and no printed shadow: a word in `error` («Descartar»), an
-  underlined link («Ver todas»), and a lone sign with no ring and a touch area
-  of 44 by 44.
+- **`AppWordButton`** ([app_word_button.dart](app_word_button.dart)) is a
+  word in `error` («Descartar») with no fill and no printed shadow.
+- **`AppLink`** ([app_link.dart](app_link.dart)) is an underlined word
+  («Ver todas») with no fill. The underline sits flush with the word: Flutter
+  has no offset for it, so the kit's 4px gap is not drawn.
+- **`AppSignButton`** ([app_sign_button.dart](app_sign_button.dart)) is a lone
+  sign with no ring and a touch area of 44 by 44. `semanticLabel` names it for
+  the screen reader, which can press it.
 
 Created and maintained by Nori.

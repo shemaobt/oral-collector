@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_opacity.dart';
+import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import 'hand_cut_rect.dart';
@@ -13,8 +14,8 @@ const _clipRoom = 1.02;
 
 class HandCutButtonBorder extends OutlinedBorder {
   const HandCutButtonBorder({
-    this.radius = 14,
-    this.shadowOffset = const Offset(3, 4),
+    required this.radius,
+    required this.shadowOffset,
     super.side,
   });
 
@@ -65,7 +66,7 @@ enum HandCutButtonTone { ink, quiet, quietOnCard, danger }
 
 enum HandCutButtonSize {
   regular(52, 14, Offset(3, 4), SpacingScale.s20, 17),
-  small(44, 12, Offset(2, 3), 14, 15);
+  small(44, RadiusScale.r12, Offset(2, 3), 14, 15);
 
   const HandCutButtonSize(
     this.height,
@@ -88,7 +89,7 @@ ButtonStyle handCutButtonStyle(
   HandCutButtonTone tone,
   TextStyle? labelStyle, {
   HandCutButtonSize size = HandCutButtonSize.regular,
-  bool dark = false,
+  required bool dark,
 }) {
   final (fill, label, shadow) = switch (tone) {
     HandCutButtonTone.ink => (c.primary, c.onPrimary, shadows.ink),
@@ -96,7 +97,7 @@ ButtonStyle handCutButtonStyle(
     HandCutButtonTone.quietOnCard => (c.pale, c.foreground, shadows.paper),
     HandCutButtonTone.danger => (
       c.error,
-      dark ? c.background : AppColors.card,
+      dark ? c.background : AppColors.white,
       shadows.danger,
     ),
   };
