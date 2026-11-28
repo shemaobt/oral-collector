@@ -115,6 +115,31 @@ void _expectBrushTitles(ThemeData theme) {
 T? _on<T>(WidgetStateProperty<T>? p, [Set<WidgetState> s = const {}]) =>
     p?.resolve(s);
 
+void _expectButtons(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  const stadium = StadiumBorder();
+  final filled = theme.filledButtonTheme.style!;
+  final elevated = theme.elevatedButtonTheme.style!;
+  final outlined = theme.outlinedButtonTheme.style!;
+  final icon = theme.iconButtonTheme.style!;
+
+  for (final style in [filled, elevated]) {
+    expect(_on(style.shape), stadium);
+    expect(_on(style.minimumSize), const Size(0, 46));
+    expect(_on(style.backgroundColor), c.accent);
+    expect(_on(style.backgroundColor, {WidgetState.disabled}), c.surfaceAlt);
+  }
+
+  expect(_on(outlined.shape), stadium);
+  expect(_on(outlined.minimumSize), const Size(0, 46));
+  expect(_on(outlined.foregroundColor), c.primary);
+  expect(_on(outlined.side), BorderSide(color: c.border, width: 1.5));
+
+  expect(_on(icon.shape), const CircleBorder());
+  expect(_on(icon.fixedSize), const Size(44, 44));
+  expect(_on(icon.side), BorderSide(color: c.border, width: 1.5));
+}
+
 void _expectOverlays(ThemeData theme) {
   final c = theme.extension<AppColorSet>()!;
   final dialog = theme.dialogTheme;
@@ -181,7 +206,13 @@ void main() {
     ('darkTheme', AppTheme.darkTheme),
   ]) {
     group('$name buttons', () {
-      testWidgets('filled button label reads 17 in weight 600', (tester) async {
+      test('read as the design pills and round icon buttons', () {
+        _expectButtons(theme);
+      });
+
+      testWidgets('filled button label reads in the labelLarge role', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
@@ -192,8 +223,8 @@ void main() {
           tester.element(find.text('Go')),
         ).style;
         expect(style.fontFamily, theme.textTheme.labelLarge!.fontFamily);
-        expect(style.fontSize, 17);
-        expect(style.fontWeight, FontWeight.w600);
+        expect(style.fontSize, theme.textTheme.labelLarge!.fontSize);
+        expect(style.fontWeight, theme.textTheme.labelLarge!.fontWeight);
       });
 
       testWidgets('danger style reads the error colour', (tester) async {

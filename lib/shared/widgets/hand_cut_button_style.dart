@@ -85,17 +85,24 @@ ButtonStyle handCutButtonStyle(
     ),
     shape: const WidgetStatePropertyAll(HandCutButtonBorder()),
     elevation: const WidgetStatePropertyAll(0),
-    shadowColor: const WidgetStatePropertyAll(Colors.transparent),
-    overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+    backgroundColor: const WidgetStatePropertyAll(AppColors.transparent),
+    shadowColor: const WidgetStatePropertyAll(AppColors.transparent),
+    overlayColor: const WidgetStatePropertyAll(AppColors.transparent),
+    textStyle: const WidgetStatePropertyAll(
+      TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+    ),
     foregroundColor: WidgetStateProperty.resolveWith(labelFor),
     iconSize: const WidgetStatePropertyAll(18),
     backgroundBuilder: (context, states, child) {
       final disabled = states.contains(WidgetState.disabled);
       final printed = !disabled && !PrintedShadowScope.paints(context);
       final base = disabled ? c.tint : fill;
+      final showFocus =
+          FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
       final tint = switch (states) {
         _ when disabled => 0.0,
-        _ when states.contains(WidgetState.focused) => OpacityScale.o10,
+        _ when showFocus && states.contains(WidgetState.focused) =>
+          OpacityScale.o10,
         _ when states.contains(WidgetState.hovered) => OpacityScale.o08,
         _ => 0.0,
       };
@@ -103,6 +110,7 @@ ButtonStyle handCutButtonStyle(
         painter: HandCutRectPainter(
           fill: Color.alphaBlend(label.withValues(alpha: tint), base),
           radius: _buttonRadius,
+          shadowOffset: _shadowOffset,
           shadow: printed ? shadow : null,
         ),
         child: child,

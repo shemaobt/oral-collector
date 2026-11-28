@@ -219,3 +219,10 @@ Path: @/lib/shared/widgets
   semantics: the screen labels a group of bars («Carregando»).
 
 Created and maintained by Nori.
+
+- **`AppButton`** ([app_button.dart](app_button.dart)) is the kit's pressable
+  word, built on [hand_cut_button_style.dart](hand_cut_button_style.dart):
+  `ink` (the main one) or `quiet`; `quietOnCard` when it stands on a card. An
+  optional `sign` leads the word. Off (`onPressed: null`) it takes the `tint`
+  fill and no printed shadow; inside a `PrintedShadowScope` it paints none
+  either. The focus tint shows only under keyboard navigation.
