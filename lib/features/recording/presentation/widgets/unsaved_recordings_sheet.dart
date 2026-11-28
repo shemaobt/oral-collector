@@ -11,6 +11,7 @@ import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../notifiers/interrupted_sessions_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
@@ -25,11 +26,9 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     BuildContext context, {
     VoidCallback? onSessionResumed,
   }) {
-    return showModalBottomSheet<void>(
+    return showAppSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: false,
-      backgroundColor: AppColors.transparent,
       builder: (_) =>
           UnsavedRecordingsSheet(onSessionResumed: onSessionResumed),
     );
@@ -54,65 +53,57 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       maxChildSize: 0.92,
       expand: false,
       builder: (_, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: colors.card,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(RadiusScale.r24),
+        return CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            const SliverToBoxAdapter(child: SizedBox(height: SpacingScale.s24)),
+            SliverToBoxAdapter(
+              child: _SheetHeader(
+                count: sessions.length,
+                onDiscardAll: () =>
+                    _handleDiscardAll(context, ref, sessions.length),
+              ),
             ),
-          ),
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              SliverToBoxAdapter(child: _Handle(color: colors.border)),
-              SliverToBoxAdapter(
-                child: _SheetHeader(
-                  count: sessions.length,
-                  onDiscardAll: () =>
-                      _handleDiscardAll(context, ref, sessions.length),
-                ),
+            SliverToBoxAdapter(
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: colors.border.withValues(alpha: 0.3),
               ),
-              SliverToBoxAdapter(
-                child: Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: colors.border.withValues(alpha: 0.3),
-                ),
+            ),
+            SliverList.separated(
+              itemCount: sessions.length,
+              separatorBuilder: (_, _) => Divider(
+                height: 1,
+                thickness: 1,
+                indent: 16,
+                endIndent: 16,
+                color: colors.border.withValues(alpha: 0.25),
               ),
-              SliverList.separated(
-                itemCount: sessions.length,
-                separatorBuilder: (_, _) => Divider(
-                  height: 1,
-                  thickness: 1,
-                  indent: 16,
-                  endIndent: 16,
-                  color: colors.border.withValues(alpha: 0.25),
-                ),
-                itemBuilder: (context, index) {
-                  final l10n = AppLocalizations.of(context);
-                  final session = sessions[index];
-                  final isMostRecent = index == 0;
-                  final number = sessions.length - index;
-                  return UnsavedRecordingRow(
-                    session: session,
-                    title: isMostRecent
-                        ? l10n.recovery_mostRecent
-                        : l10n.recovery_recordingNumbered(number),
-                    showNewBadge: isMostRecent,
-                    localeTag: localeTag,
-                    onResume: () => _handleResume(context, ref, session),
-                    onSave: () => _handleSave(context, ref, session),
-                    onDiscard: () => _handleDiscardOne(context, ref, session),
-                  );
-                },
+              itemBuilder: (context, index) {
+                final l10n = AppLocalizations.of(context);
+                final session = sessions[index];
+                final isMostRecent = index == 0;
+                final number = sessions.length - index;
+                return UnsavedRecordingRow(
+                  session: session,
+                  title: isMostRecent
+                      ? l10n.recovery_mostRecent
+                      : l10n.recovery_recordingNumbered(number),
+                  showNewBadge: isMostRecent,
+                  localeTag: localeTag,
+                  onResume: () => _handleResume(context, ref, session),
+                  onSave: () => _handleSave(context, ref, session),
+                  onDiscard: () => _handleDiscardOne(context, ref, session),
+                );
+              },
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.bottom + 16,
               ),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: MediaQuery.of(context).padding.bottom + 16,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -227,29 +218,6 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       await notifier.discard(id);
     }
     if (context.mounted) Navigator.of(context).pop();
-  }
-}
-
-class _Handle extends StatelessWidget {
-  const _Handle({required this.color});
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 36,
-        height: 4,
-        margin: const EdgeInsets.only(
-          top: SpacingScale.s8,
-          bottom: SpacingScale.s4,
-        ),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
   }
 }
 

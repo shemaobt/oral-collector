@@ -18,6 +18,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_question.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/brush_sign.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/quick_notice.dart';
@@ -766,10 +767,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final steps = recordingPendencies(recording);
     if (steps.isEmpty) return;
 
-    await showModalBottomSheet<void>(
+    await showAppSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
       // The step list is frozen at open time so nothing shifts under the user's
       // finger; only what is still open is recomputed, to tick steps off as the
       // user comes back from each editor.

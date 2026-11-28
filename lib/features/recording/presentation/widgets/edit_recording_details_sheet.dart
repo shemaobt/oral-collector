@@ -4,6 +4,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/recording_description.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 
 class EditRecordingDetailsResult {
   const EditRecordingDetailsResult({
@@ -20,10 +21,9 @@ Future<EditRecordingDetailsResult?> showEditRecordingDetailsSheet(
   required String initialTitle,
   required String initialDescription,
 }) {
-  return showModalBottomSheet<EditRecordingDetailsResult>(
+  return showAppSheet<EditRecordingDetailsResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.transparent,
     builder: (ctx) => _EditRecordingDetailsSheet(
       initialTitle: initialTitle,
       initialDescription: initialDescription,
@@ -98,16 +98,10 @@ class _EditRecordingDetailsSheetState
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.background,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(RadiusScale.r20),
-          ),
-        ),
+      child: Padding(
         padding: const EdgeInsets.fromLTRB(
           SpacingScale.s20,
-          SpacingScale.s12,
+          SpacingScale.s24,
           SpacingScale.s20,
           SpacingScale.s24,
         ),
@@ -115,17 +109,6 @@ class _EditRecordingDetailsSheetState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 44,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: colors.border.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-            const SizedBox(height: SpacingScale.s16),
             Row(
               children: [
                 Expanded(
