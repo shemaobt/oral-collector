@@ -336,7 +336,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
         ? keyboardInset + 16
         : AppShell.scrollBottomPadding;
 
-    return Container(
+    return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
