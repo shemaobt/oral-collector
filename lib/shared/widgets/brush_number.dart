@@ -68,9 +68,6 @@ double _pitch(double slot, double h) => (slot / _box + _gap) * h;
 double _width(List<double> slots, double h) =>
     slots.fold<double>(0, (sum, s) => sum + _pitch(s, h)) - _gap * h;
 
-double brushNumberWidth(String text, double scaledHeight) =>
-    _width([for (final c in text.split('')) _glyphs[c]!], scaledHeight);
-
 class _NumberPainter extends CustomPainter {
   const _NumberPainter(this.glyphs, this.slots, this.color, this.height);
 

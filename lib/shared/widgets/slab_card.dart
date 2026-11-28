@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -42,14 +40,9 @@ class SlabCard extends StatelessWidget {
     final ink = colors.onPrimary;
     final actionColor = dark ? colors.pale : colors.sand;
     final line = ink.withValues(alpha: dark ? 0.22 : 0.16);
-    final scaler = MediaQuery.textScalerOf(context);
-    final slot = rows.fold<double>(
-      scaler.scale(_countSlot),
-      (widest, r) => math.max(
-        widest,
-        brushNumberWidth('${r.count}', scaler.scale(_countHeight)),
-      ),
-    );
+    final widest = rows
+        .map((r) => '${r.count}')
+        .fold<String>('', (w, c) => c.length > w.length ? c : w);
     return CustomPaint(
       painter: HandCutRectPainter(
         fill: dark ? colors.sand : colors.primary,
@@ -75,7 +68,7 @@ class SlabCard extends StatelessWidget {
               for (var i = 0; i < rows.length; i++)
                 _Row(
                   row: rows[i],
-                  countSlot: slot,
+                  widest: widest,
                   ink: ink,
                   actionColor: actionColor,
                   line: i == rows.length - 1 ? null : line,
@@ -91,14 +84,14 @@ class SlabCard extends StatelessWidget {
 class _Row extends StatelessWidget {
   const _Row({
     required this.row,
-    required this.countSlot,
+    required this.widest,
     required this.ink,
     required this.actionColor,
     required this.line,
   });
 
   final SlabRow row;
-  final double countSlot;
+  final String widest;
   final Color ink;
   final Color actionColor;
   final Color? line;
@@ -118,15 +111,27 @@ class _Row extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              SizedBox(
-                width: countSlot,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: BrushNumber(
-                    '${row.count}',
-                    height: _countHeight,
-                    color: ink,
-                  ),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.textScalerOf(context).scale(_countSlot),
+                ),
+                child: Stack(
+                  children: [
+                    Visibility.maintain(
+                      visible: false,
+                      child: BrushNumber(
+                        widest,
+                        height: _countHeight,
+                        tabular: true,
+                      ),
+                    ),
+                    BrushNumber(
+                      '${row.count}',
+                      height: _countHeight,
+                      color: ink,
+                      tabular: true,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: _gap),
