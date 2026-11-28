@@ -75,7 +75,7 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    final Widget child = builder(context);
+    final Widget child = Builder(builder: builder);
     return themes.wrap(
       Semantics(
         scopesRoute: true,

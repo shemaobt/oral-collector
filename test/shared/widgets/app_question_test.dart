@@ -125,4 +125,32 @@ void main() {
     await t.pumpAndSettle();
     expect(builds, 1);
   });
+
+  testWidgets('the builder runs under the theme captured at the caller', (
+    t,
+  ) async {
+    Color? seen;
+    await t.pumpWidget(
+      MaterialApp(
+        home: Theme(
+          data: ThemeData(primaryColor: const Color(0xFF123456)),
+          child: Builder(
+            builder: (c) => TextButton(
+              onPressed: () => showAppDialog<void>(
+                context: c,
+                builder: (ctx) {
+                  seen = Theme.of(ctx).primaryColor;
+                  return const SizedBox();
+                },
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    expect(seen, const Color(0xFF123456));
+  });
 }
