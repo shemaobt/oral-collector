@@ -89,7 +89,7 @@ Path: @/lib/core/theme
   ENG-106 seeded the on-grid swaps on the densest screens and app chrome, ENG-163
   finished the value-identical long tail, and ENG-162 then ran the
   behavior-changing pass that snapped the off-grid stragglers onto tokens (see
-  Grid policy and Migration in Things to Know). UI motion durations are migrated
+  Grid policy and Migration in Things to Know). UI motion times are migrated
   across many widgets too — those were value-identical swaps with no behavior
   change.
 - [app_theme.dart](app_theme.dart) is now itself a consumer of the `const`
@@ -112,7 +112,7 @@ Path: @/lib/core/theme
   accents live in `GenreColors` ([genre_colors.dart](genre_colors.dart)) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
-  spacing/radii/durations/opacity, the `context.*` accessor, the resolved
+  spacing/radii/opacity and motion, the `context.*` accessor, the resolved
   component radii/padding, and the `ThemeData` registration in the
   `app_*`/`context_tokens` tests).
 
@@ -244,8 +244,9 @@ SpacingScale/RadiusScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/App
   primary surface — `copyWith(color: colorScheme.onPrimary)`; `onPrimary` is the
   page tone in light and `darkBackground` in dark, the same pair as the
   `AppColorSet.onPrimary` semantic token added in ENG-374 — see above.)
-- **`MotionScale` is motion-only.** I/O timeouts, logic timers, and
-  snackbar/feedback display durations are excluded and remain raw `Duration`s.
+- **`MotionScale` is motion-only.** I/O timeouts and logic timers are excluded
+  and remain raw `Duration`s. Notice motion and display times (`noticeJump`,
+  `noticeDrop`, `noticeStay`, `noticeStayAction`) are constants of `MotionScale`.
 - **Two migration passes, two contracts.** The *value-identical* passes
   (ENG-106/ENG-163, motion durations) swapped only literals already equal to a
   token value AND the direct argument of an `EdgeInsets` / `SizedBox` /
@@ -274,8 +275,8 @@ SpacingScale/RadiusScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/App
   guarantee that no in-policy off-grid literal survives is the codemod's
   `--verify`, not a unit test.
 - **Naming.** Colors and motion are semantic (motion is named by meaning:
-  `fast` / `base` / `slow`, `enter` / `leave`); spacing/radii/durations/opacity are
-  value-encoded (`sN` / `rN` / `msN` = the literal px or ms; `oNN` = the alpha's
+  `fast` / `base` / `slow`, `enter` / `leave`); spacing/radii/opacity are
+  value-encoded (`sN` / `rN` = the literal px; `oNN` = the alpha's
   two decimal digits, e.g. `o40` = 0.4, `o06` = 0.06); no `md`/`lg` aliases
   (YAGNI).
 - **`lerp` is effectively dormant in production** — [../../main.dart](../../main.dart)
