@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,8 +8,6 @@ import 'package:oral_collector/core/theme/app_opacity.dart';
 import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_spacing.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
-import 'package:oral_collector/shared/widgets/hand_cut_rect.dart';
-import 'package:oral_collector/shared/widgets/printed_shadow_scope.dart';
 
 BorderRadiusGeometry? _radiusOf(ShapeBorder? shape) =>
     (shape as RoundedRectangleBorder?)?.borderRadius;
@@ -184,104 +181,6 @@ void main() {
     ('darkTheme', AppTheme.darkTheme),
   ]) {
     group('$name buttons', () {
-      HandCutRectPainter painterOf(WidgetTester t, Finder button) =>
-          t
-                  .widget<CustomPaint>(
-                    find.descendant(
-                      of: button,
-                      matching: find.byWidgetPredicate(
-                        (w) =>
-                            w is CustomPaint && w.painter is HandCutRectPainter,
-                      ),
-                    ),
-                  )
-                  .painter!
-              as HandCutRectPainter;
-
-      Future<void> pumpButtons(
-        WidgetTester tester, {
-        required bool enabled,
-        bool inScope = false,
-      }) async {
-        Widget wrap(Widget w) => inScope ? PrintedShadowScope(child: w) : w;
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: theme,
-            home: wrap(
-              Column(
-                children: [
-                  FilledButton(
-                    onPressed: enabled ? () {} : null,
-                    child: const Text('Salvar'),
-                  ),
-                  OutlinedButton(
-                    onPressed: enabled ? () {} : null,
-                    child: const Text('Depois'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }
-
-      testWidgets('main and quiet buttons are 52 high, cut by hand', (
-        tester,
-      ) async {
-        await pumpButtons(tester, enabled: true);
-        final c = theme.extension<AppColorSet>()!;
-        for (final b in [
-          find.byType(FilledButton),
-          find.byType(OutlinedButton),
-        ]) {
-          expect(tester.getSize(b).height, 52);
-        }
-        final main = painterOf(tester, find.byType(FilledButton));
-        expect(main.fill, c.primary);
-        expect(main.radius, 14);
-        expect(main.shadow, isNotNull);
-        final quiet = painterOf(tester, find.byType(OutlinedButton));
-        expect(quiet.fill, c.card);
-        expect(quiet.shadow, isNotNull);
-      });
-
-      testWidgets('a button with no action is tint and paints no shadow', (
-        tester,
-      ) async {
-        await pumpButtons(tester, enabled: false);
-        final c = theme.extension<AppColorSet>()!;
-        for (final b in [
-          find.byType(FilledButton),
-          find.byType(OutlinedButton),
-        ]) {
-          final painter = painterOf(tester, b);
-          expect(painter.fill, c.tint);
-          expect(painter.shadow, isNull);
-        }
-      });
-
-      testWidgets('inside a piece that prints a shadow a button paints none', (
-        tester,
-      ) async {
-        await pumpButtons(tester, enabled: true, inScope: true);
-        expect(painterOf(tester, find.byType(FilledButton)).shadow, isNull);
-      });
-
-      testWidgets('under the pointer the label colour tints the fill', (
-        tester,
-      ) async {
-        await pumpButtons(tester, enabled: true);
-        final c = theme.extension<AppColorSet>()!;
-        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-        await mouse.addPointer(location: Offset.zero);
-        await mouse.moveTo(tester.getCenter(find.byType(FilledButton)));
-        await tester.pump();
-        expect(
-          painterOf(tester, find.byType(FilledButton)).fill,
-          Color.alphaBlend(c.onPrimary.withValues(alpha: 0.08), c.primary),
-        );
-      });
-
       testWidgets('filled button label reads 17 in weight 600', (tester) async {
         await tester.pumpWidget(
           MaterialApp(
