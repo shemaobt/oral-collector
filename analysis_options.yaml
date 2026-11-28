@@ -54,10 +54,13 @@ linter:
 #     Colors.* fora de lib/core/theme/** e test/ (ENG-159/ENG-183; ADR-0002).
 #   - avoid_raw_print: bane print/debugPrint cru fora de
 #     lib/core/observability/** e test/ (ENG-190; ADR-0010).
+#   - avoid_raw_dialog: bane showDialog/showGeneralDialog/showModalBottomSheet/
+#     showBottomSheet fora de app_question.dart, app_sheet.dart e test/.
 custom_lint:
   rules:
     - avoid_hardcoded_color
     - avoid_material_colors
+    - avoid_raw_dialog
     - avoid_raw_print
 
 # Complexity/size quality gate (dart_code_linter). Thresholds are locked to the
