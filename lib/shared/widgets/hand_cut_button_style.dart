@@ -69,6 +69,7 @@ ButtonStyle handCutButtonStyle(
   AppColorSet c,
   PrintedShadows shadows,
   HandCutButtonTone tone,
+  TextStyle? labelStyle,
 ) {
   final (fill, label, shadow) = switch (tone) {
     HandCutButtonTone.ink => (c.primary, c.onPrimary, shadows.ink),
@@ -88,34 +89,65 @@ ButtonStyle handCutButtonStyle(
     backgroundColor: const WidgetStatePropertyAll(AppColors.transparent),
     shadowColor: const WidgetStatePropertyAll(AppColors.transparent),
     overlayColor: const WidgetStatePropertyAll(AppColors.transparent),
-    textStyle: const WidgetStatePropertyAll(
-      TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+    textStyle: WidgetStatePropertyAll(
+      labelStyle?.copyWith(fontSize: 17, fontWeight: FontWeight.w600) ??
+          const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
     ),
     foregroundColor: WidgetStateProperty.resolveWith(labelFor),
     iconSize: const WidgetStatePropertyAll(18),
-    backgroundBuilder: (context, states, child) {
-      final disabled = states.contains(WidgetState.disabled);
-      final printed = !disabled && !PrintedShadowScope.paints(context);
-      final base = disabled ? c.tint : fill;
-      final showFocus =
-          FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
-      final tint = switch (states) {
-        _ when disabled => 0.0,
-        _ when showFocus && states.contains(WidgetState.focused) =>
-          OpacityScale.o10,
-        _ when states.contains(WidgetState.hovered) => OpacityScale.o08,
-        _ => 0.0,
-      };
-      final painted = CustomPaint(
-        painter: HandCutRectPainter(
-          fill: Color.alphaBlend(label.withValues(alpha: tint), base),
-          radius: _buttonRadius,
-          shadowOffset: _shadowOffset,
-          shadow: printed ? shadow : null,
-        ),
-        child: child,
-      );
-      return printed ? PrintedShadowScope(child: painted) : painted;
-    },
+    backgroundBuilder: (context, states, child) => _HighlightModeBuilder(
+      builder: (traditional) {
+        final disabled = states.contains(WidgetState.disabled);
+        final printed = !disabled && !PrintedShadowScope.paints(context);
+        final base = disabled ? c.tint : fill;
+        final tint = switch (states) {
+          _ when disabled => 0.0,
+          _ when traditional && states.contains(WidgetState.focused) =>
+            OpacityScale.o10,
+          _ when states.contains(WidgetState.hovered) => OpacityScale.o08,
+          _ => 0.0,
+        };
+        final painted = CustomPaint(
+          painter: HandCutRectPainter(
+            fill: Color.alphaBlend(label.withValues(alpha: tint), base),
+            radius: _buttonRadius,
+            shadowOffset: _shadowOffset,
+            shadow: printed ? shadow : null,
+          ),
+          child: child,
+        );
+        return printed ? PrintedShadowScope(child: painted) : painted;
+      },
+    ),
+  );
+}
+
+class _HighlightModeBuilder extends StatefulWidget {
+  const _HighlightModeBuilder({required this.builder});
+
+  final Widget Function(bool traditional) builder;
+
+  @override
+  State<_HighlightModeBuilder> createState() => _HighlightModeBuilderState();
+}
+
+class _HighlightModeBuilderState extends State<_HighlightModeBuilder> {
+  @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addHighlightModeListener(_onModeChange);
+  }
+
+  @override
+  void dispose() {
+    FocusManager.instance.removeHighlightModeListener(_onModeChange);
+    super.dispose();
+  }
+
+  void _onModeChange(FocusHighlightMode mode) => setState(() {});
+
+  @override
+  Widget build(BuildContext context) => widget.builder(
+    FocusManager.instance.highlightMode == FocusHighlightMode.traditional,
   );
 }

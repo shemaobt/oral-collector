@@ -30,6 +30,7 @@ class AppButton extends StatelessWidget {
         AppColors.of(context),
         PrintedShadows.of(context),
         tone,
+        Theme.of(context).textTheme.labelLarge,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
