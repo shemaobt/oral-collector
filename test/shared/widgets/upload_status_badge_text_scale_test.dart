@@ -4,84 +4,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/shared/widgets/app_disc.dart';
+import 'package:oral_collector/shared/widgets/brush_sign.dart';
 import 'package:oral_collector/shared/widgets/upload_status_badge.dart';
 
 import '../../support/text_scale.dart';
 
-Future<void> _pump(
-  WidgetTester tester, {
-  bool compact = false,
-  double? width,
-}) async {
-  final badge = UploadStatusBadge(status: 'uploaded', compact: compact);
+Future<void> _pump(WidgetTester tester, {required String status}) async {
   await pumpAtTextScale(
     tester,
-    scale: 2.0,
-    child: Center(
-      child: width == null ? badge : SizedBox(width: width, child: badge),
-    ),
+    child: Center(child: UploadStatusBadge(status: status)),
   );
   await tester.pump();
 }
 
 void main() {
-  testWidgets(
-    'ellipsizes instead of overflowing under width pressure at 2.0x',
-    (tester) async {
-      await _pump(tester, width: 80);
-      expectNoOverflow(tester);
-    },
-  );
-
-  testWidgets('compact ellipsizes under width pressure at 2.0x', (
-    tester,
-  ) async {
-    await _pump(tester, compact: true, width: 80);
-    expectNoOverflow(tester);
-  });
-
-  testWidgets('full label stays in the tree at 2.0x', (tester) async {
-    await _pump(tester);
-    expect(find.text('Sent'), findsOneWidget);
-  });
-
-  testWidgets('failed state shows label and retry without overflow at 2.0x', (
-    tester,
-  ) async {
-    await pumpAtTextScale(
+  for (final status in ['uploaded', 'verified']) {
+    testWidgets('$status is the check sign alone, read as Sent', (
       tester,
-      scale: 2.0,
-      child: Center(
-        child: UploadStatusBadge(status: 'failed', onRetry: () {}),
-      ),
-    );
-    await tester.pump();
-    expect(find.text('Needs you'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
-    expectNoOverflow(tester);
-  });
+    ) async {
+      await _pump(tester, status: status);
+      final sign = tester.widget<BrushSign>(find.byType(BrushSign));
+      expect(sign.sign, Sign.check);
+      expect(sign.color, AppColors.light.info);
+      expect(find.bySemanticsLabel('Sent'), findsOneWidget);
+    });
+  }
 
-  group('four send states', () {
-    final cases = <String, (String, Color Function(AppColorSet))>{
-      'local': ('On the device', (c) => c.secondary),
-      'uploading': ('Sending', (c) => c.accent),
-      'uploaded': ('Sent', (c) => c.info),
-      'failed': ('Needs you', (c) => c.error),
-    };
-    for (final entry in cases.entries) {
-      testWidgets('${entry.key} reads ${entry.value.$1} in its colour', (
-        tester,
-      ) async {
-        await pumpAtTextScale(
-          tester,
-          child: Center(child: UploadStatusBadge(status: entry.key)),
-        );
-        final colors = AppColors.of(
-          tester.element(find.byType(UploadStatusBadge)),
-        );
-        final text = tester.widget<Text>(find.text(entry.value.$1));
-        expect(text.style?.color, entry.value.$2(colors));
-      });
-    }
-  });
+  for (final (status, word, color) in [
+    ('uploading', 'Sending', AppColors.light.deep),
+    ('web_uploading', 'Sending', AppColors.light.deep),
+    ('local', 'On the device', AppColors.light.secondary),
+    ('something_new', 'On the device', AppColors.light.secondary),
+  ]) {
+    testWidgets('$status is the word "$word" at 13/600, no sign', (
+      tester,
+    ) async {
+      await _pump(tester, status: status);
+      final text = tester.widget<Text>(find.text(word));
+      expect(text.style?.fontSize, 13);
+      expect(text.style?.fontWeight, FontWeight.w600);
+      expect(text.style?.color, color);
+      expect(find.byType(BrushSign), findsNothing);
+      expect(tester.binding.transientCallbackCount, 0);
+    });
+  }
+
+  for (final status in [
+    'failed',
+    'failed_conflict',
+    'failed_description',
+    'failed_missing_file',
+    'failed_refused_object',
+  ]) {
+    testWidgets('$status is the info sign on a 32 disc, read as Needs you', (
+      tester,
+    ) async {
+      await _pump(tester, status: status);
+      final disc = tester.widget<AppDisc>(find.byType(AppDisc));
+      expect(disc.tone, DiscTone.failed);
+      expect(disc.size, DiscSize.small);
+      expect(tester.widget<BrushSign>(find.byType(BrushSign)).sign, Sign.info);
+      expect(find.bySemanticsLabel('Needs you'), findsOneWidget);
+    });
+  }
 }

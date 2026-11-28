@@ -59,9 +59,7 @@ Path: @/lib/shared/widgets
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
-  animation: a `RotationTransition` while a status is in-flight (the upload badge's
-  spinner creates/disposes an `AnimationController` in
-  `didUpdateWidget`) and `LeavingRow`'s fade and height.
+  animation (`LeavingRow`'s fade and height). Nothing spins.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -110,11 +108,6 @@ Path: @/lib/shared/widgets
   - `screen_header.dart` needed no change — its title/subtitle already ellipsize
     and fit the toolbar within the 2.0× ceiling; only regression guards were
     added.
-- **`compact` font sizing uses `null` for the on-token size.** The upload badge sets
-  `fontSize` to `null` in compact mode (which keeps `labelSmall`'s native 11)
-  and only carries the off-token `13` as an explicit override — same typography
-  convention as [/lib/core/theme/docs.md](/lib/core/theme/docs.md)'s "keep
-  `copyWith(fontSize:)` when no token matches". No rendered-size change at 1.0×.
 - **The status badge is currently unused in the app.**
   `UploadStatusBadge` has no call sites yet; it was hardened as shared-library
   hygiene so it is safe when wired up.
