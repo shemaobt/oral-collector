@@ -36,6 +36,13 @@ final recordingsListNotifierProvider =
       RecordingsListNotifier.new,
     );
 
+typedef _Question = ({
+  String projectId,
+  String? userId,
+  String? storytellerId,
+  PendencyKind? reviewFlag,
+});
+
 typedef _FetchResult = ({
   List<LocalRecordingEntity> merged,
   bool hasMore,
@@ -55,6 +62,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   // Every server id the current sweep has seen, stamped with the project it
   // was collected under. Null while there is no sweep worth finishing.
   ({String projectId, Set<String> serverIds})? _sweep;
+  _Question? _answered;
 
   @override
   RecordingsListState build() {
@@ -213,18 +221,42 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     final gen = ++_fetchGeneration;
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, isRefreshing: false);
       return;
     }
 
+    final online = ref.read(syncNotifierProvider).isOnline;
+    final question = (
+      projectId: projectId,
+      userId: state.selectedUserId,
+      storytellerId: state.selectedStorytellerId,
+      reviewFlag: state.selectedReviewFlag,
+    );
+    final answered = _answered;
+    final held = answered == question && state.recordings.isNotEmpty;
+
     // Reset isLoadingMore here so a superseded in-flight loadMore that bails on
     // the generation check does not leave the flag stuck true.
-    state = state.copyWith(isLoading: true, isLoadingMore: false);
+    if (held) {
+      state = state.copyWith(
+        isLoading: false,
+        isRefreshing: online,
+        isLoadingMore: false,
+      );
+    } else {
+      state = state.copyWith(
+        recordings: const [],
+        isLoading: true,
+        isRefreshing: false,
+        isLoadingMore: false,
+      );
+    }
 
-    if (!ref.read(syncNotifierProvider).isOnline) {
+    if (!online) {
       final local = await _localFallback(projectId);
       if (gen != _fetchGeneration) return;
       _serverOffset = 0;
+      _answered = question;
       state = state.copyWith(
         recordings: local ?? state.recordings,
         isLoading: false,
@@ -239,9 +271,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       final result = await _fetchAndMerge(projectId, gen);
       if (gen != _fetchGeneration) return;
       _serverOffset = result.serverOffset;
+      _answered = question;
       state = state.copyWith(
         recordings: result.merged,
         isLoading: false,
+        isRefreshing: false,
         hasMore: result.hasMore,
         fetchFailed: false,
       );
@@ -250,9 +284,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       final local = await _localFallback(projectId);
       if (gen != _fetchGeneration) return;
       _serverOffset = 0;
+      _answered = question;
       state = state.copyWith(
         recordings: local ?? state.recordings,
         isLoading: false,
+        isRefreshing: false,
         hasMore: false,
         // The list that comes out of here is not an answer about the project.
         // Without this the screen cannot tell "nothing to do" from "I could
@@ -263,10 +299,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   }
 
   Future<void> loadMore() async {
-    // Bail while a full fetchRecordings is in flight (isLoading): it will reset
-    // the list and _serverOffset on apply, so a page fetched against the
-    // current offset would be stale and silently drop records.
-    if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
+    // Bail while a full fetchRecordings is in flight (isLoading or
+    // isRefreshing): it will reset the list and _serverOffset on apply, so a
+    // page fetched against the current offset would be stale and drop records.
+    if (state.isLoadingMore ||
+        !state.hasMore ||
+        state.isLoading ||
+        state.isRefreshing) {
+      return;
+    }
 
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;

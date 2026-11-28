@@ -18,9 +18,11 @@ import 'package:oral_collector/features/project/presentation/notifiers/project_s
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_api_repository_impl.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_notifier.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_state.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
@@ -226,6 +228,24 @@ void main() {
         );
       },
     );
+
+    test('offline never turns refreshing on, even with rows held', () async {
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => [_makeRecording('r1')]);
+      final container = makeContainer(online: false);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
+      final seen = <RecordingsListState>[];
+      container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
+
+      await notifier.fetchRecordings();
+
+      expect(seen.any((s) => s.isRefreshing), isFalse);
+      expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
+      expect(seen.last.recordings.map((r) => r.id), ['r1']);
+    });
   });
 
   group('RecordingsListNotifier.loadMore — offline', () {
@@ -394,6 +414,170 @@ void main() {
         ).called(1);
       },
     );
+  });
+
+  group('RecordingsListNotifier.fetchRecordings — refreshing', () {
+    var asked = false;
+    void serve(Future<List<ServerRecording>> Function() answer) {
+      when(
+        () => api.listRecordings(
+          any(),
+          offset: any(named: 'offset'),
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) {
+        asked = true;
+        return answer();
+      });
+    }
+
+    Completer<List<ServerRecording>> hold() {
+      final gate = Completer<List<ServerRecording>>();
+      asked = false;
+      serve(() => gate.future);
+      return gate;
+    }
+
+    RecordingsListState read(ProviderContainer c) =>
+        c.read(recordingsListNotifierProvider);
+
+    Future<ProviderContainer> holdingRows() async {
+      serve(() async => [_makeServerRecording('srv-1')]);
+      when(
+        () => local.getAllRecordings(any()),
+      ).thenAnswer((_) async => const []);
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+      return container;
+    }
+
+    test(
+      'rows held: a reload keeps them and only refreshing is true',
+      () async {
+        final container = await holdingRows();
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+        final seen = <RecordingsListState>[];
+        container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
+        final gate = hold();
+
+        final reload = notifier.fetchRecordings();
+        await pumpUntil(() => asked);
+
+        expect(read(container).recordings.map((r) => r.id), ['srv-1']);
+        expect(read(container).isLoading, isFalse);
+        expect(read(container).isRefreshing, isTrue);
+
+        gate.complete([_makeServerRecording('srv-1')]);
+        await reload;
+
+        expect(read(container).isRefreshing, isFalse);
+        expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
+      },
+    );
+
+    test('nothing in memory: loading, not refreshing', () async {
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+      final gate = hold();
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+
+      final fetch = container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+      await pumpUntil(() => asked);
+
+      expect(read(container).recordings, isEmpty);
+      expect(read(container).isLoading, isTrue);
+      expect(read(container).isRefreshing, isFalse);
+
+      gate.complete(const []);
+      await fetch;
+    });
+
+    final questionChanges =
+        <String, Future<void> Function(RecordingsListNotifier)>{
+          'user filter': (n) => n.setUserFilter('u-1'),
+          'storyteller filter': (n) => n.setStorytellerFilter('s-1'),
+          'pendency filter': (n) =>
+              n.setReviewFlagFilter(PendencyKind.storyteller),
+          'filters cleared': (n) => n.clearAllFilters(),
+        };
+    final askedBefore = <String, Future<void> Function(RecordingsListNotifier)>{
+      'filters cleared': (n) => n.setUserFilter('u-1'),
+    };
+    for (final entry in questionChanges.entries) {
+      test('${entry.key}: the list empties and loads', () async {
+        final container = await holdingRows();
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+        await askedBefore[entry.key]?.call(notifier);
+        expect(read(container).recordings, isNotEmpty);
+        final gate = hold();
+
+        final change = entry.value(notifier);
+        await pumpUntil(() => asked);
+
+        expect(read(container).recordings, isEmpty);
+        expect(read(container).isLoading, isTrue);
+        expect(read(container).isRefreshing, isFalse);
+
+        gate.complete(const []);
+        await change;
+      });
+    }
+
+    test('loadMore asks the server nothing while a refresh runs', () async {
+      final container = await holdingRows();
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      serve(
+        () async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
+      );
+      await notifier.fetchRecordings();
+      final gate = hold();
+      final reload = notifier.fetchRecordings();
+      await pumpUntil(() => asked);
+
+      await notifier.loadMore();
+
+      verifyNever(
+        () => api.listRecordings(
+          any(),
+          offset: 50,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      );
+      gate.complete(const []);
+      await reload;
+    });
+
+    test('a failed refresh ends with refreshing off and fetchFailed', () async {
+      final container = await holdingRows();
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      when(
+        () => local.getAllRecordings(any()),
+      ).thenAnswer((_) async => [_makeRecording('l-1')]);
+      serve(() async => throw Exception('boom'));
+
+      await notifier.fetchRecordings();
+
+      expect(read(container).isRefreshing, isFalse);
+      expect(read(container).fetchFailed, isTrue);
+      expect(read(container).recordings.map((r) => r.id), ['l-1']);
+    });
   });
 
   group('RecordingsListNotifier.patchRecordingTitle', () {

@@ -16,6 +16,7 @@ enum StatusFilter {
 class RecordingsListState {
   final List<LocalRecordingEntity> recordings;
   final bool isLoading;
+  final bool isRefreshing;
   final bool isLoadingMore;
   final bool hasMore;
 
@@ -44,6 +45,7 @@ class RecordingsListState {
   const RecordingsListState({
     this.recordings = const [],
     this.isLoading = true,
+    this.isRefreshing = false,
     this.isLoadingMore = false,
     this.hasMore = true,
     this.fetchFailed = false,
@@ -59,6 +61,7 @@ class RecordingsListState {
   RecordingsListState copyWith({
     List<LocalRecordingEntity>? recordings,
     bool? isLoading,
+    bool? isRefreshing,
     bool? isLoadingMore,
     bool? hasMore,
     bool? fetchFailed,
@@ -78,6 +81,7 @@ class RecordingsListState {
     return RecordingsListState(
       recordings: recordings ?? this.recordings,
       isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
       fetchFailed: fetchFailed ?? this.fetchFailed,
