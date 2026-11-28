@@ -40,7 +40,6 @@ class RoundButton extends StatelessWidget {
     this.size = RoundButtonSize.medium,
     this.tone = RoundButtonTone.action,
   }) : sign = null;
-
   const RoundButton.sign({
     super.key,
     required Sign this.sign,
