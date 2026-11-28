@@ -22,6 +22,7 @@ class AppWordButton extends StatelessWidget {
         foregroundColor: c.error,
         disabledForegroundColor: c.secondary,
         minimumSize: const Size(0, 52),
+        overlayColor: AppColors.transparent,
         backgroundBuilder: pressLookBackground,
         textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontSize: 17,

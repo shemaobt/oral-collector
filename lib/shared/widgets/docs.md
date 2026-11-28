@@ -135,7 +135,8 @@ Path: @/lib/shared/widgets
   `pressScale` over `pressIn` and darkens by the same amount; let go, it springs
   back over `pressOut` with `pressBack`. With less motion it only darkens. `Pressable` keeps `InkWell`'s focus, Enter and
   Space, cursor and tap target, and shows nothing when it has nothing to do.
-  `RoundButton` and `RecordButton` use it; the theme turns the spreading ink
+  It follows the pointer, not Material's pressed state, so it answers at once in
+  scroll views. `RoundButton`, `RecordButton` and the button pieces use it; the theme turns the spreading ink
   off everywhere (`NoSplash`).
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or

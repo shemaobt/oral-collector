@@ -146,11 +146,11 @@ ButtonStyle handCutButtonStyle(
           ),
           child: child,
         );
-        final pressed = PressLook(
-          down: states.contains(WidgetState.pressed),
-          child: painted,
+        return pressLookBackground(
+          context,
+          states,
+          printed ? PrintedShadowScope(child: painted) : painted,
         );
-        return printed ? PrintedShadowScope(child: pressed) : pressed;
       },
     ),
   );

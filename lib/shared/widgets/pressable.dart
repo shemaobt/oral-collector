@@ -78,7 +78,52 @@ Widget pressLookBackground(
   BuildContext context,
   Set<WidgetState> states,
   Widget? child,
-) => PressLook(down: states.contains(WidgetState.pressed), child: child!);
+) => PointerPress(
+  builder: (context, down) => PressLook(
+    down: down && !states.contains(WidgetState.disabled),
+    child: child!,
+  ),
+);
+
+class PointerPress extends StatefulWidget {
+  const PointerPress({super.key, required this.builder});
+
+  final Widget Function(BuildContext context, bool down) builder;
+
+  @override
+  State<PointerPress> createState() => _PointerPressState();
+}
+
+class _PointerPressState extends State<PointerPress> {
+  bool _down = false;
+  Offset _origin = Offset.zero;
+
+  void _setDown(bool down) {
+    if (_down != down) setState(() => _down = down);
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    if (event.buttons != kPrimaryButton) return;
+    _origin = event.position;
+    _setDown(true);
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if ((event.position - _origin).distance > kTouchSlop) _setDown(false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _onPointerDown,
+      onPointerMove: _onPointerMove,
+      onPointerUp: (_) => _setDown(false),
+      onPointerCancel: (_) => _setDown(false),
+      child: widget.builder(context, _down),
+    );
+  }
+}
 
 class Pressable extends StatefulWidget {
   const Pressable({
@@ -99,35 +144,14 @@ class Pressable extends StatefulWidget {
 }
 
 class _PressableState extends State<Pressable> {
-  bool _down = false;
-  Offset _origin = Offset.zero;
-
   bool get _enabled => widget.onTap != null || widget.onLongPress != null;
-
-  void _setDown(bool down) {
-    if (_down != down) setState(() => _down = down);
-  }
-
-  void _onPointerDown(PointerDownEvent event) {
-    if (event.buttons != kPrimaryButton) return;
-    _origin = event.position;
-    _setDown(true);
-  }
-
-  void _onPointerMove(PointerMoveEvent event) {
-    if ((event.position - _origin).distance > kTouchSlop) _setDown(false);
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: _onPointerDown,
-      onPointerMove: _onPointerMove,
-      onPointerUp: (_) => _setDown(false),
-      onPointerCancel: (_) => _setDown(false),
-      child: Stack(
+    return PointerPress(
+      builder: (context, down) => Stack(
         children: [
-          PressLook(down: _down && _enabled, child: widget.child),
+          PressLook(down: down && _enabled, child: widget.child),
           Positioned.fill(
             child: Material(
               color: AppColors.transparent,
