@@ -162,7 +162,7 @@ class _NavItemContent extends StatelessWidget {
     return AnimatedSwitcher(
       duration: context.motion.fast,
       switchInCurve: context.motion.enter,
-      switchOutCurve: context.motion.leave,
+      switchOutCurve: context.motion.leave.flipped,
       child: isSelected
           ? Row(
               key: const ValueKey(true),

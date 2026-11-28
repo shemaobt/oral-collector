@@ -53,7 +53,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
     _controller.duration = motion.fast;
     _expandAnimation
       ..curve = motion.enter
-      ..reverseCurve = motion.leave;
+      ..reverseCurve = motion.leave.flipped;
   }
 
   @override
