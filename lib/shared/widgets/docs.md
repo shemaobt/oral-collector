@@ -137,6 +137,14 @@ Path: @/lib/shared/widgets
   Space, cursor and tap target, and shows nothing when it has nothing to do.
   `RoundButton` and `RecordButton` use it; the theme turns the spreading ink
   off everywhere (`NoSplash`).
+- **`SlabCard` is the kit's dark block** ([slab_card.dart](slab_card.dart)): a
+  hand-cut sheet (no printed shadow) in `primary`, `sand` in dark, with a brush
+  title and `SlabRow`s (count in brush, words, action word and chevron). The
+  line between rows is the ink at 16% (22% in dark), none after the last.
+  **`StatTile`** ([stat_tile.dart](stat_tile.dart)) is a project number: runs of
+  digits in brush, the rest as small text, and one semantic label with the value
+  and the word. The theme's `dataTableTheme` gives every `DataTable` the kit's
+  quiet heading, 46-high rows and 1 px `border` lines.
 - **`StatusBanner`** ([status_banner.dart](status_banner.dart)) is a notice on a
   hand-cut sheet in one of three tones: calm (`pale`), attention (`wood`) or
   failed (`soft`, text in `onSoft`). **`NeedsYouBlock`**
