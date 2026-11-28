@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_disc.dart';
+import 'brush_sign.dart';
+import 'call_ring.dart';
 import 'pressable.dart';
+import 'sound_strokes.dart';
 
 enum RecordButtonState { ready, recording, paused }
 
@@ -13,12 +15,14 @@ class RecordButton extends StatefulWidget {
     super.key,
     this.state = RecordButtonState.ready,
     this.size = DiscSize.huge,
+    this.calling = false,
     this.onTap,
     this.onLongPress,
   });
 
   final RecordButtonState state;
   final DiscSize size;
+  final bool calling;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -105,16 +109,32 @@ class _RecordButtonState extends State<RecordButton>
       semanticLabel = l10n.a11y_startRecording;
     }
 
-    return Pressable(
-      label: semanticLabel,
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      customBorder: const CircleBorder(),
-      child: AppDisc(
-        size: widget.size,
-        tone: DiscTone.record,
-        pressable: true,
-        child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
+    final colors = AppColors.of(context);
+    final diameter = widget.size.diameter;
+
+    return CallRing(
+      diameter: diameter,
+      color: colors.accent,
+      calling: widget.calling && widget.state == RecordButtonState.ready,
+      child: SoundStrokes(
+        diameter: diameter,
+        color: colors.mic,
+        sounding: isRecording,
+        child: Pressable(
+          label: semanticLabel,
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          customBorder: const CircleBorder(),
+          child: AppDisc(
+            size: widget.size,
+            tone: DiscTone.record,
+            pressable: true,
+            child: BrushSign(
+              isRecording ? Sign.stop : Sign.mic,
+              size: diameter * 0.46,
+            ),
+          ),
+        ),
       ),
     );
   }
