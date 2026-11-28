@@ -19,7 +19,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_description.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
-import '../../../../shared/widgets/error_snack_bar.dart';
+import '../../../../shared/widgets/error_notice.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -450,7 +450,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
 
   void _showDuplicateTitleMessage(String title) {
     final l10n = AppLocalizations.of(context);
-    showErrorSnackBar(
+    showErrorNotice(
       context,
       '',
       template: (_) => l10n.recording_duplicateTitleMessage(title),
@@ -549,7 +549,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+        showErrorNotice(context, e, template: l10n.recording_uploadFailed);
         setState(() => _isSaving = false);
       }
     }
@@ -661,7 +661,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
         if (isDuplicateRecordingTitle(e)) {
           _showDuplicateTitleMessage(resolvedTitle);
         } else {
-          showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+          showErrorNotice(context, e, template: l10n.recording_uploadFailed);
         }
         setState(() => _isSaving = false);
       }

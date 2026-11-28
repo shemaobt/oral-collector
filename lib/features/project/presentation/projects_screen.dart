@@ -11,7 +11,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../auth/data/providers/role_provider.dart';
@@ -65,7 +65,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
     ref.listen<ProjectState>(projectNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        showErrorSnackBar(context, next.error!);
+        showErrorNotice(context, next.error!);
       }
     });
 

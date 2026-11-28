@@ -7,7 +7,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/admin_notifier.dart';
@@ -37,7 +37,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       final isAdmin = ref.read(isPlatformAdminProvider);
       if (!isAdmin) {
         if (mounted) {
-          showErrorSnackBar(
+          showErrorNotice(
             context,
             AppLocalizations.of(context).admin_accessRequired,
           );
@@ -70,7 +70,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       next,
     ) {
       if (next != null && next != prev) {
-        showErrorSnackBar(context, next);
+        showErrorNotice(context, next);
       }
     });
 

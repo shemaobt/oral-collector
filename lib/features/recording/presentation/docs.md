@@ -577,8 +577,8 @@ Path: @/lib/features/recording/presentation
   mutations, none of which carry a title-conflict-style carve-out.
   The notifier hands the outcome back
   as a `RecordingMutationResult` and
-  the widget surfaces errors through the shared `showErrorSnackBar` helper
-  ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
+  the widget surfaces errors through the shared `showErrorNotice` helper
+  ([/lib/shared/widgets/error_notice.dart](../../../shared/widgets/error_notice.dart)),
   which is handed the **typed** caught exception so it localizes via the type
   switch (ENG-104; the throwing catch-sites no longer build a raw
   `ScaffoldMessenger`/`SnackBar` from an interpolated `e`). The share/export

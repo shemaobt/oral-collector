@@ -6,7 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../utils/error_helpers.dart';
 
-void showErrorSnackBar(
+void showErrorNotice(
   BuildContext context,
   Object rawError, {
   String Function(String friendlyError)? template,

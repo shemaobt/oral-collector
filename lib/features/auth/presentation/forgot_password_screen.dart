@@ -8,7 +8,7 @@ import '../../../core/auth/providers.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -43,7 +43,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (mounted) setState(() => _emailSent = true);
     } on Exception catch (e, st) {
       reporter.reportError(e, st);
-      if (mounted) showErrorSnackBar(context, e);
+      if (mounted) showErrorNotice(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

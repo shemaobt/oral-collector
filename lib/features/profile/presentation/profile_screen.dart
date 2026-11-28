@@ -16,7 +16,7 @@ import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/sync_now.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -71,7 +71,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e);
+        showErrorNotice(context, e);
       }
     }
   }
@@ -158,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? l10n.profile_inviteAcceptFailed);
+          showErrorNotice(context, err ?? l10n.profile_inviteAcceptFailed);
         }
       },
       onDecline: (invite) async {
@@ -172,7 +172,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? l10n.profile_inviteDeclineFailed);
+          showErrorNotice(context, err ?? l10n.profile_inviteDeclineFailed);
         }
       },
       onRefresh: () {

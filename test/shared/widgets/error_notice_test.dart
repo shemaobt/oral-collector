@@ -1,4 +1,4 @@
-// Behavior of the single error-presentation helper showErrorSnackBar (ENG-186):
+// Behavior of the single error-presentation helper showErrorNotice (ENG-186):
 // it maps the raw error to a friendly message once, optionally wraps it with a
 // caller-supplied template, and renders the styled (alert-icon) snackbar.
 import 'package:flutter/material.dart';
@@ -9,7 +9,7 @@ import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
-import 'package:oral_collector/shared/widgets/error_snack_bar.dart';
+import 'package:oral_collector/shared/widgets/error_notice.dart';
 
 import '../../support/text_scale.dart';
 
@@ -44,7 +44,7 @@ void main() {
   ) async {
     await pumpTrigger(
       tester,
-      (context) => showErrorSnackBar(context, const ForbiddenException()),
+      (context) => showErrorNotice(context, const ForbiddenException()),
     );
 
     await tapAndSettle(tester);
@@ -58,7 +58,7 @@ void main() {
   ) async {
     await pumpTrigger(
       tester,
-      (context) => showErrorSnackBar(
+      (context) => showErrorNotice(
         context,
         const ForbiddenException(),
         template: (friendly) => 'Prefix: $friendly',
@@ -78,7 +78,7 @@ void main() {
     // error_network, so an identity-mapping regression would fail this.
     await pumpTrigger(
       tester,
-      (context) => showErrorSnackBar(
+      (context) => showErrorNotice(
         context,
         'SocketException: failed host lookup',
         template: (f) => 'X: $f',
@@ -98,7 +98,7 @@ void main() {
       // the share path ignores it and shows only the localized prefix.
       await pumpTrigger(
         tester,
-        (context) => showErrorSnackBar(
+        (context) => showErrorNotice(
           context,
           'File not found or empty',
           template: (_) => l10n.recording_exportShareFailed,
@@ -120,7 +120,7 @@ void main() {
     ) async {
       await pumpTrigger(
         tester,
-        (context) => showErrorSnackBar(context, const ForbiddenException()),
+        (context) => showErrorNotice(context, const ForbiddenException()),
         theme: theme,
       );
 

@@ -10,7 +10,7 @@ import '../../features/project/presentation/notifiers/member_notifier.dart';
 import '../../features/user/data/user_lookup_provider.dart';
 import '../../features/user/data/user_search_repository.dart';
 import '../../l10n/app_localizations.dart';
-import 'error_snack_bar.dart';
+import 'error_notice.dart';
 import 'user_avatar.dart';
 
 class InviteDialog extends ConsumerStatefulWidget {
@@ -102,7 +102,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
       setState(() => _isSubmitting = false);
       final error = ref.read(memberNotifierProvider).error;
       final l10n = AppLocalizations.of(context);
-      showErrorSnackBar(context, error ?? l10n.invite_sendFailed);
+      showErrorNotice(context, error ?? l10n.invite_sendFailed);
     }
   }
 
