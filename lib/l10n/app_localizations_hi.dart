@@ -2474,6 +2474,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filters_sheetTitle => 'रिकॉर्डिंग फ़िल्टर करें';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'फ़िल्टर $name हटाएं';
+  }
+
+  @override
   String get filters_sectionStatus => 'इस डिवाइस पर स्थिति';
 
   @override

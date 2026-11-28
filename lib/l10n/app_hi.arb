@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "फ़िल्टर",
   "filters_sheetTitle": "रिकॉर्डिंग फ़िल्टर करें",
+  "filters_removeFilter": "फ़िल्टर {name} हटाएं",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "इस डिवाइस पर स्थिति",
   "filters_sectionStatusHint": "स्क्रीन पर पहले से मौजूद रिकॉर्डिंग को छाँटता है। ऑफ़लाइन भी काम करता है।",
   "filters_sectionGenre": "शैली",

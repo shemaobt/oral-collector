@@ -39,7 +39,8 @@ class RoundButton extends StatelessWidget {
     this.onPressed,
     this.size = RoundButtonSize.medium,
     this.tone = RoundButtonTone.action,
-  }) : sign = null;
+  }) : sign = null,
+       signSize = 18;
   const RoundButton.sign({
     super.key,
     required Sign this.sign,
@@ -47,6 +48,7 @@ class RoundButton extends StatelessWidget {
     this.onPressed,
     this.size = RoundButtonSize.medium,
     this.tone = RoundButtonTone.action,
+    this.signSize = 18,
   }) : icon = null;
 
   static const double minTouchTarget = 48;
@@ -57,6 +59,7 @@ class RoundButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final RoundButtonSize size;
   final RoundButtonTone tone;
+  final double signSize;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +82,9 @@ class RoundButton extends StatelessWidget {
               tone: tone.disc,
               pressable: true,
               enabled: onPressed != null,
-              child: sign == null ? Icon(icon) : BrushSign(sign!, size: 18),
+              child: sign == null
+                  ? Icon(icon)
+                  : BrushSign(sign!, size: signSize),
             ),
           ),
         ),

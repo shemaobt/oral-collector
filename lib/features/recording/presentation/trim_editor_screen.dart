@@ -17,6 +17,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_question.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
@@ -259,15 +260,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ? _state.segRegisterBySig[sig]
         : recording.registerId;
 
-    final result = await showModalBottomSheet<SegmentTaxonomyResult>(
+    final result = await showAppSheet<SegmentTaxonomyResult>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r20),
-        ),
-      ),
       builder: (ctx) => SegmentTaxonomySheet(
         parentGenreId: recording.genreId,
         parentSubcategoryId: recording.subcategoryId,

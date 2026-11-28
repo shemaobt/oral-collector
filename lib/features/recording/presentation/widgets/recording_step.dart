@@ -10,7 +10,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/app_sheet.dart';
+import '../../../../shared/widgets/brush_sign.dart';
 import '../../../../shared/widgets/record_button.dart';
+import '../../../../shared/widgets/recording_clock.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
 import '../notifiers/input_device_notifier.dart';
@@ -297,18 +300,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.center,
-                              child: Text(
-                                formatElapsed(recState.elapsed),
-                                maxLines: 1,
-                                softWrap: false,
-                                style: theme.textTheme.displayLarge?.copyWith(
-                                  color: colors.foreground,
-                                  fontWeight: FontWeight.w200,
-                                  fontSize: 56,
-                                  fontFeatures: [
-                                    const FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                              child: RecordingClock(
+                                elapsed: recState.elapsed,
+                                paused: recState.isPaused,
                               ),
                             ),
                           ),
@@ -463,9 +457,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       behavior: HitTestBehavior.opaque,
       onTap: () {
         HapticFeedback.selectionClick();
-        showModalBottomSheet<void>(
+        showAppSheet<void>(
           context: context,
-          showDragHandle: false,
           builder: (_) => const InputDevicePickerSheet(),
         );
       },
@@ -649,8 +642,6 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             amplitudeStream: recState.amplitudeStream,
             isPaused: recState.isPaused,
             height: 200,
-            barColor: colors.foreground,
-            cursorColor: colors.accent,
           ),
         ),
         if (checkpoint != null)
@@ -680,7 +671,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ControlButton(
-            icon: recState.isPaused ? LucideIcons.play : LucideIcons.pause,
+            sign: recState.isPaused ? Sign.play : Sign.pause,
             label: recState.isPaused
                 ? AppLocalizations.of(context).recording_resume
                 : AppLocalizations.of(context).recording_pause,
@@ -690,59 +681,13 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
           ),
           const SizedBox(width: SpacingScale.s48),
 
-          _buildStopButton(colors, () => _handleStop(notifier)),
+          ControlButton.stop(
+            label: AppLocalizations.of(context).recording_stop,
+            semanticLabel: AppLocalizations.of(context).recording_stopRecording,
+            sounding: !recState.isPaused,
+            onTap: () => _handleStop(notifier),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStopButton(AppColorSet colors, VoidCallback onTap) {
-    return Semantics(
-      label: AppLocalizations.of(context).recording_stopRecording,
-      button: true,
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.heavyImpact();
-          onTap();
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(RadiusScale.r20),
-                color: colors.accent,
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.accent.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(RadiusScale.r4),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: SpacingScale.s8),
-            Text(
-              AppLocalizations.of(context).recording_stop,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.secondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

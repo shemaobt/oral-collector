@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../shared/widgets/app_sheet.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
@@ -14,11 +15,10 @@ import '../domain/repositories/project_repository.dart';
 import 'notifiers/project_notifier.dart';
 
 Future<bool?> showCreateProjectSheet(BuildContext context) {
-  return showModalBottomSheet<bool>(
+  return showAppSheet<bool>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: AppColors.transparent,
     constraints: const BoxConstraints(maxWidth: 600),
     builder: (_) => const _CreateProjectSheet(),
   );
@@ -59,11 +59,10 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
 
   Future<void> _pickLanguage() async {
     final languages = ref.read(projectNotifierProvider).languages;
-    final result = await showModalBottomSheet<Language>(
+    final result = await showAppSheet<Language>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: AppColors.transparent,
       constraints: const BoxConstraints(maxWidth: 600),
       builder: (_) => _LanguagePickerSheet(
         languages: languages,
@@ -127,156 +126,135 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
         ? keyboardInset + 16
         : AppShell.scrollBottomPadding;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r20),
-        ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        SpacingScale.s24,
+        0,
+        SpacingScale.s24,
+        bottomPadding,
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          SpacingScale.s24,
-          0,
-          SpacingScale.s24,
-          bottomPadding,
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(
-                    top: SpacingScale.s12,
-                    bottom: SpacingScale.s20,
-                  ),
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: SpacingScale.s24),
+
+            Text(l10n.project_newProject, style: theme.textTheme.titleLarge),
+            const SizedBox(height: SpacingScale.s24),
+
+            TextFormField(
+              controller: _nameController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.project_projectName,
+                hintText: l10n.project_projectNameHint,
               ),
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.project_projectNameRequired;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: SpacingScale.s16),
 
-              Text(l10n.project_newProject, style: theme.textTheme.titleLarge),
-              const SizedBox(height: SpacingScale.s24),
-
-              TextFormField(
-                controller: _nameController,
-                autofocus: true,
+            GestureDetector(
+              onTap: _pickLanguage,
+              child: InputDecorator(
                 decoration: InputDecoration(
-                  labelText: l10n.project_projectName,
-                  hintText: l10n.project_projectNameHint,
-                ),
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.project_projectNameRequired;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: SpacingScale.s16),
-
-              GestureDetector(
-                onTap: _pickLanguage,
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: l10n.project_language,
-                    suffixIcon: const Icon(LucideIcons.chevronRight, size: 18),
-                    errorText: null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(RadiusScale.r12),
-                    ),
+                  labelText: l10n.project_language,
+                  suffixIcon: const Icon(LucideIcons.chevronRight, size: 18),
+                  errorText: null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
-                  child: _selectedLanguage != null
-                      ? Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _selectedLanguage!.name,
-                                style: theme.textTheme.bodyLarge,
-                              ),
+                ),
+                child: _selectedLanguage != null
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _selectedLanguage!.name,
+                              style: theme.textTheme.bodyLarge,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: SpacingScale.s8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.accent.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(
-                                  RadiusScale.r8,
-                                ),
-                              ),
-                              child: Text(
-                                _selectedLanguage!.code.toUpperCase(),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colors.accent,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Text(
-                          l10n.project_selectLanguage,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colors.secondary.withValues(alpha: 0.5),
                           ),
-                        ),
-                ),
-              ),
-              const SizedBox(height: SpacingScale.s16),
-
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: l10n.project_description,
-                  hintText: l10n.project_descriptionHint,
-                ),
-                maxLines: 2,
-                textCapitalization: TextCapitalization.sentences,
-              ),
-              const SizedBox(height: SpacingScale.s24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: Text(l10n.common_cancel),
-                    ),
-                  ),
-                  const SizedBox(width: SpacingScale.s12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: SpacingScale.s20,
-                              height: SpacingScale.s20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.white,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: SpacingScale.s8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.accent.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r8,
                               ),
-                            )
-                          : Text(l10n.project_createProject),
-                    ),
-                  ),
-                ],
+                            ),
+                            child: Text(
+                              _selectedLanguage!.code.toUpperCase(),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.accent,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        l10n.project_selectLanguage,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colors.secondary.withValues(alpha: 0.5),
+                        ),
+                      ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: SpacingScale.s16),
+
+            TextFormField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: l10n.project_description,
+                hintText: l10n.project_descriptionHint,
+              ),
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: SpacingScale.s24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: Text(l10n.common_cancel),
+                  ),
+                ),
+                const SizedBox(width: SpacingScale.s12),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: SpacingScale.s20,
+                            height: SpacingScale.s20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.white,
+                            ),
+                          )
+                        : Text(l10n.project_createProject),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -358,33 +336,14 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
         ? keyboardInset + 16
         : AppShell.scrollBottomPadding;
 
-    return Container(
+    return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(RadiusScale.r20),
-        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(
-                top: SpacingScale.s12,
-                bottom: SpacingScale.s16,
-              ),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.border.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+          const SizedBox(height: SpacingScale.s24),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),

@@ -1216,6 +1216,14 @@
   },
   "filters_buttonLabel": "Filters",
   "filters_sheetTitle": "Filter recordings",
+  "filters_removeFilter": "Remove the filter {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "Status on this device",
   "@filters_sectionStatus": {
     "description": "Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383)."

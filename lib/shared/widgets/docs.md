@@ -52,10 +52,19 @@ Path: @/lib/shared/widgets
   in the kit's ten brush numbers and a colon (`Glyph`, held in
   `brush_signs.dart` and generated from `ia/n-*.svg`). `height` is multiplied
   by the text scale; width follows from each character's own width plus 0.04 of
-  the height between two. Colour defaults to the text colour around it. The
+  the height between two, or, with `tabular`, every digit takes the widest
+  digit's slot (equal-width digit slots) so the width holds as digits change. Colour defaults to the text colour around it. The
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
+- [recording_clock.dart](recording_clock.dart) is the recording time in brush
+  numbers (`formatClock`, hours only from one hour on), `count` colour, `secondary`
+  when `paused`, `height` 72 unless asked. It is `tabular`.
+- [sound_strokes.dart](sound_strokes.dart) paints the kit's strokes of sound
+  in `color` behind its `child` (a disc of `diameter`) while `sounding`: a box
+  138% of the disc, centred, under the child, no taps, no semantics, still. Not
+  sounding, it paints nothing and the child stays mounted. The disc's own sign
+  size is `RoundButton.signSize` (default 18).
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
@@ -135,7 +144,8 @@ Path: @/lib/shared/widgets
   `pressScale` over `pressIn` and darkens by the same amount; let go, it springs
   back over `pressOut` with `pressBack`. With less motion it only darkens. `Pressable` keeps `InkWell`'s focus, Enter and
   Space, cursor and tap target, and shows nothing when it has nothing to do.
-  `RoundButton` and `RecordButton` use it; the theme turns the spreading ink
+  It follows the pointer, not Material's pressed state, so it answers at once in
+  scroll views. `RoundButton`, `RecordButton` and the button pieces use it; the theme turns the spreading ink
   off everywhere (`NoSplash`).
 - **`SlabCard` is the kit's dark block** ([slab_card.dart](slab_card.dart)): a
   hand-cut sheet (no printed shadow) in `primary`, `sand` in dark, with a brush
@@ -231,6 +241,18 @@ Path: @/lib/shared/widgets
   It keeps that size under any parent and takes the keyboard. It takes an
   optional `label` that is tappable and read once; `onChosen` null switches it
   off (40%). The state changes at once, with no slide. No screen uses it yet.
+
+- **`AppFilterChoice` and `AppActiveFilter`**
+  ([app_filter_choice.dart](app_filter_choice.dart),
+  [app_active_filter.dart](app_active_filter.dart)) are the two filter pieces.
+  The choice sits in the filter sheet: hand-cut, 38 high in a touch area of 44,
+  `card` at rest with the paper shadow, `primary` with the ink shadow when
+  chosen. The active filter sits in the list: 36 high in 44, `primary`, no
+  shadow, the name then a «close» sign; one tap on it calls `onRemove`, and a
+  screen reader hears «Tirar o filtro {name}». No screen uses them yet. The
+  theme's Material chips (`card`, no line, corners 12) and tabs (`primary` line
+  of 2 under the chosen tab, a `border` line under the row) wear the same look
+  until each screen moves.
 
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the

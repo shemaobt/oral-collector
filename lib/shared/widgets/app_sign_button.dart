@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'brush_sign.dart';
+import 'pressable.dart';
 
 class AppSignButton extends StatelessWidget {
   const AppSignButton({
@@ -24,11 +25,11 @@ class AppSignButton extends StatelessWidget {
       label: semanticLabel,
       onTap: onPressed,
       excludeSemantics: true,
-      child: InkResponse(
-        onTap: onPressed,
-        radius: 22,
-        child: SizedBox.square(
-          dimension: 44,
+      child: SizedBox.square(
+        dimension: 44,
+        child: Pressable(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
           child: Center(
             child: BrushSign(
               sign,

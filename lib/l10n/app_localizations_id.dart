@@ -2474,6 +2474,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get filters_sheetTitle => 'Saring rekaman';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'Hapus filter $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'Status di perangkat ini';
 
   @override

@@ -2375,6 +2375,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filters_sheetTitle => '녹음 필터';
 
   @override
+  String filters_removeFilter(String name) {
+    return '$name 필터 제거';
+  }
+
+  @override
   String get filters_sectionStatus => '이 기기의 상태';
 
   @override
