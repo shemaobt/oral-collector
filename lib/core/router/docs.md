@@ -34,10 +34,19 @@ Path: @/lib/core/router
   never sees a transient logged-out flash while `restoreSession` is still
   running.
 - `AppShell` ([../../shared/widgets/docs.md](../../shared/widgets/docs.md))
-  wraps every route inside the `ShellRoute`; per-tab navigation
-  (`_navigateToTab` in `app_shell.dart`) calls `context.go`, which — unlike
-  `push` — replaces the shell's nested stack rather than growing it, so the
-  bottom nav / web sidebar never accumulates history.
+  wraps a `StatefulShellRoute.indexedStack`: each tab is a branch with its own
+  Navigator, kept alive while another tab shows. A tab tap is `goBranch`: it
+  returns to the branch's last screen, or to its first when the tab is already
+  in use. Record always opens at its first screen.
+- **A tab's screen outlives its visit, so it refreshes on return.** The shell
+  counts the entries into each tab (`TabVisits`), whether by a tap or by a `go`
+  that lands in another tab (a save goes to `/home`). Home, Recordings,
+  Projects and Profile refresh when that count rises past the one they were
+  built at, so a first visit fetches once. The shell also counts the entries
+  that were not a tab tap (arrivals): a screen whose address carries a filter
+  (Recordings' genre) applies it only on an arrival. Record is the exception: its pages
+  are keyed by that count and by their address, so every entry starts a fresh
+  flow, as it did when every tab change built a new page.
 - Several routes gate on `projectNotifierProvider.activeProject` in their own
   `redirect` (record flow, quick-record, recovery-confirm, import-file):
   reading Riverpod state directly inside a `GoRoute.redirect`, rather than
@@ -63,7 +72,7 @@ Path: @/lib/core/router
   the file.** `/genre/:id`, `/recording/:id`, `/recording/:id/trim`,
   `/import-file`, `/project/:id/settings`, the storyteller routes, and
   `/admin` are each declared under `if (!isWeb)` **outside** the
-  `ShellRoute`, and again under `if (isWeb)` **inside** it, where `isWeb` is
+  shell, and again under `if (isWeb)` **inside** a branch, where `isWeb` is
   `isWebPlatformProvider` (so a test can run the web table). (`/record-flow`
   is *not* one of these: it is the device-only top-level twin of `/record`,
   which lives in the shell on every platform — same screen, different path
@@ -74,8 +83,8 @@ Path: @/lib/core/router
 
   | Platform | Where `/recording/:id` (and siblings) live | Navigator |
   | --- | --- | --- |
-  | Device (`!kIsWeb`) | top-level `GoRoute`, sibling of the `ShellRoute` | root `Navigator`, one level above the shell |
-  | Web (`kIsWeb`) | `GoRoute` inside the `ShellRoute`'s `routes` | the shell's nested `Navigator` |
+  | Device (`!kIsWeb`) | top-level `GoRoute`, sibling of the shell | root `Navigator`, one level above the shell |
+  | Web (`kIsWeb`) | `GoRoute` inside its tab's branch | that branch's `Navigator` |
 
   This split is deliberate and intentionally not unified as part of any single
   ticket — flattening it would change which `Navigator` these screens push
@@ -83,8 +92,9 @@ Path: @/lib/core/router
   behaviour (below). A reader who edits one branch without checking `kIsWeb`
   will silently change behaviour on only one platform.
 - **The shell's routes are one list per tab** (home, record, recordings,
-  projects, profile, and on the web admin), spread into the `ShellRoute`. A
-  web-only route sits in the list of the tab it belongs to, under `isWeb`.
+  projects, profile, and on the web admin), one branch each, in the order of
+  `ShellTab` and of the tabs. A web-only route sits in the list of the tab it
+  belongs to, under `isWeb`.
 - Routes that need an active project (`/record`, `/record-flow`,
   `/quick-record`, `/recovery-confirm`, and the device-side `/import-file`)
   share `_requireActiveProject`: no active project, back to `/home`. The web
@@ -103,7 +113,7 @@ Path: @/lib/core/router
 
 - **System back on a device pops the root Navigator, and the root falls
   through to leaving the app.** Because `/recording/:id` and its siblings are
-  top-level routes outside the `ShellRoute` on a device, pushing one of them
+  top-level routes outside the shell on a device, pushing one of them
   (e.g. from `recordings_list_screen.dart`'s `context.push('/recording/${id}')`)
   stacks on the root `Navigator`. A system back there pops that route
   normally. At the root of the stack — nothing left to pop — a system back

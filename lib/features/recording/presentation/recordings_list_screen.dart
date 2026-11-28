@@ -68,6 +68,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   @override
   void refreshOnReturn() => _refreshAll();
 
+  @override
+  void onArrival() => _applyGenreFromAddress();
+
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
 
@@ -76,20 +79,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll);
-    final gid = widget.initialGenreId;
-    final sid = widget.initialSubcategoryId;
     final flag = widget.initialReviewFlag;
     Future.microtask(() {
       if (!mounted) return;
       final notifier = ref.read(recordingsListNotifierProvider.notifier);
-      if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
-      if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
-      // Applied only when the route names one, exactly like the two above: a
-      // pendency the user picked in the sheet is not in the URL, and clearing
-      // it here would make it the one filter that cannot survive leaving this
-      // screen and coming back. Route changes are `didUpdateWidget`'s job,
-      // including the change to null that the tab bar makes.
-      //
+      _applyGenreFromAddress();
       // refresh: false — _refreshAll fetches on the next line, and the pendency
       // filter is a server-side one, so letting it fetch too would ask twice.
       if (flag != null) {
@@ -102,19 +96,15 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   @override
   void didUpdateWidget(RecordingsListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The tab bar, deep links and back navigation all reach this screen through
-    // the router, which rebuilds the widget with the route's parameters but
-    // reuses the State, so `initState` never runs again and a pendency from an
-    // earlier visit outlives the URL that named it.
-    //
     // The comparison is against the old widget, never against the notifier: a
     // filter the user picked from the sheet or a chip is not in the URL, and
     // keying this on the route alone would wipe it on any rebuild.
-    //
-    // Only the pendency: `initialGenreId`/`initialSubcategoryId` diverge the
-    // same way in principle, but no live path produces one — the only route
-    // that names a genre comes from a screen this one is never rebuilt from —
-    // so following them here would be untestable code for a hypothetical.
+    if (widget.initialGenreId != oldWidget.initialGenreId ||
+        widget.initialSubcategoryId != oldWidget.initialSubcategoryId) {
+      Future.microtask(() {
+        if (mounted) _applyGenreFromAddress();
+      });
+    }
     if (widget.initialReviewFlag == oldWidget.initialReviewFlag) return;
     final flag = widget.initialReviewFlag;
     Future.microtask(() {
@@ -125,6 +115,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
             .setReviewFlagFilter(flag),
       );
     });
+  }
+
+  void _applyGenreFromAddress() {
+    final notifier = ref.read(recordingsListNotifierProvider.notifier);
+    final gid = widget.initialGenreId;
+    final sid = widget.initialSubcategoryId;
+    if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
+    if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
   }
 
   @override

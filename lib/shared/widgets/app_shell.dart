@@ -74,6 +74,8 @@ int _currentIndexFrom(BuildContext context, List<TabItem> tabs) {
 
 class _AppShellState extends ConsumerState<AppShell> {
   late Map<ShellTab, int> _visits = {_tabInUse: 1};
+  Map<ShellTab, int> _arrivals = const {};
+  bool _tapping = false;
 
   ShellTab get _tabInUse =>
       ShellTab.values[widget.navigationShell.currentIndex];
@@ -83,9 +85,16 @@ class _AppShellState extends ConsumerState<AppShell> {
     super.didUpdateWidget(oldWidget);
     if (widget.navigationShell.currentIndex !=
         oldWidget.navigationShell.currentIndex) {
-      _visits = {..._visits, _tabInUse: (_visits[_tabInUse] ?? 0) + 1};
+      _visits = _bump(_visits);
+      if (!_tapping) _arrivals = _bump(_arrivals);
+      _tapping = false;
     }
   }
+
+  Map<ShellTab, int> _bump(Map<ShellTab, int> counts) => {
+    ...counts,
+    _tabInUse: (counts[_tabInUse] ?? 0) + 1,
+  };
 
   Future<void> _navigateToTab(TabItem tab) async {
     final state = ref.read(recordingSessionNotifierProvider);
@@ -132,6 +141,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     final shell = widget.navigationShell;
     final branch = tab.tab.index;
     if (branch >= shell.route.branches.length) return context.go(tab.path);
+    _tapping = branch != shell.currentIndex;
     shell.goBranch(
       branch,
       initialLocation:
@@ -153,8 +163,11 @@ class _AppShellState extends ConsumerState<AppShell> {
     return tabs;
   }
 
-  Widget _shellWithVisits() =>
-      TabVisits(counts: _visits, child: widget.navigationShell);
+  Widget _shellWithVisits() => TabVisits(
+    counts: _visits,
+    arrivals: _arrivals,
+    child: widget.navigationShell,
+  );
 
   @override
   Widget build(BuildContext context) {

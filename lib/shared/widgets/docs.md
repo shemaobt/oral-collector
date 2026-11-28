@@ -24,8 +24,9 @@ Path: @/lib/shared/widgets
 
 ### How it fits into the larger codebase
 
-- `AppShell` is the persistent shell wrapped around the router's `ShellRoute`
-  in [/lib/core/router/app_router.dart](/lib/core/router/app_router.dart); it
+- `AppShell` is the persistent shell wrapped around the router's
+  `StatefulShellRoute` in
+  [/lib/core/router/app_router.dart](/lib/core/router/app_router.dart); it
   hosts the bottom nav (mobile) / collapsible sidebar (web), the global FAB,
   and reads Riverpod state (auth/role, the recording session, invites) to gate
   tab navigation through the recording navigation guard. Every routed screen
