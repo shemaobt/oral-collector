@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'pressable.dart';
 
 class AppWordButton extends StatelessWidget {
   const AppWordButton({
@@ -21,6 +22,8 @@ class AppWordButton extends StatelessWidget {
         foregroundColor: c.error,
         disabledForegroundColor: c.secondary,
         minimumSize: const Size(0, 52),
+        overlayColor: AppColors.transparent,
+        backgroundBuilder: pressLookBackground,
         textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontSize: 17,
           fontWeight: FontWeight.w600,

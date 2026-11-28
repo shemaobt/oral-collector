@@ -8,6 +8,7 @@ import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import 'hand_cut_rect.dart';
+import 'pressable.dart';
 import 'printed_shadow_scope.dart';
 
 const _clipRoom = 1.02;
@@ -145,7 +146,11 @@ ButtonStyle handCutButtonStyle(
           ),
           child: child,
         );
-        return printed ? PrintedShadowScope(child: painted) : painted;
+        return pressLookBackground(
+          context,
+          states,
+          printed ? PrintedShadowScope(child: painted) : painted,
+        );
       },
     ),
   );

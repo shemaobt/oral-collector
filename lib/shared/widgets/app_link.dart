@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'pressable.dart';
 
 class AppLink extends StatelessWidget {
   const AppLink({super.key, required this.label, required this.onPressed});
@@ -24,6 +25,8 @@ class AppLink extends StatelessWidget {
             foregroundColor: c.foreground,
             disabledForegroundColor: c.secondary,
             minimumSize: const Size(0, 44),
+            overlayColor: AppColors.transparent,
+            backgroundBuilder: pressLookBackground,
           ).copyWith(
             textStyle: WidgetStateProperty.resolveWith(
               (states) => base?.copyWith(
