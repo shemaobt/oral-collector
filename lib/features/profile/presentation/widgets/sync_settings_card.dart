@@ -83,20 +83,15 @@ class SyncSettingsCard extends ConsumerWidget {
 
           ListTile(
             leading: syncState.uploadingId != null
-                ? Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(RadiusScale.r8),
-                    ),
+                ? SizedBox(
+                    width: 28,
                     child: Center(
                       child: SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 24,
+                        height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: colors.accent,
+                          color: colors.foreground,
                         ),
                       ),
                     ),
