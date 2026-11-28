@@ -110,4 +110,21 @@ void main() {
 
     expect(app.read(pendingRecordingDecisionProvider), same(second));
   });
+
+  testWidgets('Record starts at its first step after a visit to Home, '
+      'even when it was opened on a genre', (tester) async {
+    final app = await _pump(
+      tester,
+      at: '/home',
+      overrides: [genreNotifierProvider.overrideWith(_OneGenre.new)],
+    );
+    app.read(routerProvider).go('/record?genreId=g1');
+    await settle(tester);
+    expect(find.byType(GenreSelectionStep), findsNothing);
+
+    await _tapTab(tester, 'Home');
+    await _tapTab(tester, 'Record');
+
+    expect(find.byType(GenreSelectionStep), findsOneWidget);
+  });
 }
