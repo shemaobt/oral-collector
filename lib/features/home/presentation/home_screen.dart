@@ -65,13 +65,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RefreshOnReturn {
     if (fetched) _checkFirstLoginLocale();
   });
 
-  Future<bool> _fetchRemoteData() async {
-    if (!ref.read(syncNotifierProvider).isOnline) return false;
-    await ref.read(projectNotifierProvider.notifier).fetchProjects();
-    if (!mounted) return false;
-    ref.read(genreNotifierProvider.notifier).fetchGenres();
-    _fetchStatsIfNeeded();
-    return true;
+  Future<bool> _fetchRemoteData() {
+    if (!ref.read(syncNotifierProvider).isOnline) return Future.value(false);
+    return ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
+      if (!mounted) return false;
+      ref.read(genreNotifierProvider.notifier).fetchGenres();
+      _fetchStatsIfNeeded();
+      return true;
+    });
   }
 
   void _checkFirstLoginLocale() {
