@@ -731,6 +731,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get sendState_needsYou => 'Yu mas mekim';
 
   @override
+  String sendState_sendingPercent(int percent) {
+    return 'I salim nau $percent%';
+  }
+
+  @override
   String get recording_statusNameConflict => 'Nem i pait';
 
   @override

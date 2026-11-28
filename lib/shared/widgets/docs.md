@@ -10,7 +10,7 @@ Path: @/lib/shared/widgets
   [app_shell/](app_shell), and
   [screen_header.dart](screen_header.dart)'s flat `AppBar`/`SliverAppBar`),
   list/section affordances ([empty_state.dart](empty_state.dart),
-  `section_header.dart`, `status_banner.dart`), status chips
+  `section_header.dart`, `status_banner.dart`), send-state signs and words
   ([upload_status_badge.dart](upload_status_badge.dart),
   `sync_status_indicator.dart`), and dialogs/sheets/inputs.
 - A screen is built only from these pieces and the tokens, and a new piece
@@ -59,9 +59,8 @@ Path: @/lib/shared/widgets
 - [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
   stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
-  animation: a `RotationTransition` while a status is in-flight (the upload badge's
-  spinner creates/disposes an `AnimationController` in
-  `didUpdateWidget`) and `LeavingRow`'s fade and height.
+  animation (`LeavingRow`'s fade and height). Nothing spins: the upload state
+  is a sign or a word.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -110,11 +109,14 @@ Path: @/lib/shared/widgets
   - `screen_header.dart` needed no change — its title/subtitle already ellipsize
     and fit the toolbar within the 2.0× ceiling; only regression guards were
     added.
-- **`compact` font sizing uses `null` for the on-token size.** The upload badge sets
-  `fontSize` to `null` in compact mode (which keeps `labelSmall`'s native 11)
-  and only carries the off-token `13` as an explicit override — same typography
-  convention as [/lib/core/theme/docs.md](/lib/core/theme/docs.md)'s "keep
-  `copyWith(fontSize:)` when no token matches". No rendered-size change at 1.0×.
+- **`UploadStatusBadge` draws a send state as a word or a sign, never a pill.**
+  `status` maps `uploaded`/`verified` to sent, `uploading`/`web_uploading` to
+  sending, any `failed…` to needs you, everything else (and unknown strings) to
+  on the device. `compact` is the row form: sent is the check alone (read as
+  «Enviada»), sending and on-device are a 13/600 word («Enviando 42%» when
+  `percent` is known), needs you is a 32 disc without shadow holding the info
+  sign (read as «Precisa de você»). The page form is the sign at 18 then the
+  word at 15/600. No retry lives here.
 - **The status badge is currently unused in the app.**
   `UploadStatusBadge` has no call sites yet; it was hardened as shared-library
   hygiene so it is safe when wired up.

@@ -308,6 +308,14 @@
   "sendState_sending": "Sending",
   "sendState_sent": "Sent",
   "sendState_needsYou": "Needs you",
+  "sendState_sendingPercent": "Sending {percent}%",
+  "@sendState_sendingPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "recording_statusNameConflict": "Name conflict",
   "recording_statusDescriptionTooShort": "Description too short",
   "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
