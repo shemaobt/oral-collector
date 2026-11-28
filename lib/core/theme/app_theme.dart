@@ -166,13 +166,18 @@ abstract class AppTheme {
       filled: true,
       fillColor: halfWhenOff(fill),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
-      border: FieldBorder(edge: edge),
+      border: WidgetStateInputBorder.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return FieldBorder(edge: dimmedEdge);
+        }
+        if (states.contains(WidgetState.error)) return line(c.error);
+        return FieldBorder(edge: edge);
+      }),
       enabledBorder: FieldBorder(edge: edge),
       disabledBorder: FieldBorder(edge: dimmedEdge),
       focusedBorder: line(c.primary),
-      errorBorder: line(c.error),
       focusedErrorBorder: line(c.error),
-      hintStyle: TextStyle(color: c.secondary),
+      hintStyle: label,
       labelStyle: label,
       floatingLabelStyle: label,
       errorStyle: text.bodySmall?.copyWith(color: c.error),
