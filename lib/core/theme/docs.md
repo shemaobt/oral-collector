@@ -222,8 +222,8 @@ SpacingScale/RadiusScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/App
 - **The typography ramp has gaps — keep `copyWith(fontSize:)` when no token
   matches.** `_buildTextTheme` ([app_theme.dart](app_theme.dart)) defines the
   `textTheme.*` roles at a fixed set of sizes (display/headline/title/body/label),
-  but several literal sizes consumers use have no exact token (e.g. 10, 14, and
-  12@w400 — only `labelMedium` is 12, at w600). This is the typography analogue of
+  but several literal sizes consumers use have no exact token (e.g. 10, 12 and 14;
+  the sans roles sit at 13, 15, 17 and 24, at w500 or w600). This is the typography analogue of
   the off-grid spacing stragglers in the Grid policy above. When a site moves from
   a hand-built `TextStyle(fontSize: N)` to a theme token, it starts from the
   nearest-role token (for size/weight/family/`height` defaults) and keeps an

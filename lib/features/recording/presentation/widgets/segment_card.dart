@@ -114,7 +114,7 @@ class SegmentCard extends StatelessWidget {
           child: Text(
             '${index + 1}',
             style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               color: isExcluded ? colors.error : colors.accent,
               decoration: isExcluded ? TextDecoration.lineThrough : null,
             ),

@@ -40,7 +40,7 @@ class ProjectSettingsStatChip extends StatelessWidget {
             Text(
               value,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 color: colors.foreground,
               ),
             ),

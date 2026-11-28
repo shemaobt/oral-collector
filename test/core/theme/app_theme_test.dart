@@ -33,7 +33,9 @@ void _expectPaddingFromTokens(ThemeData theme) {
 }
 
 const _brush = 'CaveatBrush';
-const _sans = 'Montserrat';
+const _sans = 'Geist';
+final _sansSizes = {13.0, 15.0, 17.0, 24.0};
+final _sansWeights = {FontWeight.w500, FontWeight.w600};
 
 final _roles = <String, (String, double, FontWeight)>{
   'displayLarge': (_brush, 44, FontWeight.w400),
@@ -41,16 +43,16 @@ final _roles = <String, (String, double, FontWeight)>{
   'displaySmall': (_brush, 28, FontWeight.w400),
   'headlineLarge': (_brush, 28, FontWeight.w400),
   'headlineMedium': (_brush, 23, FontWeight.w400),
-  'headlineSmall': (_sans, 16, FontWeight.w700),
-  'titleLarge': (_sans, 16, FontWeight.w700),
-  'titleMedium': (_sans, 14, FontWeight.w700),
-  'titleSmall': (_sans, 14, FontWeight.w600),
-  'bodyLarge': (_sans, 16, FontWeight.w500),
-  'bodyMedium': (_sans, 14, FontWeight.w500),
+  'headlineSmall': (_sans, 24, FontWeight.w600),
+  'titleLarge': (_sans, 17, FontWeight.w600),
+  'titleMedium': (_sans, 15, FontWeight.w600),
+  'titleSmall': (_sans, 13, FontWeight.w600),
+  'bodyLarge': (_sans, 17, FontWeight.w500),
+  'bodyMedium': (_sans, 15, FontWeight.w500),
   'bodySmall': (_sans, 13, FontWeight.w500),
-  'labelLarge': (_sans, 14, FontWeight.w700),
-  'labelMedium': (_sans, 12, FontWeight.w700),
-  'labelSmall': (_sans, 11, FontWeight.w700),
+  'labelLarge': (_sans, 15, FontWeight.w600),
+  'labelMedium': (_sans, 13, FontWeight.w600),
+  'labelSmall': (_sans, 13, FontWeight.w600),
 };
 
 Map<String, TextStyle?> _styles(TextTheme t) => {
@@ -82,6 +84,9 @@ void _expectTypography(ThemeData theme) {
     expect(style.fontStyle, isNot(FontStyle.italic), reason: role);
     if (family == _brush) {
       expect(style.fontFamilyFallback, [_sans], reason: role);
+    } else {
+      expect(_sansSizes, contains(style.fontSize), reason: role);
+      expect(_sansWeights, contains(style.fontWeight), reason: role);
     }
   }
 }
@@ -207,9 +212,12 @@ void main() {
     );
 
     group('$name typography', () {
-      test('titles read in the brush and the rest in Montserrat', () {
-        _expectTypography(theme);
-      });
+      test(
+        'titles read in the brush and the rest in Geist, 500 or 600, at 13, 15, 17 or 24',
+        () {
+          _expectTypography(theme);
+        },
+      );
 
       test('app bar and dialog titles read in the brush at 28', () {
         _expectBrushTitles(theme);
@@ -218,7 +226,7 @@ void main() {
   }
 
   test(
-    'the font manifest ships Montserrat and Caveat Brush, not Plus Jakarta Sans',
+    'the font manifest ships Geist in 500 and 600 and Caveat Brush, not Montserrat or Plus Jakarta Sans',
     () async {
       TestWidgetsFlutterBinding.ensureInitialized();
       final manifest =
@@ -226,6 +234,11 @@ void main() {
       final families = manifest.map((f) => (f as Map)['family']).toSet();
       expect(families, containsAll([_sans, _brush]));
       expect(families, isNot(contains('PlusJakartaSans')));
+      expect(families, isNot(contains('Montserrat')));
+      final geist =
+          manifest.firstWhere((f) => (f as Map)['family'] == _sans) as Map;
+      final weights = (geist['fonts'] as List).map((f) => (f as Map)['weight']);
+      expect(weights, unorderedEquals([500, 600]));
     },
   );
 

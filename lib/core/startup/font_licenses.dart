@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const _fontLicenseAssets = {
-  'Montserrat': 'assets/fonts/OFL-Montserrat.txt',
+  'Geist': 'assets/fonts/OFL-Geist.txt',
   'Caveat Brush': 'assets/fonts/OFL-CaveatBrush.txt',
 };
 

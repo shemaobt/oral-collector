@@ -64,7 +64,7 @@ class HeroGenreCard extends StatelessWidget {
                         Text(
                           localizedGenreName(l10n, genre.name, id: genre.id),
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (genre.description != null) ...[

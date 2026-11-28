@@ -536,7 +536,7 @@ class _GenresHeader extends StatelessWidget {
           Text(
             l10n.home_genres,
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const Spacer(),

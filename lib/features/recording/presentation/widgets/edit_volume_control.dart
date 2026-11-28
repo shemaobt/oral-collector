@@ -163,7 +163,7 @@ class EditVolumeControl extends StatelessWidget {
                     clippingLabel.toUpperCase(),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colors.error,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
                   ),

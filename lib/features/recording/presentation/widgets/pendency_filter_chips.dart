@@ -159,7 +159,7 @@ class _PendencyChip extends StatelessWidget {
               '$badgeCount',
               style: TextStyle(
                 fontSize: _fontSize,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 // The count is the one thing on the chip that outranks its
                 // label, so it takes the stronger ink rather than a box.
                 color: selected ? colors.onPrimary : colors.foreground,
