@@ -57,6 +57,9 @@ double _pitch(Glyph g, double h) => (g.width / _box + _gap) * h;
 double _width(List<Glyph> glyphs, double h) =>
     glyphs.fold<double>(0, (sum, g) => sum + _pitch(g, h)) - _gap * h;
 
+double brushNumberWidth(String text, double scaledHeight) =>
+    _width([for (final c in text.split('')) _glyphs[c]!], scaledHeight);
+
 class _NumberPainter extends CustomPainter {
   const _NumberPainter(this.glyphs, this.color, this.height);
 

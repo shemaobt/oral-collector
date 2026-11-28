@@ -1,5 +1,6 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'brush_number.dart';
@@ -41,6 +42,14 @@ class SlabCard extends StatelessWidget {
     final ink = colors.onPrimary;
     final actionColor = dark ? colors.pale : colors.sand;
     final line = ink.withValues(alpha: dark ? 0.22 : 0.16);
+    final scaler = MediaQuery.textScalerOf(context);
+    final slot = rows.fold<double>(
+      scaler.scale(_countSlot),
+      (widest, r) => math.max(
+        widest,
+        brushNumberWidth('${r.count}', scaler.scale(_countHeight)),
+      ),
+    );
     return CustomPaint(
       painter: HandCutRectPainter(
         fill: dark ? colors.sand : colors.primary,
@@ -66,6 +75,7 @@ class SlabCard extends StatelessWidget {
               for (var i = 0; i < rows.length; i++)
                 _Row(
                   row: rows[i],
+                  countSlot: slot,
                   ink: ink,
                   actionColor: actionColor,
                   line: i == rows.length - 1 ? null : line,
@@ -81,12 +91,14 @@ class SlabCard extends StatelessWidget {
 class _Row extends StatelessWidget {
   const _Row({
     required this.row,
+    required this.countSlot,
     required this.ink,
     required this.actionColor,
     required this.line,
   });
 
   final SlabRow row;
+  final double countSlot;
   final Color ink;
   final Color actionColor;
   final Color? line;
@@ -107,10 +119,8 @@ class _Row extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                width: _countSlot,
-                child: OverflowBox(
-                  fit: OverflowBoxFit.deferToChild,
-                  maxWidth: double.infinity,
+                width: countSlot,
+                child: Align(
                   alignment: Alignment.centerLeft,
                   child: BrushNumber(
                     '${row.count}',

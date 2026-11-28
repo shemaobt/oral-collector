@@ -139,7 +139,7 @@ Path: @/lib/shared/widgets
   off everywhere (`NoSplash`).
 - **`SlabCard` is the kit's dark block** ([slab_card.dart](slab_card.dart)): a
   hand-cut sheet (no printed shadow) in `primary`, `sand` in dark, with a brush
-  title and `SlabRow`s (an `int` count in brush in a fixed 32 slot, so the words line up
+  title and `SlabRow`s (an `int` count in brush in one column, 32 at text scale 1 or as wide as the widest count, so the words line up
   across rows; words, action word and chevron). The
   line between rows is the ink at 16% (22% in dark), none after the last.
   **`StatTile`** ([stat_tile.dart](stat_tile.dart)) is a project number: runs of
