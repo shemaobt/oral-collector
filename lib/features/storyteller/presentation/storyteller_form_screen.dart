@@ -7,7 +7,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
 
@@ -132,7 +132,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
       if (!mounted) return;
       final error = ref.read(projectStorytellersNotifierProvider).error;
       if (error != null) {
-        showErrorSnackBar(context, error);
+        showErrorNotice(context, error);
       } else {
         popOrGo(context, '/project/${widget.projectId}/storytellers');
       }

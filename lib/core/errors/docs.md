@@ -34,8 +34,8 @@ Path: @/lib/core/errors
   maps each leaf to an `l10n.error_*` key, and `friendlyErrorFor(Object)`
   dispatches typed-first before falling back to legacy string matching. The
   snack bar entry point is
-  [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart),
-  whose `showErrorSnackBar(context, Object)` calls `friendlyErrorFor`.
+  [../../shared/widgets/error_notice.dart](../../shared/widgets/error_notice.dart),
+  whose `showErrorNotice(context, Object)` calls `friendlyErrorFor`.
 - **The exception type is preserved until that UI boundary (ENG-173).** Feature
   state holds the *raw* exception, not a pre-localized string: every notifier's
   `error` field is typed `Object?` and a catch stores `copyWith(error: e)` — never
@@ -43,15 +43,15 @@ Path: @/lib/core/errors
   `e.toString().replaceFirst('Exception: ', '')`) discarded the type, forcing a
   typed leaf through the brittle string fallback and leaking custom messages /
   response bodies. Translation is exclusively the UI's job (`friendlyErrorFor`
-  / `showErrorSnackBar`), so a typed leaf always reaches `messageForException`.
+  / `showErrorNotice`), so a typed leaf always reaches `messageForException`.
   ENG-100 routed the widget catch-sites it found that still called
   `friendlyErrorMessage(e.toString())` directly (file-import, trim-split,
   confirmation-step upload) through `friendlyErrorFor`, and ENG-104 finished the
   job for the remaining screen catch-sites that were still bypassing the typed
   path another way — passing `e.toString()`, a hardcoded English string, or an
-  *already-localized* string straight into `showErrorSnackBar` /
+  *already-localized* string straight into `showErrorNotice` /
   raw `ScaffoldMessenger`. All of those now hand the **typed object** (`e`, or
-  the notifier's `state.error`) to `showErrorSnackBar`, so a typed leaf reaches
+  the notifier's `state.error`) to `showErrorNotice`, so a typed leaf reaches
   `messageForException` and `friendlyErrorMessage` is reached only via
   `friendlyErrorFor`'s fallback arm for genuinely untyped errors. That
   retained-but-legacy fallback (and its private `_humanizeDetail`) is now pinned
@@ -149,10 +149,10 @@ Path: @/lib/core/errors
 - **No dedicated `NotFoundException`.** 404 maps to `ValidationException`
   because 404 is sometimes non-exceptional (e.g. a delete treats it as
   success), so a 404-specific leaf was deliberately left out of scope.
-- **Screens hand `showErrorSnackBar` the typed object, never a string
+- **Screens hand `showErrorNotice` the typed object, never a string
   (ENG-104).** The single display entry point is
-  [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart)'s
-  `showErrorSnackBar(context, Object)`; call sites pass the caught exception `e`
+  [../../shared/widgets/error_notice.dart](../../shared/widgets/error_notice.dart)'s
+  `showErrorNotice(context, Object)`; call sites pass the caught exception `e`
   or the notifier's `state.error`. Passing `e.toString()` discards the type and
   forces the regex fallback. Passing an **already-localized** string is worse: the
   fallback's substring rules re-map it — any message containing "permission" or
@@ -173,7 +173,7 @@ Path: @/lib/core/errors
   around such a call is therefore dead code, and an unguarded happy path will
   show a false success. The contract for a notifier-driven screen action is:
   `await` the mutation, then check `state.error` (surface it via
-  `showErrorSnackBar`) before treating the action as succeeded. The project-save
+  `showErrorNotice`) before treating the action as succeeded. The project-save
   screen was fixed to follow this — it previously caught nothing and showed a
   false "updated" toast on failure (regression pinned by
   [../../../test/features/project/presentation/project_settings_save_error_test.dart](../../../test/features/project/presentation/project_settings_save_error_test.dart)).

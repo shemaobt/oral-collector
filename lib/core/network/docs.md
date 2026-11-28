@@ -65,7 +65,7 @@ Path: @/lib/core/network
   [../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart).
   These leaves travel **untranslated** all the way to that UI boundary: feature
   notifiers store the raw exception in their `Object?` `error` field and only the
-  UI calls `friendlyErrorFor` / `showErrorSnackBar` (ENG-173), so the type the
+  UI calls `friendlyErrorFor` / `showErrorNotice` (ENG-173), so the type the
   boundary picks here is the type that reaches `messageForException`. See
   [../errors/docs.md](../errors/docs.md) for the hierarchy and its invariants, and
   [the ADR](../../../docs/adr/0001-sealed-app-exception.md) for the rationale.

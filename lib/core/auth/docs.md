@@ -71,7 +71,7 @@ Path: @/lib/core/auth
   (`ref.read(errorReporterProvider).reportError(e, st)`,
   [../observability/docs.md](../observability/docs.md)); the UI layer translates the
   stored exception at display time via `friendlyErrorFor` /
-  `showErrorSnackBar(context, Object)`
+  `showErrorNotice(context, Object)`
   ([../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart)).
   This keeps a typed `AppException` intact end-to-end so it hits the exhaustive
   `messageForException` switch instead of degrading to the string fallback.

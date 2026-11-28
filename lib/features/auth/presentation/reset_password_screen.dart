@@ -9,7 +9,7 @@ import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/web/url_history.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key, required this.token});
@@ -61,7 +61,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       if (mounted) setState(() => _success = true);
     } on Exception catch (e, st) {
       reporter.reportError(e, st);
-      if (mounted) showErrorSnackBar(context, e);
+      if (mounted) showErrorNotice(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

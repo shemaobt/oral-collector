@@ -9,7 +9,7 @@ import '../../../core/auth/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import 'widgets/hero_panel.dart';
 
 @Preview(name: 'Signup Screen', wrapper: previewWrapper)
@@ -64,7 +64,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        showErrorSnackBar(context, next.error!);
+        showErrorNotice(context, next.error!);
       }
     });
 

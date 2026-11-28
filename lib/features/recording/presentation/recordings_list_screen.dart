@@ -15,7 +15,7 @@ import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
@@ -218,7 +218,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       // A fixed message rather than the mapped one: what can fail here is a
       // local write, and `friendlyErrorFor` would dress it as something the
       // user could act on. The real error goes to telemetry above.
-      showErrorSnackBar(
+      showErrorNotice(
         context,
         '',
         template: (_) => l10n.recordings_retryFailed,

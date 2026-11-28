@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/platform/file_source.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/widgets/error_snack_bar.dart';
+import '../../../../shared/widgets/error_notice.dart';
 import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/local_recording_entity.dart';
@@ -133,7 +133,7 @@ class _PendingWebUploadsBannerState
 
       if (!result.success) {
         if (mounted) {
-          showErrorSnackBar(
+          showErrorNotice(
             context,
             result.error ?? 'unknown',
             template: l10n.recording_uploadFailed,
@@ -156,7 +156,7 @@ class _PendingWebUploadsBannerState
       );
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e);
+        showErrorNotice(context, e);
       }
     } finally {
       if (mounted) {

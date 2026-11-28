@@ -189,7 +189,7 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.textContaining('Upload failed'), findsOneWidget);
-      // Routed through the unified showErrorSnackBar -> styled alert icon.
+      // Routed through the unified showErrorNotice -> styled alert icon.
       expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
 
       final saveButton = tester.widget<ElevatedButton>(

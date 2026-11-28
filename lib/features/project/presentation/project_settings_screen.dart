@@ -11,7 +11,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../shared/widgets/error_notice.dart';
 import '../../../shared/widgets/invite_dialog.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../recording/domain/entities/review_pendency.dart';
@@ -122,7 +122,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       });
     } on Exception catch (e) {
       if (!mounted) return;
-      showErrorSnackBar(context, e);
+      showErrorNotice(context, e);
     }
   }
 
@@ -171,7 +171,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
       final updatedState = ref.read(projectNotifierProvider);
       if (updatedState.error != null) {
-        showErrorSnackBar(context, updatedState.error!);
+        showErrorNotice(context, updatedState.error!);
         return;
       }
 
@@ -239,7 +239,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       );
     } else {
       final error = ref.read(memberNotifierProvider).error;
-      showErrorSnackBar(
+      showErrorNotice(
         context,
         error ?? l10n.projectSettings_memberRemoveFailed,
       );
@@ -275,7 +275,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       } on Exception catch (e, st) {
         ref.read(errorReporterProvider).reportError(e, st);
         if (!mounted) return;
-        showErrorSnackBar(context, e);
+        showErrorNotice(context, e);
         return;
       }
     }
