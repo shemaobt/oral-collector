@@ -30,3 +30,19 @@ class HandCutDiscPainter extends CustomPainter {
   bool shouldRepaint(HandCutDiscPainter old) =>
       old.fill != fill || old.shadow != shadow;
 }
+
+class HandCutDiscClipper extends CustomClipper<Path> {
+  const HandCutDiscClipper();
+
+  @override
+  Path getClip(Size size) => _disc.transform(
+    Matrix4.diagonal3Values(
+      size.width / _units,
+      size.height / _units,
+      1,
+    ).storage,
+  );
+
+  @override
+  bool shouldReclip(HandCutDiscClipper old) => false;
+}

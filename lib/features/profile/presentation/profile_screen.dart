@@ -234,11 +234,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             children: [
               ListTile(
-                leading: IconBox(
-                  icon: LucideIcons.logOut,
-                  color: colors.error,
-                  alpha: 0.1,
-                ),
+                leading: IconBox(icon: LucideIcons.logOut, color: colors.error),
                 title: Text(
                   l10n.profile_logOut,
                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -260,11 +256,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: IconBox(
-                  icon: LucideIcons.trash2,
-                  color: colors.error,
-                  alpha: 0.1,
-                ),
+                leading: IconBox(icon: LucideIcons.trash2, color: colors.error),
                 title: Text(
                   l10n.profile_deleteAccount,
                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -499,7 +491,7 @@ class _LanguageSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: ListTile(
-            leading: IconBox(icon: LucideIcons.globe, color: colors.primary),
+            leading: const IconBox(icon: LucideIcons.globe),
             title: Text(localeName),
             trailing: Icon(
               LucideIcons.chevronRight,
@@ -565,7 +557,7 @@ class _AboutSection extends StatelessWidget {
           child: Column(
             children: [
               ListTile(
-                leading: IconBox(icon: LucideIcons.info, color: colors.info),
+                leading: const IconBox(icon: LucideIcons.info),
                 title: Text(l10n.profile_appVersion),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
@@ -588,7 +580,7 @@ class _AboutSection extends StatelessWidget {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: IconBox(icon: LucideIcons.heart, color: colors.accent),
+                leading: const IconBox(icon: LucideIcons.heart),
                 title: Text(l10n.profile_byShema),
               ),
             ],
@@ -616,10 +608,7 @@ class _AdminSection extends ConsumerWidget {
             borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: ListTile(
-            leading: IconBox(
-              icon: LucideIcons.layoutDashboard,
-              color: colors.primary,
-            ),
+            leading: const IconBox(icon: LucideIcons.layoutDashboard),
             title: Text(l10n.profile_adminDashboard),
             subtitle: Text(l10n.profile_adminSubtitle),
             trailing: Icon(

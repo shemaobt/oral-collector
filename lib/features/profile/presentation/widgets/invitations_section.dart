@@ -31,19 +31,17 @@ class InvitationsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(child: SectionHeader(title: l10n.profile_invitations)),
-            IconButton(
-              icon: Icon(
-                LucideIcons.refreshCw,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              onPressed: onRefresh,
-              tooltip: l10n.profile_refreshInvitations,
+        SectionHeader(
+          title: l10n.profile_invitations,
+          trailing: IconButton(
+            icon: Icon(
+              LucideIcons.refreshCw,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-          ],
+            onPressed: onRefresh,
+            tooltip: l10n.profile_refreshInvitations,
+          ),
         ),
         const SizedBox(height: SpacingScale.s8),
         if (inviteState.isLoading)
