@@ -16,13 +16,21 @@ Future<T?> showAppQuestion<T>({
   required String message,
   required List<Widget> Function(BuildContext) actionsBuilder,
   bool isDismissible = true,
+}) => showAppDialog<T>(
+  context: context,
+  isDismissible: isDismissible,
+  builder: (c) => _card(c, title, message, actionsBuilder),
+);
+
+Future<T?> showAppDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool isDismissible = true,
 }) {
   final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
   return navigator.push(
     _AppQuestionRoute<T>(
-      title: title,
-      message: message,
-      actionsBuilder: actionsBuilder,
+      builder: builder,
       motion: context.motion,
       themes: InheritedTheme.capture(from: context, to: navigator.context),
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
@@ -33,18 +41,14 @@ Future<T?> showAppQuestion<T>({
 
 class _AppQuestionRoute<T> extends PopupRoute<T> {
   _AppQuestionRoute({
-    required this.title,
-    required this.message,
-    required this.actionsBuilder,
+    required this.builder,
     required this.motion,
     required this.themes,
     required this.barrierLabel,
     required this.isDismissible,
   });
 
-  final String title;
-  final String message;
-  final List<Widget> Function(BuildContext) actionsBuilder;
+  final WidgetBuilder builder;
   final AppMotion motion;
   final CapturedThemes themes;
   final bool isDismissible;
@@ -107,7 +111,7 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
                       opacity: v,
                       child: Transform.translate(
                         offset: Offset(0, entering ? motion.rise * (1 - v) : 0),
-                        child: _card(context),
+                        child: builder(context),
                       ),
                     ),
                   ),
@@ -119,47 +123,52 @@ class _AppQuestionRoute<T> extends PopupRoute<T> {
       ),
     );
   }
+}
 
-  Widget _card(BuildContext context) {
-    final AppColorSet colors = AppColors.of(context);
-    final TextTheme text = Theme.of(context).textTheme;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _width),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.card,
-          borderRadius: BorderRadius.circular(RadiusScale.r24),
-          boxShadow: QuestionShadows.of(context),
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(title, style: text.headlineLarge?.copyWith(fontSize: 30)),
-                const SizedBox(height: _gap),
-                Text(
-                  message,
-                  style: text.bodyMedium?.copyWith(
-                    fontSize: 15,
-                    color: colors.secondary,
-                  ),
+Widget _card(
+  BuildContext context,
+  String title,
+  String message,
+  List<Widget> Function(BuildContext) actionsBuilder,
+) {
+  final AppColorSet colors = AppColors.of(context);
+  final TextTheme text = Theme.of(context).textTheme;
+  return ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: _width),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(RadiusScale.r24),
+        boxShadow: QuestionShadows.of(context),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(title, style: text.headlineLarge?.copyWith(fontSize: 30)),
+              const SizedBox(height: _gap),
+              Text(
+                message,
+                style: text.bodyMedium?.copyWith(
+                  fontSize: 15,
+                  color: colors.secondary,
                 ),
-                const SizedBox(height: _gap * 2),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: _gap,
-                  runSpacing: _gap,
-                  children: actionsBuilder(context),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: _gap * 2),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: _gap,
+                runSpacing: _gap,
+                children: actionsBuilder(context),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

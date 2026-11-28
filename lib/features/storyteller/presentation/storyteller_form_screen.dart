@@ -7,6 +7,7 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/error_notice.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
@@ -295,7 +296,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 tooltip: l10n.storyteller_externalAcceptanceInfo,
                 iconSize: 18,
                 onPressed: () {
-                  showDialog<void>(
+                  showAppDialog<void>(
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text(l10n.storyteller_externalAcceptanceTitle),

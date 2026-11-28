@@ -13,6 +13,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_notice.dart';
@@ -146,7 +147,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   Future<void> _deleteRecording(LocalRecordingEntity recording) async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.recording_deleteTitle),

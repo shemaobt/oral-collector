@@ -9,6 +9,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/app_question.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
@@ -140,7 +141,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
 
   Future<void> _showRefuseDialog() async {
     final l10n = AppLocalizations.of(context);
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.recording_storageRefuseTitle),
@@ -158,7 +159,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   Future<bool?> _showWarnDialog(int estimatedSeconds) async {
     final l10n = AppLocalizations.of(context);
     final minutes = (estimatedSeconds / 60).floor();
-    return showDialog<bool>(
+    return showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.recording_storageLowWarnTitle),

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/app_question.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../notifiers/interrupted_sessions_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
@@ -162,7 +163,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     InterruptedSession session,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.recovery_confirmDiscardTitle),
@@ -195,7 +196,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     int count,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.recovery_discardAllTitle),

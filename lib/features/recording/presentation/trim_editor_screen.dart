@@ -16,6 +16,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_question.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
@@ -556,7 +557,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<TrimSaveMode?> _confirmSave(AppLocalizations l10n) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.trim_saveConfirmTitle),
