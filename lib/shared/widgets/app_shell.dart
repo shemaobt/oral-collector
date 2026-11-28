@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/platform/file_ops.dart' as file_ops;
+import '../../core/router/tab_visits.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
@@ -19,9 +20,9 @@ import 'brush_sign.dart';
 import 'quick_notice.dart';
 
 class AppShell extends ConsumerStatefulWidget {
-  const AppShell({super.key, required this.child});
+  const AppShell({super.key, required this.navigationShell});
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
   static const double scrollBottomPadding = 120;
   static const double wideBreakpoint = 1024;
@@ -72,7 +73,21 @@ int _currentIndexFrom(BuildContext context, List<TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  Future<void> _navigateToTab(String targetPath) async {
+  late Map<ShellTab, int> _visits = {_tabInUse: 1};
+
+  ShellTab get _tabInUse =>
+      ShellTab.values[widget.navigationShell.currentIndex];
+
+  @override
+  void didUpdateWidget(AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.navigationShell.currentIndex !=
+        oldWidget.navigationShell.currentIndex) {
+      _visits = {..._visits, _tabInUse: (_visits[_tabInUse] ?? 0) + 1};
+    }
+  }
+
+  Future<void> _navigateToTab(TabItem tab) async {
     final state = ref.read(recordingSessionNotifierProvider);
     final l10n = AppLocalizations.of(context);
     if (state.isFinalizing || state.hasFinalizationError) {
@@ -114,7 +129,14 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     if (!mounted) return;
-    context.go(targetPath);
+    final shell = widget.navigationShell;
+    final branch = tab.tab.index;
+    if (branch >= shell.route.branches.length) return context.go(tab.path);
+    shell.goBranch(
+      branch,
+      initialLocation:
+          branch == shell.currentIndex || tab.tab == ShellTab.record,
+    );
   }
 
   List<TabItem> _buildWebTabs(AppLocalizations l10n) {
@@ -130,6 +152,9 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
     return tabs;
   }
+
+  Widget _shellWithVisits() =>
+      TabVisits(counts: _visits, child: widget.navigationShell);
 
   @override
   Widget build(BuildContext context) {
@@ -152,10 +177,10 @@ class _AppShellState extends ConsumerState<AppShell> {
             WebSidebar(
               tabs: tabs,
               selectedIndex: selectedIndex,
-              onTabTapped: (index) => _navigateToTab(tabs[index].path),
+              onTabTapped: (index) => _navigateToTab(tabs[index]),
               pendingInvites: pendingInvites,
             ),
-            Expanded(child: widget.child),
+            Expanded(child: _shellWithVisits()),
           ],
         ),
       );
@@ -163,11 +188,11 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: QuickNoticeFloor(child: widget.child),
+      body: QuickNoticeFloor(child: _shellWithVisits()),
       bottomNavigationBar: FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),
-        onTabTapped: (index) => _navigateToTab(mobileTabs[index].path),
+        onTabTapped: (index) => _navigateToTab(mobileTabs[index]),
         colors: colors,
         pendingInvites: pendingInvites,
         bottomPadding: MediaQuery.of(context).padding.bottom,

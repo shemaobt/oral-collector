@@ -26,6 +26,7 @@ import 'package:oral_collector/features/recording/presentation/recording_flow_sc
 import 'package:oral_collector/features/recording/presentation/recordings_list_screen.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/register_selection_step.dart';
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_state.dart';
@@ -249,13 +250,16 @@ void main() {
   ) async {
     final app = await _pumpWeb(
       tester,
-      at: '/genre/g1',
+      at: '/record',
       settled: false,
       overrides: [
         genreNotifierProvider.overrideWith(_GenreWithSubcategory.new),
       ],
     );
     await tester.pump();
+    app.read(routerProvider).go('/genre/g1');
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
     await tester.tap(
       find.descendant(
@@ -271,6 +275,7 @@ void main() {
       find.byType(RecordingFlowScreen),
     );
     expect((flow.genreId, flow.subcategoryId), ('g1', 's1'));
+    expect(find.byType(RegisterSelectionStep), findsOneWidget);
   });
 
   testWidgets(

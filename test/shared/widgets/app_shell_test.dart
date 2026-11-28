@@ -105,30 +105,22 @@ GoRouter _buildRouter() {
   return GoRouter(
     initialLocation: '/home',
     routes: [
-      ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            builder: (_, _) => const Scaffold(
-              key: ValueKey('home-screen'),
-              body: Center(child: Text('home page')),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          for (final name in ['home', 'record', 'recordings'])
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/$name',
+                  builder: (_, _) => Scaffold(
+                    key: ValueKey('$name-screen'),
+                    body: Center(child: Text('$name page')),
+                  ),
+                ),
+              ],
             ),
-          ),
-          GoRoute(
-            path: '/record',
-            builder: (_, _) => const Scaffold(
-              key: ValueKey('record-screen'),
-              body: Center(child: Text('record page')),
-            ),
-          ),
-          GoRoute(
-            path: '/recordings',
-            builder: (_, _) => const Scaffold(
-              key: ValueKey('recordings-screen'),
-              body: Center(child: Text('recordings page')),
-            ),
-          ),
         ],
       ),
       GoRoute(

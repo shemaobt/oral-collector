@@ -282,18 +282,22 @@ Widget _shellApp(ProviderContainer container, RecordingResult result) {
   final router = GoRouter(
     initialLocation: '/record',
     routes: [
-      ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/record',
-            builder: (_, _) => Scaffold(body: _confirmationStep(result)),
-          ),
-          GoRoute(
-            path: '/home',
-            builder: (_, _) =>
-                const Scaffold(body: Center(child: Text('home page'))),
-          ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          for (final (path, page) in [
+            ('/home', const Center(child: Text('home page'))),
+            ('/record', _confirmationStep(result)),
+          ])
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: path,
+                  builder: (_, _) => Scaffold(body: page),
+                ),
+              ],
+            ),
         ],
       ),
     ],
