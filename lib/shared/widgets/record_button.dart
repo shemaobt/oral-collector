@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_disc.dart';
+import 'pressable.dart';
 
 enum RecordButtonState { ready, recording, paused }
 
@@ -104,19 +104,15 @@ class _RecordButtonState extends State<RecordButton>
     return Semantics(
       label: semanticLabel,
       button: true,
-      child: Material(
-        color: AppColors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: widget.onLongPress,
-          customBorder: const CircleBorder(),
-          child: AppDisc(
-            size: widget.size,
-            tone: DiscTone.record,
-            pressable: true,
-            child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
-          ),
+      child: Pressable(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        customBorder: const CircleBorder(),
+        child: AppDisc(
+          size: widget.size,
+          tone: DiscTone.record,
+          pressable: true,
+          child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
         ),
       ),
     );

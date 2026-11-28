@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
 import 'app_disc.dart';
+import 'pressable.dart';
 
 enum RoundButtonSize {
   small(DiscSize.medium),
@@ -60,25 +60,18 @@ class RoundButton extends StatelessWidget {
       onTap: onPressed,
       child: SizedBox.square(
         dimension: target,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            AppDisc(
+        child: Pressable(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Center(
+            child: AppDisc(
               size: size.disc,
               tone: tone.disc,
               pressable: true,
               enabled: onPressed != null,
               child: Icon(icon),
             ),
-            Material(
-              color: AppColors.transparent,
-              child: InkWell(
-                onTap: onPressed,
-                customBorder: const CircleBorder(),
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
