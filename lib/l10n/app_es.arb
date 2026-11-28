@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "Filtros",
   "filters_sheetTitle": "Filtrar grabaciones",
+  "filters_removeFilter": "Quitar el filtro {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "Estado en este dispositivo",
   "filters_sectionStatusHint": "Filtra las grabaciones que ya están en pantalla. Funciona sin conexión.",
   "filters_sectionGenre": "Género",

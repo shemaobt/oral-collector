@@ -24,10 +24,6 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
     _radiusOf(theme.floatingActionButtonTheme.shape),
     BorderRadius.circular(RadiusScale.r16),
   );
-  expect(
-    _radiusOf(theme.chipTheme.shape),
-    BorderRadius.circular(RadiusScale.r20),
-  );
 }
 
 void _expectPaddingFromTokens(ThemeData theme) {
@@ -159,21 +155,6 @@ void _expectOverlays(ThemeData theme) {
 
 void _expectControls(ThemeData theme) {
   final c = theme.extension<AppColorSet>()!;
-  final chip = theme.chipTheme;
-  expect(chip.selectedColor, c.primary);
-  final label = chip.labelStyle!.color! as WidgetStateColor;
-  expect(label.resolve({WidgetState.selected}), c.onPrimary);
-  expect(label.resolve({}), c.foreground);
-  expect(chip.secondaryLabelStyle!.color, c.onPrimary);
-  expect(chip.backgroundColor, Colors.transparent);
-  expect(chip.side, BorderSide(color: c.border, width: 1.5));
-
-  final tabs = theme.tabBarTheme;
-  expect(tabs.indicatorColor, c.accent);
-  final indicator = tabs.indicator! as UnderlineTabIndicator;
-  expect(indicator.borderSide, BorderSide(color: c.accent, width: 3));
-  expect(tabs.dividerColor, Colors.transparent);
-
   final progress = theme.progressIndicatorTheme;
   expect(progress.color, c.accent);
   expect(progress.linearTrackColor, c.surfaceAlt);

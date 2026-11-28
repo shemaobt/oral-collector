@@ -2459,6 +2459,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filters_sheetTitle => 'Chuja rekodi';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'Ondoa kichujio $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'Hali kwenye kifaa hiki';
 
   @override

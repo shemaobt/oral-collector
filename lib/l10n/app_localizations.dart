@@ -4388,6 +4388,12 @@ abstract class AppLocalizations {
   /// **'Filter recordings'**
   String get filters_sheetTitle;
 
+  /// No description provided for @filters_removeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the filter {name}'**
+  String filters_removeFilter(String name);
+
   /// Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383).
   ///
   /// In en, this message translates to:

@@ -2448,6 +2448,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters_sheetTitle => 'تصفية التسجيلات';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'إزالة عامل التصفية $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'الحالة على هذا الجهاز';
 
   @override

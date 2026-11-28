@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "Vichujio",
   "filters_sheetTitle": "Chuja rekodi",
+  "filters_removeFilter": "Ondoa kichujio {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "Hali kwenye kifaa hiki",
   "filters_sectionStatusHint": "Huchuja rekodi zilizo tayari kwenye skrini. Hufanya kazi bila mtandao.",
   "filters_sectionGenre": "Aina",

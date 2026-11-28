@@ -2481,6 +2481,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get filters_sheetTitle => 'Filtrar gravações';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'Tirar o filtro $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'Situação neste aparelho';
 
   @override

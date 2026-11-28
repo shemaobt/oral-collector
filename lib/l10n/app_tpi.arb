@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "Ol filta",
   "filters_sheetTitle": "Filta ol rekoding",
+  "filters_removeFilter": "Rausim filta {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "Stetas long dispela masin",
   "filters_sectionStatusHint": "Em i filtaim ol rekoding i stap pinis long skrin. Em i wok tu taim i no gat net.",
   "filters_sectionGenre": "Kain stori",

@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "필터",
   "filters_sheetTitle": "녹음 필터",
+  "filters_removeFilter": "{name} 필터 제거",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "이 기기의 상태",
   "filters_sectionStatusHint": "화면에 이미 있는 녹음을 걸러 냅니다. 오프라인에서도 됩니다.",
   "filters_sectionGenre": "장르",

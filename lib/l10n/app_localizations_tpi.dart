@@ -2456,6 +2456,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filters_sheetTitle => 'Filta ol rekoding';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'Rausim filta $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'Stetas long dispela masin';
 
   @override

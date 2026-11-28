@@ -2466,6 +2466,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters_sheetTitle => 'Filter recordings';
 
   @override
+  String filters_removeFilter(String name) {
+    return 'Remove the filter $name';
+  }
+
+  @override
   String get filters_sectionStatus => 'Status on this device';
 
   @override
