@@ -514,6 +514,108 @@ void main() {
       expect(read(container).isRefreshing, isFalse);
     });
 
+    test('a reload while the device rows show keeps them', () async {
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => [_makeRecording('local-1')]);
+      final gate = hold();
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      final first = notifier.fetchRecordings();
+      await pumpUntil(() => read(container).recordings.isNotEmpty);
+      final seen = <RecordingsListState>[];
+      container.listen(recordingsListNotifierProvider, (_, s) => seen.add(s));
+
+      final second = notifier.fetchRecordings();
+      gate.complete(const []);
+      await Future.wait([first, second]);
+
+      expect(seen.every((s) => s.recordings.isNotEmpty), isTrue);
+      expect(read(container).isRefreshing, isFalse);
+    });
+
+    test('a device read slower than the server is dropped', () async {
+      final slow = Completer<List<LocalRecording>>();
+      var reads = 0;
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) => ++reads == 1 ? slow.future : Future.value(const []));
+      serve(() async => [_makeServerRecording('srv-1')]);
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      slow.complete([_makeRecording('stale')]);
+      await pumpEventQueue();
+
+      expect(read(container).recordings.map((r) => r.id), ['srv-1']);
+      expect(read(container).isRefreshing, isFalse);
+    });
+
+    test('a device read of the old project never reaches the new', () async {
+      final slowA = Completer<List<LocalRecording>>();
+      final projects = _SwitchableProjectNotifier(
+        ProjectState(activeProject: activeProject),
+      );
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) => slowA.future);
+      when(
+        () => local.getAllRecordings('proj-2'),
+      ).thenAnswer((_) async => const []);
+      final gate = hold();
+      final container = makeContainer(online: true, projects: projects);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      final first = notifier.fetchRecordings();
+      projects.switchTo(
+        const Project(id: 'proj-2', name: 'Other', languageId: 'en'),
+      );
+      final second = notifier.fetchRecordings();
+
+      slowA.complete([_makeRecording('a-row')]);
+      await pumpEventQueue();
+
+      expect(read(container).recordings, isEmpty);
+      gate.complete(const []);
+      await Future.wait([first, second]);
+    });
+
+    final noDeviceRows =
+        <String, Future<void> Function(RecordingsListNotifier)>{
+          'a filter change after the first answer': (n) async {
+            serve(() async => const []);
+            await n.fetchRecordings();
+            hold();
+            unawaited(n.setStorytellerFilter('s-1'));
+          },
+          'a cold start under a pendency filter': (n) async {
+            hold();
+            unawaited(n.setReviewFlagFilter(PendencyKind.storyteller));
+          },
+        };
+    for (final entry in noDeviceRows.entries) {
+      test('${entry.key} shows no device rows', () async {
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => [_makeRecording('local-1')]);
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+
+        await entry.value(
+          container.read(recordingsListNotifierProvider.notifier),
+        );
+        await pumpUntil(() => asked);
+        await pumpEventQueue();
+
+        expect(read(container).recordings, isEmpty);
+        expect(read(container).isLoading, isTrue);
+      });
+    }
+
     group('another project', () {
       late _SwitchableProjectNotifier projects;
       late ProviderContainer container;
@@ -1963,7 +2065,8 @@ void main() {
       final sweepRead = Completer<List<LocalRecording>>();
       when(() => local.getAllRecordings('proj-1')).thenAnswer((_) {
         localReads++;
-        // The third read is the sweep's own (device-first, merge, sweep), the one the refresh interrupts.
+        // Reads: device-first, merge, then the sweep's own, which the refresh
+        // interrupts.
         return localReads == 3 ? sweepRead.future : Future.value([row]);
       });
       when(() => local.deleteRecording(any())).thenAnswer((_) async => true);

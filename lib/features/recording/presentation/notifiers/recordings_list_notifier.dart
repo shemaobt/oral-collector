@@ -256,7 +256,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
               answered.storytellerId == question.storytellerId &&
               answered.reviewFlag == question.reviewFlag);
       if (online && question.reviewFlag == null && sameFilters) {
-        unawaited(_showDevice(projectId, gen));
+        unawaited(_showDevice(question, gen));
       }
     }
 
@@ -306,12 +306,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
   }
 
-  /// Puts the device's rows on screen while the server has not answered. The
-  /// server's answer wins: a read that lands after it is dropped.
-  Future<void> _showDevice(String projectId, int gen) async {
-    final device = await _loadLocal(projectId);
+  Future<void> _showDevice(_Question question, int gen) async {
+    final device = await _loadLocal(question.projectId);
     if (gen != _fetchGeneration || !state.isLoading) return;
     if (device == null || device.isEmpty) return;
+    _answered = question;
     state = state.copyWith(
       recordings: device,
       isLoading: false,
