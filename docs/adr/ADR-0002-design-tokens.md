@@ -11,6 +11,9 @@
   `still` when the person asks for less motion. A value one moment needs is a
   constant of `MotionScale`, not a field of `AppMotion`: the cyclomatic gate
   counts each `??` of `copyWith` and each `&&` of `==`.
+- Update (2026-11-28, ENG-3047): the duration scale of items 1, 3 and 4
+  (`DurationScale`, `AppDurations`, `context.durations`) is deleted, replaced
+  by the motion set of ENG-3045.
 - Update (2026-06-15, ENG-159): the deferred `Color(0x…)`/`Colors.*` lint rule
   from item 7 shipped as the `obt_lints` plugin (`avoid_hardcoded_color` +
   `avoid_material_colors`), staged at `info`/non-blocking, exempting

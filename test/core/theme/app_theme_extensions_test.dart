@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/core/theme/app_durations.dart';
 import 'package:oral_collector/core/theme/app_opacity.dart';
 import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_spacing.dart';
@@ -10,7 +9,6 @@ void main() {
     final theme = AppTheme.lightTheme;
     expect(theme.extension<AppSpacing>(), AppSpacing.fallback);
     expect(theme.extension<AppRadii>(), AppRadii.fallback);
-    expect(theme.extension<AppDurations>(), AppDurations.fallback);
     expect(theme.extension<AppOpacity>(), AppOpacity.fallback);
   });
 
@@ -18,7 +16,6 @@ void main() {
     final theme = AppTheme.darkTheme;
     expect(theme.extension<AppSpacing>(), AppSpacing.fallback);
     expect(theme.extension<AppRadii>(), AppRadii.fallback);
-    expect(theme.extension<AppDurations>(), AppDurations.fallback);
     expect(theme.extension<AppOpacity>(), AppOpacity.fallback);
   });
 }
