@@ -57,8 +57,7 @@ Path: @/lib/core/theme
 - The semantic state tokens are `info`, `success`, `warning`, and `error`. They are
   single tokens with no text pair (callers tint both icon and label with the one color). `warning` is the
   caution/attention color (amber/orange): it backs the unclassified affordances
-  (FABs, badges, breadcrumbs), `ForbiddenException`
-  permission snackbars, and the `needs_cleaning` cleaning state via
+  (FABs, badges, breadcrumbs) and the `needs_cleaning` cleaning state via
   [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart).
   It replaced the previously hardcoded `Colors.amber.shade700` / `Colors.orange`
   literals so those surfaces now adapt to dark mode. The recording detail

@@ -7,6 +7,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
 import '../notifiers/admin_notifier.dart';
@@ -218,9 +219,7 @@ class AdminGenreCard extends ConsumerWidget {
             .read(adminNotifierProvider.notifier)
             .updateGenre(genre.id, update);
         if (success && context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.admin_genreUpdated)));
+          showQuickNotice(context, l10n.admin_genreUpdated);
         }
       }
     }
@@ -256,9 +255,7 @@ class AdminGenreCard extends ConsumerWidget {
           .read(adminNotifierProvider.notifier)
           .deleteGenre(genre.id);
       if (success && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.admin_genreDeleted)));
+        showQuickNotice(context, l10n.admin_genreDeleted);
       }
     }
   }
@@ -312,9 +309,7 @@ class AdminGenreCard extends ConsumerWidget {
             name: nameController.text.trim(),
           );
       if (success && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.admin_subcategoryCreated)));
+        showQuickNotice(context, l10n.admin_subcategoryCreated);
       }
     }
 
@@ -353,9 +348,7 @@ class AdminGenreCard extends ConsumerWidget {
           .read(adminNotifierProvider.notifier)
           .deleteSubcategory(subId);
       if (success && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.admin_subcategoryDeleted)));
+        showQuickNotice(context, l10n.admin_subcategoryDeleted);
       }
     }
   }

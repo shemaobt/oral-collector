@@ -17,7 +17,7 @@ This is foundation work for E2/E4/E5/E8. We are NOT migrating the ~52 throws now
 - Add a boundary helper `lib/core/network/error_boundary.dart`: `throwForStatus(int)` / `throwForResponse(http.Response)` map HTTP status → exception; `guard<T>(body)` maps `SocketException`→`NetworkException` and `dart:async` timeout→`TimeoutException`, rethrowing via `Error.throwWithStackTrace` to preserve the original stack.
 - `TimeoutException` keeps the ticket name despite colliding with `dart:async.TimeoutException`. The collision is resolved only inside `error_boundary.dart` via `import 'dart:async' as async;`.
 - Consolidate the two legacy exceptions into the hierarchy (no user string). `api_exception.dart` becomes a re-export shim (`show UnauthorizedException, ForbiddenException`) so existing imports and `const` zero-arg construction keep working unchanged. `guardResponse` keeps its exact 401/403 contract (now `AppException` leaves, with `traceId` populated).
-- UI: `error_helpers.dart` gains `messageForException` (exhaustive `switch` over the sealed type → `l10n.error_*`) and `friendlyErrorFor(Object)` which dispatches typed-first and falls back to the legacy string matcher. `showErrorSnackBar` now accepts `Object`.
+- UI: `error_helpers.dart` gains `messageForException` (exhaustive `switch` over the sealed type → `l10n.error_*`) and `friendlyErrorFor(Object)` which dispatches typed-first and falls back to the legacy string matcher. `showErrorNotice` now accepts `Object`.
 - Begin using it conservatively: the consolidated `guardResponse` (a chokepoint already wired into ~36 sites) and the tested helpers. No repository call sites are migrated in this change.
 
 ## Consequences

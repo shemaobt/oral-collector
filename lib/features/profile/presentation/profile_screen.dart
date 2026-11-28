@@ -66,10 +66,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .read(profileNotifierProvider.notifier)
           .pickAndUploadAvatar();
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).profile_photoUpdated),
-          ),
+        showQuickNotice(
+          context,
+          AppLocalizations.of(context).profile_photoUpdated,
         );
       }
     } catch (e) {
@@ -118,10 +117,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .read(profileNotifierProvider.notifier)
           .updateDisplayName(newName);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).profile_nameUpdated),
-          ),
+        showQuickNotice(
+          context,
+          AppLocalizations.of(context).profile_nameUpdated,
         );
       }
     }
@@ -154,10 +152,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (!context.mounted) return;
         if (accepted) {
           unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.profile_joinedSuccess(invite.projectName)),
-            ),
+          showQuickNotice(
+            context,
+            l10n.profile_joinedSuccess(invite.projectName),
           );
         } else {
           final err = ref.read(inviteNotifierProvider).error;
@@ -170,9 +167,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             .declineInvite(invite.id);
         if (!context.mounted) return;
         if (declined) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
+          showQuickNotice(context, l10n.profile_inviteDeclined);
         } else {
           final err = ref.read(inviteNotifierProvider).error;
           showErrorNotice(context, err ?? l10n.profile_inviteDeclineFailed);

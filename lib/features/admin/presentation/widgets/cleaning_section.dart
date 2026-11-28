@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../notifiers/admin_notifier.dart';
 import 'admin_mini_stat.dart';
@@ -50,15 +51,11 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
         .read(adminNotifierProvider.notifier)
         .triggerClean(recordingId);
     if (mounted) {
-      final colors = AppColors.of(context);
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? l10n.admin_cleaningTriggered : l10n.admin_cleaningFailed,
-          ),
-          backgroundColor: success ? colors.success : colors.error,
-        ),
+      showQuickNotice(
+        context,
+        success ? l10n.admin_cleaningTriggered : l10n.admin_cleaningFailed,
+        tone: success ? QuickNoticeTone.calm : QuickNoticeTone.failed,
       );
     }
     _selectedIds.remove(recordingId);
@@ -74,13 +71,10 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
         .triggerBatchClean(ids);
 
     if (mounted) {
-      final colors = AppColors.of(context);
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.admin_cleaningPartial(count, ids.length)),
-          backgroundColor: count > 0 ? colors.success : colors.error,
-        ),
+      showQuickNotice(
+        context,
+        AppLocalizations.of(context).admin_cleaningPartial(count, ids.length),
+        tone: count > 0 ? QuickNoticeTone.calm : QuickNoticeTone.failed,
       );
       setState(() {
         _isCleaning = false;

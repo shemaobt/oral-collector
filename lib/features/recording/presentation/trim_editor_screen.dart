@@ -18,6 +18,7 @@ import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_question.dart';
 import '../../../shared/widgets/app_sheet.dart';
+import '../../../shared/widgets/quick_notice.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
@@ -429,10 +430,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (accepted) {
       setState(() => _excludeDraft = null);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).trim_atLeastOneSegment),
-        ),
+      showQuickNotice(
+        context,
+        AppLocalizations.of(context).trim_atLeastOneSegment,
+        tone: QuickNoticeTone.failed,
       );
     }
   }
@@ -441,9 +442,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     HapticFeedback.lightImpact();
     if (!_notifier.toggleExclude(index)) {
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(
+      showQuickNotice(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.trim_atLeastOneSegment)));
+        l10n.trim_atLeastOneSegment,
+        tone: QuickNoticeTone.failed,
+      );
     }
   }
 
@@ -532,9 +535,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           ),
           TrimSaveMode.split => l10n.trim_splitInto(keptCount),
         };
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        showQuickNotice(context, msg);
         if (context.canPop()) {
           context.pop(true);
         } else {
@@ -542,9 +543,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         }
       case TrimSaveFailed(:final error):
         final friendly = friendlyErrorFor(error, l10n);
-        ScaffoldMessenger.of(
+        showQuickNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.trim_splitError(friendly))));
+          l10n.trim_splitError(friendly),
+          tone: QuickNoticeTone.failed,
+        );
       case TrimSaveAborted():
         break;
     }

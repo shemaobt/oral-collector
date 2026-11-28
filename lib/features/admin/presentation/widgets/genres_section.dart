@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/quick_notice.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../notifiers/admin_notifier.dart';
 import 'admin_genre_card.dart';
@@ -132,9 +133,7 @@ class GenresSection extends ConsumerWidget {
                 : descController.text.trim(),
           );
       if (success && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.admin_genreCreated)));
+        showQuickNotice(context, l10n.admin_genreCreated);
       }
     }
 
