@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/app_question.dart';
+import '../../../../shared/widgets/app_sheet.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
@@ -463,9 +464,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       behavior: HitTestBehavior.opaque,
       onTap: () {
         HapticFeedback.selectionClick();
-        showModalBottomSheet<void>(
+        showAppSheet<void>(
           context: context,
-          showDragHandle: false,
           builder: (_) => const InputDevicePickerSheet(),
         );
       },
