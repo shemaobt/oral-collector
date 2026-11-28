@@ -66,10 +66,10 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   ShellTab get tab => ShellTab.recordings;
 
   @override
-  void refreshOnReturn() {
-    _applyGenreFromAddress();
-    _refreshAll();
-  }
+  void refreshOnReturn() => _refreshAll();
+
+  @override
+  void onArrival() => _applyGenreFromAddress();
 
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();

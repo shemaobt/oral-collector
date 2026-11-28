@@ -35,8 +35,9 @@ Path: @/lib/features/recording/presentation
   subcategory, from `didUpdateWidget`, not only from `initState`: the tab keeps
   its `State` alive across visits, so without it a filter from an earlier visit
   outlives the URL that named it. The genre and subcategory are also applied
-  again on every return to the tab, so the same genre link opened twice filters
-  both times. The guard compares the new widget against the old one rather than
+  again on every arrival by a link (a `go`), so the same genre link opened
+  twice filters both times, but never on a tab tap: a filter the person cleared
+  or picked in the sheet is how they left the tab, and it wins. The guard compares the new widget against the old one rather than
   against the notifier — a filter the user picked from the sheet or a chip is
   not in the URL and must survive an unrelated rebuild (ENG-383).
   **The division of labour between the two callbacks is the whole rule: the URL

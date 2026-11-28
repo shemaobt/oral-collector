@@ -42,7 +42,9 @@ Path: @/lib/core/router
   counts the entries into each tab (`TabVisits`), whether by a tap or by a `go`
   that lands in another tab (a save goes to `/home`). Home, Recordings,
   Projects and Profile refresh when that count rises past the one they were
-  built at, so a first visit fetches once. Record is the exception: its pages
+  built at, so a first visit fetches once. The shell also counts the entries
+  that were not a tab tap (arrivals): a screen whose address carries a filter
+  (Recordings' genre) applies it only on an arrival. Record is the exception: its pages
   are keyed by that count and by their address, so every entry starts a fresh
   flow, as it did when every tab change built a new page.
 - Several routes gate on `projectNotifierProvider.activeProject` in their own

@@ -89,6 +89,44 @@ class _OneGenre extends FakeGenreNotifier {
   );
 }
 
+ServerRecording _recorded(String id, String genreId, [String? sub]) =>
+    ServerRecording(
+      id: id,
+      projectId: 'p1',
+      genreId: genreId,
+      subcategoryId: sub,
+      title: 'Story $id',
+      durationSeconds: 30,
+      fileSizeBytes: 1024,
+      format: 'm4a',
+      uploadStatus: 'uploaded',
+      cleaningStatus: 'none',
+      recordedAt: DateTime(2026, 1, 2),
+    );
+
+Future<ProviderContainer> _openSubcategoryFromHome(WidgetTester tester) async {
+  final server = _GrowingServer()
+    ..recordings.addAll([
+      _recorded('r1', 'g1'),
+      _recorded('r2', 'g1', 's1'),
+      _recorded('r3', 'g2'),
+    ]);
+  final app = await _pump(
+    tester,
+    at: '/home',
+    overrides: [recordingApiRepositoryProvider.overrideWithValue(server)],
+  );
+  app.read(routerProvider).go('/recordings?genreId=g1&subcategoryId=s1');
+  await settle(tester);
+  expect(find.text('Story r2'), findsOneWidget);
+  return app;
+}
+
+Future<void> _visitHomeAndComeBack(WidgetTester tester) async {
+  await _tapTab(tester, 'Home');
+  await _tapTab(tester, 'Recordings');
+}
+
 Future<void> _tapTab(WidgetTester tester, String label) async {
   await tester.tap(find.bySemanticsLabel('$label tab'));
   await settle(tester);
@@ -161,26 +199,39 @@ void main() {
     expect(refreshes, 2);
   });
 
+  testWidgets('a filter cleared on Recordings stays cleared after a visit '
+      'to Home', (tester) async {
+    final app = await _openSubcategoryFromHome(tester);
+    app.read(recordingsListNotifierProvider.notifier)
+      ..setGenreFilter(null)
+      ..setSubcategoryFilter(null);
+    await settle(tester);
+
+    await _visitHomeAndComeBack(tester);
+
+    expect(find.byType(RecordingCard), findsNWidgets(3));
+  });
+
+  testWidgets('a genre picked in the sheet stays after a visit to Home', (
+    tester,
+  ) async {
+    final app = await _openSubcategoryFromHome(tester);
+    app.read(recordingsListNotifierProvider.notifier)
+      ..setSubcategoryFilter(null)
+      ..setGenreFilter('g2');
+    await settle(tester);
+
+    await _visitHomeAndComeBack(tester);
+
+    expect(find.byType(RecordingCard), findsOneWidget);
+    expect(find.text('Story r3'), findsOneWidget);
+  });
+
   testWidgets('a genre opens its recordings filtered on a list kept alive', (
     tester,
   ) async {
     final server = _GrowingServer()
-      ..recordings.addAll([
-        serverRecording,
-        ServerRecording(
-          id: 'r2',
-          projectId: 'p1',
-          genreId: 'g1',
-          subcategoryId: 's1',
-          title: 'The drum that spoke',
-          durationSeconds: 30,
-          fileSizeBytes: 1024,
-          format: 'm4a',
-          uploadStatus: 'uploaded',
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2026, 1, 2),
-        ),
-      ]);
+      ..recordings.addAll([serverRecording, _recorded('r2', 'g1', 's1')]);
     final app = await _pump(
       tester,
       at: '/recordings',
@@ -196,7 +247,7 @@ void main() {
 
     await openSubcategory();
     expect(find.byType(RecordingCard), findsOneWidget);
-    expect(find.text('The drum that spoke'), findsOneWidget);
+    expect(find.text('Story r2'), findsOneWidget);
 
     app.read(recordingsListNotifierProvider.notifier)
       ..setGenreFilter(null)
