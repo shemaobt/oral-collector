@@ -835,6 +835,14 @@
   },
   "filters_buttonLabel": "Filtros",
   "filters_sheetTitle": "Filtrar gravações",
+  "filters_removeFilter": "Tirar o filtro {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "Situação neste aparelho",
   "filters_sectionStatusHint": "Filtra as gravações que já estão na tela. Funciona offline.",
   "filters_sectionGenre": "Gênero",

@@ -223,6 +223,18 @@ Path: @/lib/shared/widgets
   optional `label` that is tappable and read once; `onChosen` null switches it
   off (40%). The state changes at once, with no slide. No screen uses it yet.
 
+- **`AppFilterChoice` and `AppActiveFilter`**
+  ([app_filter_choice.dart](app_filter_choice.dart),
+  [app_active_filter.dart](app_active_filter.dart)) are the two filter pieces.
+  The choice sits in the filter sheet: hand-cut, 38 high in a touch area of 44,
+  `card` at rest with the paper shadow, `primary` with the ink shadow when
+  chosen. The active filter sits in the list: 36 high in 44, `primary`, no
+  shadow, the name then a «close» sign; one tap on it calls `onRemove`, and a
+  screen reader hears «Tirar o filtro {name}». No screen uses them yet. The
+  theme's Material chips (`card`, no line, corners 12) and tabs (`primary` line
+  of 2 under the chosen tab, a `border` line under the row) wear the same look
+  until each screen moves.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in

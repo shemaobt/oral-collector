@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "عوامل التصفية",
   "filters_sheetTitle": "تصفية التسجيلات",
+  "filters_removeFilter": "إزالة عامل التصفية {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "الحالة على هذا الجهاز",
   "filters_sectionStatusHint": "يصفّي التسجيلات الظاهرة على الشاشة. يعمل دون اتصال.",
   "filters_sectionGenre": "النوع",

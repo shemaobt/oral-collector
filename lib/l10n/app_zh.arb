@@ -1011,6 +1011,14 @@
   },
   "filters_buttonLabel": "筛选条件",
   "filters_sheetTitle": "筛选录音",
+  "filters_removeFilter": "移除筛选 {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "本机状态",
   "filters_sectionStatusHint": "筛选屏幕上已有的录音。离线也能用。",
   "filters_sectionGenre": "类型",

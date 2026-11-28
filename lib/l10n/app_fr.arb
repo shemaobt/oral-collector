@@ -810,6 +810,14 @@
   },
   "filters_buttonLabel": "Filtres",
   "filters_sheetTitle": "Filtrer les enregistrements",
+  "filters_removeFilter": "Retirer le filtre {name}",
+  "@filters_removeFilter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filters_sectionStatus": "État sur cet appareil",
   "filters_sectionStatusHint": "Filtre les enregistrements déjà affichés. Fonctionne hors ligne.",
   "filters_sectionGenre": "Genre",

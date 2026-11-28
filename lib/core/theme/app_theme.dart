@@ -324,13 +324,13 @@ abstract class AppTheme {
 
   static ChipThemeData _chipTheme(AppColorSet c) {
     return ChipThemeData(
-      backgroundColor: Colors.transparent,
+      backgroundColor: c.card,
       selectedColor: c.primary,
       checkmarkColor: c.onPrimary,
       labelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
         color: WidgetStateColor.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? c.onPrimary
@@ -339,34 +339,36 @@ abstract class AppTheme {
       ),
       secondaryLabelStyle: TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
         color: c.onPrimary,
       ),
-      side: BorderSide(color: c.border, width: _buttonBorder),
+      side: BorderSide.none,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r20),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
       ),
     );
   }
 
   static TabBarThemeData _tabBarTheme(AppColorSet c) {
     return TabBarThemeData(
-      labelColor: c.accent,
+      labelColor: c.foreground,
       unselectedLabelColor: c.secondary,
-      indicatorColor: c.accent,
+      indicatorColor: c.primary,
       indicator: UnderlineTabIndicator(
-        borderSide: BorderSide(color: c.accent, width: 3),
+        borderSide: BorderSide(color: c.primary, width: 2),
       ),
-      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.label,
+      dividerColor: c.border,
+      dividerHeight: 1,
       labelStyle: const TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
       ),
       unselectedLabelStyle: const TextStyle(
         fontFamily: _fontFamily,
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: FontWeight.w500,
       ),
     );

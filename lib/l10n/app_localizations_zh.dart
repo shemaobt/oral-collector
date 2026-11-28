@@ -2354,6 +2354,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filters_sheetTitle => '筛选录音';
 
   @override
+  String filters_removeFilter(String name) {
+    return '移除筛选 $name';
+  }
+
+  @override
   String get filters_sectionStatus => '本机状态';
 
   @override
