@@ -51,7 +51,6 @@ class RoundButton extends StatelessWidget {
   }) : icon = null;
 
   static const double minTouchTarget = 48;
-  static const double _signSize = 18;
 
   final IconData? icon;
   final Sign? sign;
@@ -81,9 +80,7 @@ class RoundButton extends StatelessWidget {
               tone: tone.disc,
               pressable: true,
               enabled: onPressed != null,
-              child: sign == null
-                  ? Icon(icon)
-                  : BrushSign(sign!, size: _signSize),
+              child: sign == null ? Icon(icon) : BrushSign(sign!, size: 18),
             ),
           ),
         ),

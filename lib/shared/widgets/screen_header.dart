@@ -28,13 +28,12 @@ class ScreenHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
 
   @override
-  Size get preferredSize =>
-      Size.fromHeight(_height(_platformScaler(), onBack != null));
+  Size get preferredSize => Size.fromHeight(_height(onBack != null));
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      toolbarHeight: _height(_platformScaler(), onBack != null),
+      toolbarHeight: preferredSize.height,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       shape: const Border(),
@@ -64,7 +63,7 @@ class ScreenHeaderSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      toolbarHeight: _height(MediaQuery.textScalerOf(context), onBack != null),
+      toolbarHeight: _height(onBack != null, MediaQuery.textScalerOf(context)),
       floating: floating,
       snap: snap,
       pinned: pinned,
@@ -76,19 +75,18 @@ class ScreenHeaderSliver extends StatelessWidget {
   }
 }
 
-TextScaler _platformScaler() => TextScaler.linear(
-  WidgetsBinding.instance.platformDispatcher.textScaleFactor,
-);
-
-double _titleLine(TextScaler scaler) {
+double _height(bool back, [TextScaler? scaler]) {
   const line = AppTheme.titleSize * AppTheme.titleHeight;
-  return math.min(scaler.scale(line), line * _maxHeaderTextScale);
-}
-
-double _height(TextScaler scaler, bool back) {
-  final line = _titleLine(scaler);
+  final title = math.min(
+    (scaler ??
+            TextScaler.linear(
+              WidgetsBinding.instance.platformDispatcher.textScaleFactor,
+            ))
+        .scale(line),
+    line * _maxHeaderTextScale,
+  );
   return _air +
-      (back ? _rowHeight + _titleGap + line : math.max(_rowHeight, line));
+      (back ? _rowHeight + _titleGap + title : math.max(_rowHeight, title));
 }
 
 class _ScreenTop extends StatelessWidget {
