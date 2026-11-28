@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/brush_sign.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../../../../shared/widgets/round_button.dart';
 import '../../../../shared/widgets/sound_strokes.dart';
 
@@ -63,16 +64,17 @@ class ControlButton extends StatelessWidget {
             : button,
         const SizedBox(height: 14),
         ExcludeSemantics(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: press,
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontSize: 13,
-                color: colors.secondary,
-                fontWeight: FontWeight.w500,
+          child: ExcludeFocus(
+            child: Pressable(
+              onTap: press,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 13,
+                  color: colors.secondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),

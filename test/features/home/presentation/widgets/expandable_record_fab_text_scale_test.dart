@@ -5,7 +5,9 @@
 // a fixed-size box). This is asserted via geometry, because clipping inside a
 // Stack throws no overflow exception and find.text still finds a clipped label.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/home/presentation/widgets/expandable_record_fab.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
@@ -40,7 +42,12 @@ Future<void> _pumpExpanded(
   Locale locale = const Locale('en'),
 }) async {
   await _pump(tester, scale, locale: locale);
-  await tester.tap(find.byType(InkWell));
+  await tester.tap(
+    find.ancestor(
+      of: find.byIcon(LucideIcons.mic),
+      matching: find.byType(InkWell),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -109,4 +116,40 @@ void main() {
     await _pumpExpanded(tester, 2.0);
     _expectLabelWithinFab(tester, AppLocalizationsEn().fab_normalRecord);
   });
+
+  testWidgets(
+    'the mini discs take no focus while collapsed and fire when open',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      var quick = 0;
+      var normal = 0;
+      await pumpAtTextScale(
+        tester,
+        scale: 1,
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: ExpandableRecordFab(
+            onQuickRecord: () => quick++,
+            onNormalRecord: () => normal++,
+            colors: AppColors.light,
+          ),
+        ),
+      );
+      await tester.pump();
+      final quickLabel = AppLocalizationsEn().fab_quickRecord;
+      expect(find.bySemanticsLabel(quickLabel), findsNothing);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect((quick, normal), (0, 0));
+      expect(find.bySemanticsLabel(quickLabel), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect((quick, normal), (0, 1));
+      semantics.dispose();
+    },
+  );
 }

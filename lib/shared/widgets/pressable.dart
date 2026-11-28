@@ -134,12 +134,14 @@ class Pressable extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.customBorder,
+    this.label,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final ShapeBorder? customBorder;
+  final String? label;
 
   @override
   State<Pressable> createState() => _PressableState();
@@ -151,22 +153,38 @@ class _PressableState extends State<Pressable> {
   @override
   Widget build(BuildContext context) {
     return PointerPress(
-      builder: (context, down) => Stack(
-        children: [
-          PressLook(down: down && _enabled, child: widget.child),
-          Positioned.fill(
-            child: Material(
-              color: AppColors.transparent,
-              child: InkWell(
-                onTap: widget.onTap,
-                onLongPress: widget.onLongPress,
-                customBorder: widget.customBorder,
-                highlightColor: AppColors.transparent,
-                child: const SizedBox.expand(),
+      builder: (context, down) => MergeSemantics(
+        child: Semantics(
+          label: widget.label,
+          button: true,
+          enabled: _enabled,
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              PressLook(down: down && _enabled, child: widget.child),
+              Positioned.fill(
+                child: Material(
+                  color: AppColors.transparent,
+                  child: InkWell(
+                    onTap: widget.onTap,
+                    onLongPress: widget.onLongPress,
+                    customBorder: widget.customBorder,
+                    enableFeedback: false,
+                    highlightColor: AppColors.transparent,
+                    overlayColor: widget.customBorder == null
+                        ? WidgetStateProperty.resolveWith(
+                            (states) => states.contains(WidgetState.focused)
+                                ? Theme.of(context).focusColor
+                                : AppColors.transparent,
+                          )
+                        : null,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

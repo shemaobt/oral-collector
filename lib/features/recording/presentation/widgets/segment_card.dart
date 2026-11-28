@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/pressable.dart';
 
 class SegmentCard extends StatelessWidget {
   const SegmentCard({
@@ -171,7 +172,7 @@ class SegmentCard extends StatelessWidget {
         ),
         const SizedBox(width: SpacingScale.s8),
 
-        GestureDetector(
+        Pressable(
           onTap: onPlayPause,
           child: Container(
             width: 34,
@@ -194,7 +195,7 @@ class SegmentCard extends StatelessWidget {
         ),
         const SizedBox(width: SpacingScale.s8),
 
-        GestureDetector(
+        Pressable(
           onTap: onToggleExclude,
           child: Container(
             width: 34,
@@ -245,7 +246,7 @@ class SegmentCard extends StatelessWidget {
           const SizedBox(width: SpacingScale.s8),
           Tooltip(
             message: copyFromPreviousLabel,
-            child: GestureDetector(
+            child: Pressable(
               onTap: onCopyFromPrevious,
               child: Container(
                 width: 28,

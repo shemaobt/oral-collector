@@ -105,19 +105,16 @@ class _RecordButtonState extends State<RecordButton>
       semanticLabel = l10n.a11y_startRecording;
     }
 
-    return Semantics(
+    return Pressable(
       label: semanticLabel,
-      button: true,
-      child: Pressable(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        customBorder: const CircleBorder(),
-        child: AppDisc(
-          size: widget.size,
-          tone: DiscTone.record,
-          pressable: true,
-          child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
-        ),
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      customBorder: const CircleBorder(),
+      child: AppDisc(
+        size: widget.size,
+        tone: DiscTone.record,
+        pressable: true,
+        child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
       ),
     );
   }

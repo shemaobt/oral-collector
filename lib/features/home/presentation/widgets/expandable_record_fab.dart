@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/pressable.dart';
 
 class ExpandableRecordFab extends StatefulWidget {
   const ExpandableRecordFab({
@@ -183,8 +184,8 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
       opacity: _expandAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: IgnorePointer(
-          ignoring: !_isOpen,
+        child: _Hidden(
+          hidden: !_isOpen,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -212,8 +213,9 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                 ),
               ),
               const SizedBox(width: SpacingScale.s8),
-              GestureDetector(
+              Pressable(
                 onTap: onTap,
+                customBorder: const CircleBorder(),
                 child: Container(
                   width: _miniButtonSize,
                   height: _miniButtonSize,
@@ -235,6 +237,21 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Hidden extends StatelessWidget {
+  const _Hidden({required this.hidden, required this.child});
+
+  final bool hidden;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeFocus(
+      excluding: hidden,
+      child: IgnorePointer(ignoring: hidden, child: child),
     );
   }
 }

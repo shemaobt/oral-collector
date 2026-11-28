@@ -9,6 +9,7 @@ import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import 'brush_sign.dart';
 import 'hand_cut_rect.dart';
+import 'pressable.dart';
 
 const double _lift = 10;
 const double _minHeight = 52;
@@ -324,18 +325,13 @@ class _Action extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    container: true,
-    button: true,
-    child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: _actionHeight),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
-          child: Center(child: Text(word, style: style)),
-        ),
+  Widget build(BuildContext context) => Pressable(
+    onTap: onTap,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: _actionHeight),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
+        child: Center(child: Text(word, style: style)),
       ),
     ),
   );

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../notifiers/recordings_list_state.dart';
 
 class StatusFilterBar extends StatelessWidget {
@@ -56,7 +57,7 @@ class StatusFilterBar extends StatelessWidget {
           final (filter, label, icon) = filters[index];
           final isSelected = currentFilter == filter;
 
-          return GestureDetector(
+          return Pressable(
             onTap: () => onFilterChanged(filter),
             child: AnimatedContainer(
               duration: context.motion.fast,
